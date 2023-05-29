@@ -69,7 +69,9 @@ using namespace std;
 void InputReader::ReadQuery(std::string& line) {
 	auto [type_line, args_line] = detail::parser::Split(line, ':');
 	auto [type, name] = detail::parser::Split(type_line, ' ');
+	
 	if(type == "Stop") {
+		name = AddName(name, stop_names_);
 		auto args = detail::parser::SplitIntoWords(args_line, ',');
 		std::unordered_map<std::string_view, int> stop_di;
 		for(int i = 2; i < args.size(); ++i) {
@@ -77,36 +79,55 @@ void InputReader::ReadQuery(std::string& line) {
 			auto [to, to_stop] = detail::parser::Split(to_stop_line, ' '); 		//to_stop_line look as "to StopName"
 			dim.remove_suffix(1);
 			to_stop = detail::parser::LRstrip(to_stop);
-			stop_di[addName(to_stop, stop_names_)] = detail::parser::fromString<int>(std::string(dim));
+			stop_di_[name][AddName(to_stop, stop_names_)] = detail::parser::fromString<int>(std::string(dim));
 		}
 		
-		stop_query_.push_back({ addName(name, stop_names_),
-								detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[0]))), 
-								detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[1]))),
-								stop_di 
+		stops_.push_back({ name,
+								{	detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[0]))), 
+									detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[1]))),
+								}
 							});
 	}
 	else if(type == "Bus") {
+		name = AddName(name, bus_names_);
 		std::vector<std::string_view> stops;
-		bool is_ring = parseStopList(args_line, stops);
-		bus_query_.push_back({ addName(name, bus_names_), std::move(stops), is_ring});
+		bool is_ring = ParseStopList(args_line, stops);
+		bus_stops_[name] = std::move(stops);
+		buses_.push_back({ name, {}, is_ring});
 	}
 	//else {
 		//throw ExceptionWrongQueryType(std::string(type));
 	//} 	 	
 }
 
-std::unordered_set<std::string>& InputReader::ExportStops(std::vector<detail::QueryStop>& stop_query) {
-	stop_query = stop_query_;
-	return stop_names_;
+void InputReader::Export(TransportCatalogue& trc) {
+	trc.ImportStopNames(std::move(stop_names_));
+	trc.ImportBusNames(std::move(bus_names_));
+	
+	for(auto& stop : stops_) {
+		trc.AddStop(std::move(stop));
+	}
+	
+	// add distance between stops
+	for(const auto& from_stop : trc.GetStops()) {
+		// ВОПРОС: остались ли индексы в map::stop_di_ валидными после перемещения вектора stop_names_: trc.ImportStopNames(std::move(stop_names_));
+		for(const auto& [to_stop, di]: stop_di_[from_stop.name]) { 
+			trc.SetDistance(&trc.GetStop(from_stop.name), &trc.GetStop(to_stop), di);
+		}
+	}
+		
+	for(auto& bus : buses_) {
+		// fill bus stops vector by pointers
+		auto stops = bus_stops_[bus.name];
+		std::for_each(stops.begin(), stops.end(), [&stops, &trc, &bus, this](auto& stop_name) {
+				bus.stops.push_back(&trc.GetStop(stop_name));
+			});
+		
+		trc.AddBus(std::move(bus));
+	}
 }
 
-std::unordered_set<std::string>& InputReader::ExportBuses(std::vector<detail::QueryBus>& bus_query) {
-	bus_query = bus_query_;
-	return bus_names_;
-}
-
-bool InputReader::parseStopList(std::string_view args_line, std::vector<std::string_view>& stops_view) {
+bool InputReader::ParseStopList(std::string_view args_line, std::vector<std::string_view>& stops_view) {
 	bool is_ring = true;
 	if(args_line.find('-') != std::string::npos) {
 		stops_view = detail::parser::SplitIntoWords(args_line, '-');
@@ -116,7 +137,7 @@ bool InputReader::parseStopList(std::string_view args_line, std::vector<std::str
 		stops_view = detail::parser::SplitIntoWords(args_line, '>');
 	}
 
-	stops_view = loadNames(stops_view, stop_names_);
+	stops_view = LoadNames(stops_view, stop_names_);
 
 	if(!is_ring) {
 		for(int i = stops_view.size() - 2; i >= 0; --i) { // backward if not ring route
@@ -127,16 +148,16 @@ bool InputReader::parseStopList(std::string_view args_line, std::vector<std::str
 	return is_ring;
 }
 
-std::string_view InputReader::addName(std::string_view& view, std::unordered_set<std::string>& set) {
+std::string_view InputReader::AddName(std::string_view& view, std::unordered_set<std::string>& set) {
 	return *(set.insert(std::string(view)).first);
 }
 
-std::vector<std::string_view> InputReader::loadNames(std::vector<std::string_view>& view, std::unordered_set<std::string>& set) {
+std::vector<std::string_view> InputReader::LoadNames(std::vector<std::string_view>& view, std::unordered_set<std::string>& set) {
 	std::vector<std::string_view> res;
 	std::for_each(view.begin(), view.end(), [&res, &set, this](auto v) {
 			std::string name(v);
 			if(set.find(name) == set.end()) {
-				res.push_back(addName(v, set));
+				res.push_back(AddName(v, set));
 				return;
 			}
 			
@@ -145,7 +166,7 @@ std::vector<std::string_view> InputReader::loadNames(std::vector<std::string_vie
 	return res;
 }
 
-std::vector<std::string_view> InputReader::addNames(std::vector<std::string_view>& view, std::unordered_set<std::string>& set) {
+std::vector<std::string_view> InputReader::AddNames(std::vector<std::string_view>& view, std::unordered_set<std::string>& set) {
 	std::vector<std::string_view> res;
 	std::for_each(view.begin(), view.end(), [&res, &set](auto v) {
 			res.push_back(*(set.insert(std::string(v)).first));

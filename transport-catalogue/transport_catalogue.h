@@ -1,16 +1,17 @@
 #pragma once
 
+#include <algorithm>
+#include <deque>
+#include <iomanip>
+#include <iostream>
+#include <set>
 #include <string>
 #include <string_view>
-#include <deque>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
-#include "input_reader.h"
+
 #include "geo.h"
-#include <iostream>
-#include <iomanip>
-#include <set>
 
 namespace trans_cat {
 
@@ -28,31 +29,29 @@ struct Stop {
 };
 
 struct Route {
-	std::vector<const Stop*> stop;
 	size_t unique_stops;
 	double geo_length;
 	int distance;
 	bool is_ring;
-	size_t size() const {
-		return stop.size();
-	}
-	double curvature() const {
-		return distance / geo_length;
-	}
 };
 
 struct Bus {
 	std::string_view name;
-	Route route;
+	std::vector<const Stop*> stops;
+	bool is_ring;
+	
+	size_t StopsCount() const {
+		return stops.size();
+	}
+	
+	size_t UniqueStopsCount() const {
+		auto temp = stops;
+		std::sort(temp.begin(), temp.end());	
+		return std::unique(temp.begin(), temp.end()) - temp.begin();
+	}		
 };
 
 namespace detail {
-struct compareBusesByName {
-	bool operator()(const Bus* lhs, const Bus* rhs) const {
-		return lhs->name < rhs->name;
-	}
-};
-
 class DistanceBetweenStopHasher {
 public:
 	template<class TFirst, class TSecond>
@@ -63,27 +62,38 @@ public:
 		return std::hash<size_t>{}(h);
 	}
 };	
+	struct compareBusesByName {
+		bool operator()(const Bus* lhs, const Bus* rhs) const {
+			return lhs->name < rhs->name;
+		}
+	};
 
-using StopBuses = std::set<const Bus*, compareBusesByName>;
-using DistanceBetweenStop = std::unordered_map<std::pair<const Stop*, const Stop*>, int, DistanceBetweenStopHasher>;
+	using StopBuses = std::set<const Bus*, compareBusesByName>;
+	using DistanceBetweenStop = std::unordered_map<std::pair<const Stop*, const Stop*>, int, DistanceBetweenStopHasher>;
+
 } // end ::detail	
 
 class TransportCatalogue{
 public:
-	
 	TransportCatalogue() {}
 	
-	void Import(InputReader& ir) ;
-	void AddStop(const detail::QueryStop& stop);	
-	void AddBus(const detail::QueryBus& bus);
+	void AddStop(Stop&& stop);	
+	void AddBus(Bus&& bus);
 	
 	const Bus& GetBus(std::string_view bus_name) const;
 	const Stop& GetStop(std::string_view stop_name) const;
-	const std::set<const Bus*, detail::compareBusesByName>& GetStopBuses(const Stop&) const;
+	const std::deque<Bus>& GetBuses() const;
+	const std::deque<Stop>& GetStops() const;
+	const detail::StopBuses& GetStopBuses(const Stop&) const;
 
 	void SetDistance(const Stop* s1, const Stop*  s2, int di); 
-	int GetDistance(const Stop* s1, const Stop*  s2) const; 
+	int GetDistanceBetweenStops(const Stop* s1, const Stop*  s2) const; 
+	int GetDistance(const Bus& bus) const;
+	double GetGeoLength(const Bus& bus) const;
+	double GetCurvature(const Bus& bus) const;
 	
+	void ImportStopNames(std::unordered_set<std::string>&& stop_names);
+	void ImportBusNames(std::unordered_set<std::string>&& bus_names);	
 private:
 	// bus & stop store
 	std::deque<Bus> bus_;
@@ -93,7 +103,7 @@ private:
 	std::unordered_map <std::string_view, const Bus*> bus_index_;
 	std::unordered_map <std::string_view, const Stop*> stop_index_;
 	
-	std::unordered_map<const Stop*, std::set<const Bus*, detail::compareBusesByName>> stop_buses_;
+	std::unordered_map<const Stop*, detail::StopBuses> stop_buses_;
 	detail::DistanceBetweenStop stop_di_;
 	
 	// string store

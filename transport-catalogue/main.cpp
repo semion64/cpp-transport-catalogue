@@ -30,7 +30,7 @@ void Run(istream& in) {
 	int N;
 	in >> N;
 	ReadInputs(in, N, ir);
-	trc.Import(ir);
+	ir.Export(trc);
 	
 	// Exec stat queries
 	in >> N;
@@ -69,7 +69,7 @@ void Test(std::string test_name) {
 	int N;
 	in >> N;
 	ReadInputs(in, N, ir);
-	trc.Import(ir);
+	ir.Export(trc);
 	
 	in >> N;
 	std::ifstream in_check(test_name+"_output.txt");
