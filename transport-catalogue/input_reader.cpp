@@ -110,11 +110,11 @@ void InputReader::Export(TransportCatalogue& trc) {
 	
 	// add distance between stops
 	for(const auto& from_stop : trc.GetStops()) {
-		// ВОПРОС: остались ли индексы в map::stop_di_ (string_view указывает на строку из stop_names_) валидными после перемещения вектора stop_names_: trc.ImportStopNames(std::move(stop_names_));
+		// ==ВОПРОС: остались ли индексы в map::stop_di_ (string_view указывает на строку из stop_names_) валидными после перемещения вектора stop_names_: trc.ImportStopNames(std::move(stop_names_));
 		for(const auto& [to_stop, di]: stop_di_[from_stop.name]) { 
 			trc.SetDistance(&trc.GetStop(from_stop.name), &trc.GetStop(to_stop), di);
 		}
-		// Может лучше отказаться от множеств stop_names_ и bus_names_ и хранить строки в struct Stop и struct Bus?
+		// ==ВОПРОС: Может лучше отказаться от множеств stop_names_ и bus_names_ и хранить строки в struct Stop и struct Bus?
 	}
 		
 	for(auto& bus : buses_) {
