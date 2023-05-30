@@ -1,16 +1,13 @@
 #include "stat_reader.h"
 
 namespace trans_cat {
-StatQuery StatReader::ReadQuery(std::string& line) {
-	auto [type_str, arg]= detail::parser::Split(line, ' ');
-	StatQueryType type = StatQueryType::NONE;
+void StatReader::ExecQuery(std::string& line) {
+	auto [type_str, name]= detail::parser::Split(line, ' ');
 	if(type_str == "Bus") {
-		type = StatQueryType::BUS;
+		ui_.ShowBus(name);	
 	}
 	else if(type_str == "Stop") {
-		type = StatQueryType::STOP;
+		ui_.ShowStopBuses(name);	
 	}
-	
-	return {type, std::string(arg)};
 }
 } // end ::trans_cat

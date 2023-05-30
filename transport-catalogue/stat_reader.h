@@ -1,10 +1,11 @@
 #pragma once
 
-#include "input_reader.h"
+#include <algorithm>
 #include <string>
 #include <string_view>
-#include <algorithm>
 #include <unordered_set>
+
+#include "input_reader.h"
 
 namespace trans_cat {
 class ExceptionWrongStatReaderQuery {
@@ -13,21 +14,12 @@ public:
 	ExceptionWrongStatReaderQuery(std::string text = "") : text_(text) { }	
 };
 
-enum class StatQueryType {
-	NONE,
-	BUS,
-	STOP
-};
-
-struct StatQuery {
-	StatQueryType type;
-	std::string arg;
-};
-
 class StatReader {	
 public:	
-	StatReader() { } 
+	StatReader(UserInterface& ui) : ui_(ui) { } 
 	
-	StatQuery ReadQuery(std::string& line);
+	void ExecQuery(std::string& line);
+private:
+	UserInterface ui_;
 };
 } // end ::trans_cat

@@ -1,59 +1,58 @@
+#include <cassert>
 #include <iostream>
-#include <string>
+#include <fstream>
 #include <sstream>
-#include "transport_catalogue.h"
+#include <string>
+
 #include "input_reader.h"
 #include "stat_reader.h"
-#include <fstream>
-#include <cassert>
+#include "transport_catalogue.h"
 
 using namespace std;
 
 namespace trans_cat {
 namespace console {
-void ReadInputs(std::istream& in, int N, trans_cat::InputReader& ir) {
+void ReadInputs(trans_cat::TransportCatalogue& trc, std::istream& in) {
+	trans_cat::InputReader ir;
+	
+	// Exec update queries
+	int N;
+	in >> N;
+	
 	while(N >= 0) {
 		std::string line;
 		std::getline(in, line);
 		ir.ReadQuery(line);
 		--N;
 	}
+	
+	ir.Export(trc);
 }
 
-void Run(istream& in) {
-	trans_cat::TransportCatalogue trc;
+void ReadAndExecStats(trans_cat::TransportCatalogue& trc, std::istream& in) {
 	trans_cat::UserInterface ui(trc);
-	trans_cat::InputReader ir;
-	trans_cat::StatReader sr;
-	
-	// Exec update queries
+	trans_cat::StatReader sr(ui);
 	int N;
-	in >> N;
-	ReadInputs(in, N, ir);
-	ir.Export(trc);
-	
 	// Exec stat queries
 	in >> N;
 	while(N >= 0) {
 		std::string line;
 		std::getline(in, line);
-		auto query = sr.ReadQuery(line);
-		switch(query.type) {
-			case trans_cat::StatQueryType::BUS:
-				ui.ShowBus(query.arg);
-			break;
-			case trans_cat::StatQueryType::STOP:
-				ui.ShowStopBuses(query.arg);
-			break;
-			case trans_cat::StatQueryType::NONE:
-			break;
-		}
-		
+		sr.ExecQuery(line);
 		--N;
 	}
 }
 
-void Test(std::string test_name) {
+} // end ::console
+} // end ::trans_cat
+
+int main() {
+	trans_cat::TransportCatalogue trc;
+	trans_cat::console::ReadInputs(trc, std::cin);
+	trans_cat::console::ReadAndExecStats(trc, std::cin);
+}
+
+/*void Test(std::string test_name) {
 	std::ifstream in(test_name+"_input.txt");
 	std::string out_str;
 	stringstream ss(out_str);
@@ -100,11 +99,4 @@ void Test(std::string test_name) {
 	}
 	
 	in.close();
-}
-} // end ::console
-} // end ::trans_cat
-
-int main() {
-	//trans_cat::console::Test("test3/tsC_case1"s);
-	trans_cat::console::Run(std::cin);
-}
+}*/
