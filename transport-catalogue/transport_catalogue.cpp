@@ -2,34 +2,42 @@
 
 namespace trans_cat {
 
-void TransportCatalogue::AddStop(Stop&& stop) {
-	stop_.push_back(stop);
+Stop& TransportCatalogue::AddStop(std::string name, const geo::Coordinates&& coord) {
+	stop_.push_back({AddName(std::move(name), stop_names_), std::move(coord)});
 	stop_index_[stop_.back().name] = &stop_.back();
+	return stop_.back();
+}
+
+Bus& TransportCatalogue::AddBus(std::string name, std::vector<const Stop*>&& stops, bool is_ring) {
+	// add bus
+	bus_.push_back({AddName(std::move(name), bus_names_), std::move(stops), is_ring});
+	Bus* insert_bus = &bus_.back();
+	
+	// add bus to index map
+	bus_index_[insert_bus->name] = insert_bus;
+	
+	// add inserted bus to stop_buses_ map
+	std::for_each(insert_bus->stops.begin(), insert_bus->stops.end(), [this, &insert_bus](const auto stop) {
+		stop_buses_[stop_index_[stop->name]].insert(insert_bus);
+	});
+	
+	return *insert_bus;
+}
+
+std::string_view  TransportCatalogue::AddName(std::string&& name, std::unordered_set<std::string>& set) {
+	return *(set.insert(name).first);
 }
 
 void TransportCatalogue::SetDistance(const Stop* s1, const Stop* s2, int di) {
 	stop_di_[{s1, s2}] = di;
 }
 
-void TransportCatalogue::AddBus(Bus&& bus) {
-	// add bus
-	bus_.push_back(bus);
-	const Bus* insert_bus = &bus_.back();
-	
-	// add bus to index map
-	bus_index_[bus.name] = insert_bus;
-	
-	// add inserted bus to stop_buses_ map
-	std::for_each(insert_bus->stops.begin(), insert_bus->stops.end(), [this, &insert_bus](const auto stop) {
-		stop_buses_[stop_index_[stop->name]].insert(insert_bus);
-	});
-}
-
 const Bus& TransportCatalogue::GetBus(std::string_view bus_name) const {
 	if(!bus_index_.count(bus_name)) {
+		// исключение перехватывается в методе UserInterface::ShowStopBuses, чтобы вывести информацию, что не существует автобуса или остановки
 		throw ExceptionBusNotFound();
 	}
-	
+	 
 	return *bus_index_.at(bus_name);
 }
 
@@ -45,6 +53,7 @@ const Stop& TransportCatalogue::GetStop(std::string_view stop_name) const {
 const std::deque<Bus>& TransportCatalogue::GetBuses() const {
 	return bus_;
 }
+
 const std::deque<Stop>& TransportCatalogue::GetStops() const {
 	return stop_;
 }
@@ -86,64 +95,19 @@ int TransportCatalogue::GetDistanceBetweenStops(const Stop* s1, const Stop*  s2)
 	return stop_di_.at({s2, s1});
 }
 
-void TransportCatalogue::ImportStopNames(std::unordered_set<std::string>&& stop_names) {
-	stop_names_ = std::move(stop_names);
+size_t TransportCatalogue::GetUniqueStopsCount(const Bus& bus) const {
+	auto temp = bus.stops;
+	std::sort(temp.begin(), temp.end());	
+	return std::unique(temp.begin(), temp.end()) - temp.begin();
 }
-
-void TransportCatalogue::ImportBusNames(std::unordered_set<std::string>&& bus_names) {
-	bus_names_ = std::move(bus_names);
-}
-
-UserInterface::UserInterface(TransportCatalogue& trc, std::ostream& os) : trc_(trc), os_(os) { }
-
-void UserInterface::ShowBus(std::string_view bus_name, bool end_line) {
-	os_ << std::setprecision(6);
 	
-	try {
- 		const auto bus = trc_.GetBus(bus_name);
-		os_ << "Bus " << bus.name << ": ";
-		os_	<< bus.StopsCount() << " stops on route, " 
-					<< bus.UniqueStopsCount() << " unique stops, " 
-					<< static_cast<double>(trc_.GetDistance(bus)) << " route length, "
-					<< trc_.GetCurvature(bus) << " curvature"; 
-	}
-	catch(ExceptionBusNotFound) {
-		os_ << "Bus " << bus_name << ": not found";
-	}
-	
-	EndLine(end_line);
-}
-
-void UserInterface::ShowStopBuses(std::string_view stop_name, bool end_line) {
-	os_ << std::setprecision(6);
-	
-	try {
- 		const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(stop_name));
-		os_ << "Stop " << stop_name << ": buses ";
-		bool is_first = false;
-		for(const auto& bus : stop_buses) {
-			if(!is_first) {
-				is_first = true;
-			}
-			else {
-				os_ << " ";
-			}
-			os_ << bus->name;
-		}
-	}
-	catch(ExceptionBusNotFound) {
-		os_ << "Stop " << stop_name << ": no buses";
-	}
-	catch(ExceptionStopNotFound) {
-		os_ << "Stop " << stop_name << ": not found";
-	}
-	
-	EndLine(end_line);
-}
-
-void UserInterface::EndLine(bool end_line) {
-	if(end_line) {
-		os_ << std::endl;
-	}
+const detail::RouteStat TransportCatalogue::GetRouteStat(const Bus& bus) const {
+	return {
+		bus.stops.size(),
+		GetUniqueStopsCount(bus),
+		GetDistance(bus),
+		GetCurvature(bus),
+		bus.is_ring
+	};
 }
 } // end ::trans_cat

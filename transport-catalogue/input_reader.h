@@ -28,38 +28,32 @@ T fromString(std::string str) {
 }
 
 std::pair<std::string_view, std::string_view> Split(std::string_view line, char by);
-
 std::string_view Lstrip(std::string_view line) ;
-
 std::string_view Rstrip(std::string_view line);
-
 std::string_view LRstrip(std::string_view line) ;
-
 std::vector<std::string_view> SplitIntoWords(std::string_view text, char add_delimetr = ' ');
 } // end ::parser
 } // end ::detail
 
 class InputReader {	
 public:	
-	InputReader() {	}
+	InputReader(TransportCatalogue& trc) : trc_ (trc) {	}
 	
-	void Export(TransportCatalogue& trc);
-	void ReadQuery(std::string& line);
-
+	void Read(std::istream& is);
 private:
+	TransportCatalogue& trc_;
 	std::vector<Bus> buses_;
 	
 	std::unordered_map<std::string_view, std::vector<std::string_view>> bus_stops_;
 	std::vector<Stop> stops_;
-	std::unordered_set<std::string> stop_names_;
-	std::unordered_set<std::string> bus_names_;
-	std::unordered_map<std::string_view, std::unordered_map<std::string_view,int>> stop_di_;
+	std::unordered_map<std::string, std::string> add_stop_queries_;
+	std::unordered_map<std::string, std::string> add_bus_queries_;
+	std::unordered_map<std::string_view, std::unordered_map<std::string,int>> stop_di_;
 	
-	bool ParseStopList(std::string_view args_line, std::vector<std::string_view>& stops_view);
-	
-	std::string_view AddName(std::string_view& view, std::unordered_set<std::string>& set);
-	
-	std::vector<std::string_view> AddNames(std::vector<std::string_view>& view, std::unordered_set<std::string>& set);
-	std::vector<std::string_view> LoadNames(std::vector<std::string_view>& view, std::unordered_set<std::string>& set);
+	void ReadQuery(std::string& line);
+	void AddStops();
+	void AddBuses();
+	void AddDistanceBetweenStops();
+	std::vector<const Stop*> ParseStopList(std::string_view args_line, bool* is_ring);
 };
 } // end ::trans_cat

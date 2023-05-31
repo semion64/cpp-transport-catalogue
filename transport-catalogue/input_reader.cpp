@@ -66,113 +66,95 @@ using namespace std;
 } // end ::parser
 } // end ::detail
 
+void InputReader::Read(std::istream& is) {
+	int N;
+	is >> N;
+	
+	while(N >= 0) {
+		std::string line;
+		std::getline(is, line);
+		ReadQuery(line);
+		--N;
+	}
+	
+	AddStops();
+	AddBuses();
+	AddDistanceBetweenStops();
+}
+
 void InputReader::ReadQuery(std::string& line) {
 	auto [type_line, args_line] = detail::parser::Split(line, ':');
 	auto [type, name] = detail::parser::Split(type_line, ' ');
 	
 	if(type == "Stop") {
-		name = AddName(name, stop_names_);
-		auto args = detail::parser::SplitIntoWords(args_line, ',');
-		std::unordered_map<std::string_view, int> stop_di;
-		for(int i = 2; i < args.size(); ++i) {
-			auto [dim, to_stop_line] = detail::parser::Split(args[i], ' ');     //args[i] look as "2134m to StopName"
-			auto [to, to_stop] = detail::parser::Split(to_stop_line, ' '); 		//to_stop_line look as "to StopName"
-			dim.remove_suffix(1);
-			to_stop = detail::parser::LRstrip(to_stop);
-			stop_di_[name][AddName(to_stop, stop_names_)] = detail::parser::fromString<int>(std::string(dim));
-		}
-		
-		stops_.push_back({ name,
-								{	detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[0]))), 
-									detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[1]))),
-								}
-							});
+		add_stop_queries_[std::string(name)] = std::string(args_line);
 	}
 	else if(type == "Bus") {
-		name = AddName(name, bus_names_);
-		std::vector<std::string_view> stops;
-		bool is_ring = ParseStopList(args_line, stops);
-		bus_stops_[name] = std::move(stops);
-		buses_.push_back({ name, {}, is_ring});
+		add_bus_queries_[std::string(name)] = std::string(args_line);
 	}
 	//else {
 		//throw ExceptionWrongQueryType(std::string(type));
-	//} 	 	
+	//} 
 }
-
-void InputReader::Export(TransportCatalogue& trc) {
-	trc.ImportStopNames(std::move(stop_names_));
-	trc.ImportBusNames(std::move(bus_names_));
-	
-	for(auto& stop : stops_) {
-		trc.AddStop(std::move(stop));
-	}
-	
-	// add distance between stops
-	for(const auto& from_stop : trc.GetStops()) {
-		// ==ВОПРОС: остались ли индексы в map::stop_di_ (string_view указывает на строку из stop_names_) валидными после перемещения вектора stop_names_: trc.ImportStopNames(std::move(stop_names_));
-		for(const auto& [to_stop, di]: stop_di_[from_stop.name]) { 
-			trc.SetDistance(&trc.GetStop(from_stop.name), &trc.GetStop(to_stop), di);
+void InputReader::AddStops() {
+	for(auto& [name, args_line] : add_stop_queries_) {
+		auto args = detail::parser::SplitIntoWords(args_line, ',');
+		auto& stop = trc_.AddStop(name, { detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[0]))), 
+							detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[1])))});
+		for(int i = 2; i < args.size(); ++i) {
+			auto [dim, to_stop_line] = detail::parser::Split(args[i], ' ');     //args[i] look as "2134m to StopName"
+			auto [to, to_stop_name] = detail::parser::Split(to_stop_line, ' '); 		//to_stop_line look as "to StopName"
+			dim.remove_suffix(1);
+			stop_di_[stop.name][std::string(detail::parser::LRstrip(to_stop_name))] = detail::parser::fromString<int>(std::string(dim));
 		}
-		// ==ВОПРОС: Может лучше отказаться от множеств stop_names_ и bus_names_ и хранить строки в struct Stop и struct Bus?
 	}
-		
-	for(auto& bus : buses_) {
-		// fill bus stops vector by pointers
-		auto stops = bus_stops_[bus.name];
-		std::for_each(stops.begin(), stops.end(), [&stops, &trc, &bus, this](auto& stop_name) {
-				bus.stops.push_back(&trc.GetStop(stop_name));
-			});
-		
-		trc.AddBus(std::move(bus));
-	}
+	
+	add_stop_queries_.clear();
 }
 
-bool InputReader::ParseStopList(std::string_view args_line, std::vector<std::string_view>& stops_view) {
-	bool is_ring = true;
+void InputReader::AddBuses() { 
+	for(auto& [name, args_line] : add_bus_queries_) {
+		bool is_ring;
+		std::vector<const Stop*> bus_stops = ParseStopList(args_line, &is_ring);
+		trc_.AddBus(name, std::move(bus_stops), is_ring);
+	}
+	
+	add_bus_queries_.clear();
+}
+
+void InputReader::AddDistanceBetweenStops() {
+	for(const auto& from_stop : trc_.GetStops()) {
+		for(const auto& [to_stop, di]: stop_di_[from_stop.name]) { 
+			trc_.SetDistance(&trc_.GetStop(from_stop.name), &trc_.GetStop(to_stop), di);
+		}
+	}
+	
+	stop_di_.clear();
+}
+
+std::vector<const Stop*> InputReader::ParseStopList(std::string_view args_line, bool* is_ring) {
+	std::vector<std::string_view> stop_names;
+	*is_ring = true;
 	if(args_line.find('-') != std::string::npos) {
-		stops_view = detail::parser::SplitIntoWords(args_line, '-');
-		is_ring = false;
+		stop_names = detail::parser::SplitIntoWords(args_line, '-');
+		*is_ring = false;
 	}
 	else {
-		stops_view = detail::parser::SplitIntoWords(args_line, '>');
+		stop_names = detail::parser::SplitIntoWords(args_line, '>');
 	}
+	
+    std::vector<const Stop*> stops;
+	stops.reserve(stop_names.size());
+	std::for_each(stop_names.begin(), stop_names.end(), [&stops, this](auto& stop_name) {
+			stops.push_back(&trc_.GetStop(stop_name));
+		});
 
-	stops_view = LoadNames(stops_view, stop_names_);
-
-	if(!is_ring) {
-		for(int i = stops_view.size() - 2; i >= 0; --i) { // backward if not ring route
-			stops_view.push_back(stops_view[i]);
+	if(!(*is_ring)) {
+		for(int i = stops.size() - 2; i >= 0; --i) { // backward if not ring route
+			stops.push_back(stops[i]);
 		}
 	}
 	
-	return is_ring;
+	return stops;
 }
-
-std::string_view InputReader::AddName(std::string_view& view, std::unordered_set<std::string>& set) {
-	return *(set.insert(std::string(view)).first);
-}
-
-std::vector<std::string_view> InputReader::LoadNames(std::vector<std::string_view>& view, std::unordered_set<std::string>& set) {
-	std::vector<std::string_view> res;
-	std::for_each(view.begin(), view.end(), [&res, &set, this](auto v) {
-			std::string name(v);
-			if(set.find(name) == set.end()) {
-				res.push_back(AddName(v, set));
-				return;
-			}
-			
-			res.push_back(*set.find(std::string(v)));
-		});
-	return res;
-}
-
-std::vector<std::string_view> InputReader::AddNames(std::vector<std::string_view>& view, std::unordered_set<std::string>& set) {
-	std::vector<std::string_view> res;
-	std::for_each(view.begin(), view.end(), [&res, &set](auto v) {
-			res.push_back(*(set.insert(std::string(v)).first));
-		});
-	return res;
-}
-
 } // end ::trans_cat
