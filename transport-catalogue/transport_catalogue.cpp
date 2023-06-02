@@ -2,15 +2,15 @@
 
 namespace trans_cat {
 
-Stop& TransportCatalogue::AddStop(std::string name, const geo::Coordinates&& coord) {
-	stop_.push_back({AddName(std::move(name), stop_names_), std::move(coord)});
+Stop& TransportCatalogue::AddStop(const std::string& name, geo::Coordinates coord) {
+	stop_.push_back({AddName(name, stop_names_), coord});
 	stop_index_[stop_.back().name] = &stop_.back();
 	return stop_.back();
 }
 
-Bus& TransportCatalogue::AddBus(std::string name, std::vector<const Stop*>&& stops, bool is_ring) {
+Bus& TransportCatalogue::AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring) {
 	// add bus
-	bus_.push_back({AddName(std::move(name), bus_names_), std::move(stops), is_ring});
+	bus_.push_back({AddName(name, bus_names_), std::move(stops), is_ring});
 	Bus* insert_bus = &bus_.back();
 	
 	// add bus to index map
@@ -24,7 +24,7 @@ Bus& TransportCatalogue::AddBus(std::string name, std::vector<const Stop*>&& sto
 	return *insert_bus;
 }
 
-std::string_view  TransportCatalogue::AddName(std::string&& name, std::unordered_set<std::string>& set) {
+std::string_view  TransportCatalogue::AddName(const std::string& name, std::unordered_set<std::string>& set) {
 	return *(set.insert(name).first);
 }
 

@@ -69,8 +69,8 @@ class TransportCatalogue{
 public:
 	TransportCatalogue() {}
 	
-	Stop& AddStop(std::string name, const geo::Coordinates&& coord);	
-	Bus& AddBus(std::string name, std::vector<const Stop*>&& stops, bool is_ring); 
+	Stop& AddStop(const std::string& name, const geo::Coordinates coord);	
+	Bus& AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring); 
 	
 	const Bus& GetBus(std::string_view bus_name) const;
 	const Stop& GetStop(std::string_view stop_name) const;
@@ -95,7 +95,7 @@ private:
 	std::unordered_set<std::string> stop_names_;
 	std::unordered_set<std::string> bus_names_;
 	
-	std::string_view AddName(std::string&& name, std::unordered_set<std::string>& set);
+	std::string_view AddName(const std::string& name, std::unordered_set<std::string>& set);
 	
 	int GetDistanceBetweenStops(const Stop* s1, const Stop*  s2) const; 
 	int GetDistance(const Bus& bus) const;

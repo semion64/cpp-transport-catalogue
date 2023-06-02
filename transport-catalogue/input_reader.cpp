@@ -116,7 +116,7 @@ void InputReader::AddBuses() {
 	for(auto& [name, args_line] : add_bus_queries_) {
 		bool is_ring;
 		std::vector<const Stop*> bus_stops = ParseStopList(args_line, &is_ring);
-		trc_.AddBus(name, std::move(bus_stops), is_ring);
+		trc_.AddBus(name, bus_stops, is_ring);
 	}
 	
 	add_bus_queries_.clear();
