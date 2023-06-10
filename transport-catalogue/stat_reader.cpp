@@ -2,33 +2,30 @@
 
 namespace trans_cat {
 
-void StatReader::ReadAndExec(std::istream& is) {
-	int N;
-	is >> N;
-	while(N >= 0) {
-		std::string line;
+void StatReaderStd::Read(std::istream& is) {
+	
+	std::string line;
+	std::getline(is, line);
+	int N = stoi(line);
+	//std::cerr << "Stat N: " << N << std::endl;
+	while(N > 0) {
 		std::getline(is, line);
-		ExecQuery(line);
+		auto [type_str, name]= detail::parser::Split(line, ' ');
+		//std::cerr << "read_stat_q: " << line << std::endl;
+		queries_.push_back({0, StatQuery::GetType(type_str), std::string(name)});
 		--N;
 	}
 }
 
-void StatReader::ExecQuery(std::string& line) {
-	auto [type_str, name]= detail::parser::Split(line, ' ');
-	if(type_str == "Bus") {
-		ui_.ShowBus(name);	
-	}
-	else if(type_str == "Stop") {
-		ui_.ShowStopBuses(name);	
-	}
-}
-
-void UserInterface::ShowBus(std::string_view bus_name, bool end_line) {
+void UserInterfaceStd::ShowBus(std::string_view bus_name) {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	
 	try {
+		std::cerr << "!" << std::endl;
  		const auto& bus = trc_.GetBus(bus_name);
+ 		std::cerr << "!" << std::endl;
 		const auto& route = trc_.GetRouteStat(bus);
+		std::cerr << "!" << std::endl;
  		os_ << "Bus " << bus.name << ": ";
 		os_	<< route.stops_count << " stops on route, " 
 					<< route.unique_stops << " unique stops, " 
@@ -39,12 +36,10 @@ void UserInterface::ShowBus(std::string_view bus_name, bool end_line) {
 		os_ << "Bus " << bus_name << ": not found";
 	}
 	
-	if(end_line) {
-		os_ << std::endl;
-	}
+	os_ << std::endl;
 }
 
-void UserInterface::ShowStopBuses(std::string_view stop_name, bool end_line) {
+void UserInterfaceStd::ShowStopBuses(std::string_view stop_name) {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	
 	try {
@@ -68,8 +63,6 @@ void UserInterface::ShowStopBuses(std::string_view stop_name, bool end_line) {
 		os_ << "Stop " << stop_name << ": not found";
 	}
 	
-	if(end_line) {
-		os_ << std::endl;
-	}
+	os_ << std::endl;
 }
 } // end ::trans_cat

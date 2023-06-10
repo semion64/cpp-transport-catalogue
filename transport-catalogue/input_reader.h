@@ -9,14 +9,9 @@
 #include <vector>
 
 #include "transport_catalogue.h"
+#include "request_handler.h"
 
 namespace trans_cat {
-class ExceptionWrongQueryType {
-public:	
-	std::string text_;
-	ExceptionWrongQueryType(std::string  text = "") : text_(text) { }
-};
-
 namespace detail {
 namespace parser{
 template <typename T>
@@ -35,25 +30,20 @@ std::vector<std::string_view> SplitIntoWords(std::string_view text, char add_del
 } // end ::parser
 } // end ::detail
 
-class InputReader {	
+class InputReaderStd : public RequestHandlerBase {	
 public:	
-	InputReader(TransportCatalogue& trc) : trc_ (trc) {	}
+	InputReaderStd(TransportCatalogue& trc) : RequestHandlerBase (trc) {	}
 	
-	void Read(std::istream& is);
+	void Read(std::istream& is) override;
 private:
-	TransportCatalogue& trc_;
-	std::vector<Bus> buses_;
-	
-	std::unordered_map<std::string_view, std::vector<std::string_view>> bus_stops_;
-	std::vector<Stop> stops_;
 	std::unordered_map<std::string, std::string> add_stop_queries_;
 	std::unordered_map<std::string, std::string> add_bus_queries_;
 	std::unordered_map<std::string_view, std::unordered_map<std::string,int>> stop_di_;
 	
 	void ReadQuery(std::string& line);
-	void AddStops();
-	void AddBuses();
-	void AddDistanceBetweenStops();
+	void AddStops() override;
+	void AddBuses() override;
+	void AddDistanceBetweenStops() override;
 	std::vector<const Stop*> ParseStopList(std::string_view args_line, bool* is_ring);
 };
 } // end ::trans_cat

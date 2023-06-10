@@ -66,7 +66,7 @@ using namespace std;
 } // end ::parser
 } // end ::detail
 
-void InputReader::Read(std::istream& is) {
+void InputReaderStd::Read(std::istream& is) {
 	int N;
 	is >> N;
 	
@@ -76,13 +76,9 @@ void InputReader::Read(std::istream& is) {
 		ReadQuery(line);
 		--N;
 	}
-	
-	AddStops();
-	AddBuses();
-	AddDistanceBetweenStops();
 }
 
-void InputReader::ReadQuery(std::string& line) {
+void InputReaderStd::ReadQuery(std::string& line) {
 	auto [type_line, args_line] = detail::parser::Split(line, ':');
 	auto [type, name] = detail::parser::Split(type_line, ' ');
 	
@@ -96,7 +92,7 @@ void InputReader::ReadQuery(std::string& line) {
 		//throw ExceptionWrongQueryType(std::string(type));
 	//} 
 }
-void InputReader::AddStops() {
+void InputReaderStd::AddStops() {
 	for(auto& [name, args_line] : add_stop_queries_) {
 		auto args = detail::parser::SplitIntoWords(args_line, ',');
 		auto& stop = trc_.AddStop(name, { detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[0]))), 
@@ -112,7 +108,7 @@ void InputReader::AddStops() {
 	add_stop_queries_.clear();
 }
 
-void InputReader::AddBuses() { 
+void InputReaderStd::AddBuses() { 
 	for(auto& [name, args_line] : add_bus_queries_) {
 		bool is_ring;
 		std::vector<const Stop*> bus_stops = ParseStopList(args_line, &is_ring);
@@ -122,7 +118,7 @@ void InputReader::AddBuses() {
 	add_bus_queries_.clear();
 }
 
-void InputReader::AddDistanceBetweenStops() {
+void InputReaderStd::AddDistanceBetweenStops() {
 	for(const auto& from_stop : trc_.GetStops()) {
 		for(const auto& [to_stop, di]: stop_di_[from_stop.name]) { 
 			trc_.SetDistance(&trc_.GetStop(from_stop.name), &trc_.GetStop(to_stop), di);
@@ -132,7 +128,7 @@ void InputReader::AddDistanceBetweenStops() {
 	stop_di_.clear();
 }
 
-std::vector<const Stop*> InputReader::ParseStopList(std::string_view args_line, bool* is_ring) {
+std::vector<const Stop*> InputReaderStd::ParseStopList(std::string_view args_line, bool* is_ring) {
 	std::vector<std::string_view> stop_names;
 	*is_ring = true;
 	if(args_line.find('-') != std::string::npos) {
