@@ -10,7 +10,6 @@ void RequestHandlerBase::DoQueries() {
 
 void RequestHandlerStat::DoQueries() {
 	for(const auto& q: queries_) {
-		std::cerr << "do_stat_q: " << q.name << std::endl;
 		if(q.type == StatQueryType::BUS) {
 			ui_.ShowBus(q.name);	
 		}
@@ -27,8 +26,8 @@ StatQueryType StatQuery::GetType(std::string_view type_str) {
 	else if(type_str == "Stop") {
 		return StatQueryType::STOP;
 	}
-	
-	throw ExceptionWrongStatReaderQuery("incorrect query type: " + std::string(type_str));
+	return StatQueryType::NONE;
+	//throw ExceptionWrongStatReaderQuery("incorrect query type: " + std::string(type_str));
 }
 
 } // end ::trans_cat

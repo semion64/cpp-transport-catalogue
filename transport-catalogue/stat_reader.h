@@ -14,8 +14,6 @@ class StatReaderStd : public RequestHandlerStat {
 public:	
 	StatReaderStd(TransportCatalogue& trc, UserInterface& ui) : RequestHandlerStat(trc, ui) { } 
 	void Read(std::istream& is) override;
-private:
-	void ExecQuery(std::string& line);
 };
 
 class UserInterfaceStd : public UserInterface {

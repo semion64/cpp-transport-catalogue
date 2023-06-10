@@ -17,7 +17,7 @@ using namespace std;
 namespace trans_cat {
 namespace tests {
 /*
- 13
+13
 Stop Tolstopaltsevo: 55.611087, 37.20829, 3900m to Marushkino
 Stop Marushkino: 55.595884, 37.209755, 9900m to Rasskazovka, 100m to Marushkino
 Bus 256: Biryulyovo Zapadnoye > Biryusinka > Universam > Biryulyovo Tovarnaya > Biryulyovo Passazhirskaya > Biryulyovo Zapadnoye
@@ -38,8 +38,7 @@ Bus 751
 Stop Samara
 Stop Prazhskaya
 Stop Biryulyovo Zapadnoye 
-* 
-* 
+ 
 Вывод
 Bus 256: 6 stops on route, 5 unique stops, 5950 route length, 1.36124 curvature
 Bus 750: 7 stops on route, 3 unique stops, 27400 route length, 1.30853 curvature
@@ -47,18 +46,16 @@ Bus 751: not found
 Stop Samara: not found
 Stop Prazhskaya: no buses
 Stop Biryulyovo Zapadnoye: buses 256 828
- */
- 
-/*
-	std::string query = 
-		"Stop Tolstopaltsevo: 55, 37, 1000m to Marushkino\n"
-		"Stop Marushkino: 25, 37, 2000m to Tolstopaltsevo\n"
-		"Bus 128: Tolstopaltsevo > Marushkino > Tolstopaltsevo\n"
-		"Bus 256: Tolstopaltsevo - Marushkino\n";
-	std::stringstream ss(query);
-  
- */ 
- /*
+
+--------------------------------------------------------------------------------------
+
+std::string query = 
+	"Stop Tolstopaltsevo: 55.611087, 37.20829, 1000m to Marushkino\n"
+	"Stop Marushkino: 55.595884, 37.209755, 2000m to Tolstopaltsevo\n"
+	"Bus 128: Tolstopaltsevo > Marushkino > Tolstopaltsevo\n"
+	"Bus 256: Tolstopaltsevo - Marushkino\n";
+	
+std::stringstream ss(query);
  struct Stop {
 	std::string_view name;
 	geo::Coordinates coord;
@@ -70,6 +67,7 @@ struct Bus {
 	std::vector<const Stop*> stops;
 	bool is_ring;
 };
+
 struct RouteStat {
 	size_t stops_count;
 	size_t unique_stops;
@@ -77,7 +75,8 @@ struct RouteStat {
 	double curvature;
 	bool is_ring;
 };
-* */
+
+*/
 
 void TestSimple_HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat::RequestHandlerBase& handler_base) {
 	handler_base.Read(is);
@@ -123,11 +122,6 @@ void TestSimple_InputStd() {
 	std::cerr << "\tok" << std::endl;
 }
 
-void TestSimple_HandlerStat(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat::RequestHandlerStat& handler_stat) {
-	handler_stat.Read(is);
-	handler_stat.DoQueries();	
-}
-
 void TestSimple_StatStd() {
 	std::cerr << "\tTestSimple_StatStd(): ";
 	std::string query = 
@@ -143,7 +137,6 @@ void TestSimple_StatStd() {
 	trans_cat::InputReaderStd hb(trc);
 	hb.Read(ss_base);
 	hb.DoQueries();
-	
 	
 	query = "6\n"
 		"Stop Chapaeva\n"
@@ -172,6 +165,13 @@ void TestSimple_StatStd() {
 	std::cerr << "\tok" << std::endl;
 }
 } // end ::tests
+} // end ::trans_cat
+
+void Tests() {
+	std::cerr << "Tests_Start" << std::endl;
+	trans_cat::tests::TestSimple_InputStd();
+	trans_cat::tests::TestSimple_StatStd();
+	std::cerr << "Tests_End" << std::endl;
 }
 
 void Run(std::istream& is = std::cin) {
@@ -186,15 +186,8 @@ void Run(std::istream& is = std::cin) {
 	sr.DoQueries();
 }
 
-void Tests() {
-	std::cerr << "Tests_Start" << std::endl;
-	trans_cat::tests::TestSimple_InputStd();
-	trans_cat::tests::TestSimple_StatStd();
-	std::cerr << "Tests_End" << std::endl;
-}
-
 int main() {
-	std::ifstream f("test1/tsA_case1_input.txt");
-	Run(f);
-	//Tests();
+	//std::ifstream f("test1/tsA_case1_input.txt");
+	//Run();
+	Tests();
 }

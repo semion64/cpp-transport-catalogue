@@ -24,6 +24,7 @@ public:
 };
 
 enum class StatQueryType {
+	NONE,
 	BUS,
 	STOP
 };

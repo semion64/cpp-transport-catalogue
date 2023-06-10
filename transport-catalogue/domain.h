@@ -27,7 +27,6 @@ public:
 struct Stop {
 	std::string_view name;
 	geo::Coordinates coord;
-	
 };
 
 struct Bus {
