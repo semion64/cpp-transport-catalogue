@@ -92,7 +92,7 @@ void InputReaderStd::ReadQuery(std::string& line) {
 		//throw ExceptionWrongQueryType(std::string(type));
 	//} 
 }
-void InputReaderStd::AddStops() {
+void InputReaderStd::AddStops(MapDiBetweenStops& stop_di) {
 	for(auto& [name, args_line] : add_stop_queries_) {
 		auto args = detail::parser::SplitIntoWords(args_line, ',');
 		auto& stop = trc_.AddStop(name, { detail::parser::fromString<double>(std::string(detail::parser::LRstrip(args[0]))), 
@@ -101,7 +101,7 @@ void InputReaderStd::AddStops() {
 			auto [dim, to_stop_line] = detail::parser::Split(args[i], ' ');     //args[i] look as "2134m to StopName"
 			auto [to, to_stop_name] = detail::parser::Split(to_stop_line, ' '); 		//to_stop_line look as "to StopName"
 			dim.remove_suffix(1);
-			stop_di_[stop.name][std::string(detail::parser::LRstrip(to_stop_name))] = detail::parser::fromString<int>(std::string(dim));
+			stop_di[stop.name][std::string(detail::parser::LRstrip(to_stop_name))] = detail::parser::fromString<int>(std::string(dim));
 		}
 	}
 	
@@ -116,16 +116,6 @@ void InputReaderStd::AddBuses() {
 	}
 	
 	add_bus_queries_.clear();
-}
-
-void InputReaderStd::AddDistanceBetweenStops() {
-	for(const auto& from_stop : trc_.GetStops()) {
-		for(const auto& [to_stop, di]: stop_di_[from_stop.name]) { 
-			trc_.SetDistance(&trc_.GetStop(from_stop.name), &trc_.GetStop(to_stop), di);
-		}
-	}
-	
-	stop_di_.clear();
 }
 
 std::vector<const Stop*> InputReaderStd::ParseStopList(std::string_view args_line, bool* is_ring) {

@@ -41,9 +41,8 @@ private:
 	std::unordered_map<std::string_view, std::unordered_map<std::string,int>> stop_di_;
 	
 	void ReadQuery(std::string& line);
-	void AddStops() override;
+	void AddStops(MapDiBetweenStops& stop_di) override;
 	void AddBuses() override;
-	void AddDistanceBetweenStops() override;
 	std::vector<const Stop*> ParseStopList(std::string_view args_line, bool* is_ring);
 };
 } // end ::trans_cat

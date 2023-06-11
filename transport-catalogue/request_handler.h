@@ -23,6 +23,11 @@ public:
 	ExceptionWrongStatReaderQuery(std::string what = "") : logic_error(what) { }
 };
 
+class ExceptionWrongInputFormat : public std::logic_error {
+public:	
+	ExceptionWrongInputFormat(std::string what = "") : logic_error(what) { }
+};
+
 enum class StatQueryType {
 	NONE,
 	BUS,
@@ -56,9 +61,14 @@ public:
 	RequestHandlerBase(TransportCatalogue& trc) : RequestHandler(trc) {	}
 	void DoQueries() override;
 protected:
-	virtual void AddStops() = 0;
+	using MapDiBetweenStops = std::unordered_map<std::string_view, std::unordered_map<std::string, int>>;
+	
+	virtual void AddStops(MapDiBetweenStops& stop_di) = 0; // function must fill stop_di_ map
 	virtual void AddBuses() = 0;
-	virtual void AddDistanceBetweenStops() = 0;
+	
+private:
+	MapDiBetweenStops stop_di_;
+	void AddDistanceBetweenStops();
 };
 
 class RequestHandlerStat : public RequestHandler {

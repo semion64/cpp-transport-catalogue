@@ -1,0 +1,46 @@
+{
+	"stat_requests": [
+		
+	],
+	
+	"base_requests": [
+		{
+			"type": "Stop",
+			"name": "Tolstopaltsevo",
+			"latitude": 55.611087,
+			"longitude": 37.20829,
+			"road_distances": {
+				"Marushkino": 1000
+			}
+		},
+		{
+			"type": "Stop",
+			"name": "Marushkino",
+			"latitude": 55.595884,
+			"longitude": 37.209755,
+			"road_distances": {
+				"Tolstopaltsevo": 2000,
+				"Marushkino", 100
+			}
+		},
+		{
+			"type": "Bus",
+			"name": "128",
+			"stops": [
+				"Tolstopaltsevo",
+				"Marushkino",
+				"Tolstopaltsevo"
+			],
+			"is_roundtrip": true
+		},
+		{
+			"type": "Bus",
+			"name": "256",
+			"stops": [
+				"Tolstopaltsevo",
+				"Marushkino"
+			],
+			"is_roundtrip": false
+		}  
+	]
+}

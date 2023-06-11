@@ -3,7 +3,7 @@
 namespace trans_cat {
 	
 void RequestHandlerBase::DoQueries() {
-	AddStops();
+	AddStops(stop_di_);
 	AddBuses();
 	AddDistanceBetweenStops();
 }
@@ -30,4 +30,13 @@ StatQueryType StatQuery::GetType(std::string_view type_str) {
 	//throw ExceptionWrongStatReaderQuery("incorrect query type: " + std::string(type_str));
 }
 
+void RequestHandlerBase::AddDistanceBetweenStops() {
+	for(const auto& from_stop : trc_.GetStops()) {
+		for(const auto& [to_stop, di]: stop_di_[from_stop.name]) { 
+			trc_.SetDistance(&trc_.GetStop(from_stop.name), &trc_.GetStop(to_stop), di);
+		}
+	}
+	
+	stop_di_.clear();
+}
 } // end ::trans_cat

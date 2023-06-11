@@ -10,6 +10,7 @@
 
 #include "input_reader.h"
 #include "stat_reader.h"
+#include "json_reader.h"
 #include "transport_catalogue.h"
 
 using namespace std;
@@ -78,10 +79,33 @@ struct RouteStat {
 
 */
 
-void TestSimple_HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat::RequestHandlerBase& handler_base) {
+std::string base_test_query = 
+		"4"
+		"Stop Tolstopaltsevo: 55.611087, 37.20829, 1000m to Marushkino\n"
+		"Stop Marushkino: 55.595884, 37.209755, 2000m to Tolstopaltsevo, 100m to Marushkino\n"
+		"Bus 128: Tolstopaltsevo > Marushkino > Tolstopaltsevo\n"
+		"Bus 256: Tolstopaltsevo - Marushkino\n";
+		
+std::string stat_test_query = 
+		"6\n"
+		"Stop Chapaeva\n"
+		"Bus 128\n"
+		"Bus 256\n"
+		"Stop Tolstopaltsevo\n"
+		"Stop Marushkino\n"
+		"Bus 512\n";
+		
+std::string stat_test_result = 
+		"Stop Chapaeva: not found\n"
+		"Bus 128: 3 stops on route, 2 unique stops, 3000 route length, 0.886001 curvature\n"
+		"Bus 256: 3 stops on route, 2 unique stops, 3000 route length, 0.886001 curvature\n"
+		"Stop Tolstopaltsevo: buses 128 256\n"
+		"Stop Marushkino: buses 128 256\n"
+		"Bus 512: not found\n";
+				
+void HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat::RequestHandlerBase& handler_base) {
 	handler_base.Read(is);
 	handler_base.DoQueries();
-		
 	assert((trc.GetStops().size() == 2));
 	assert((trc.GetBuses().size() == 2));
 	
@@ -106,62 +130,46 @@ void TestSimple_HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc
 	assert((trc.GetRouteStat(bus_256).distance == 3000));
 }
 
-void TestSimple_InputStd() {
-	std::cerr << "\tTestSimple_InputStd(): ";
-	std::string query = 
-		"4"
-		"Stop Tolstopaltsevo: 55.611087, 37.20829, 1000m to Marushkino\n"
-		"Stop Marushkino: 55.595884, 37.209755, 2000m to Tolstopaltsevo, 100m to Marushkino\n"
-		"Bus 128: Tolstopaltsevo > Marushkino > Tolstopaltsevo\n"
-		"Bus 256: Tolstopaltsevo - Marushkino\n";
-	std::stringstream ss(query);
+void BaseStd() {
+	std::cerr << "\tBaseStd: ";
+	
+	std::stringstream ss(base_test_query);
 	
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd hb(trc);
-	TestSimple_HandlerBase(ss, trc, hb);
+	HandlerBase(ss, trc, hb);
 	std::cerr << "\tok" << std::endl;
 }
 
-void TestSimple_StatStd() {
-	std::cerr << "\tTestSimple_StatStd(): ";
-	std::string query = 
-		"4"
-		"Stop Tolstopaltsevo: 55.611087, 37.20829, 1000m to Marushkino\n"
-		"Stop Marushkino: 55.595884, 37.209755, 2000m to Tolstopaltsevo, 100m to Marushkino\n"
-		"Bus 128: Tolstopaltsevo > Marushkino > Tolstopaltsevo\n"
-		"Bus 256: Tolstopaltsevo - Marushkino\n";
-		
-	std::stringstream ss_base(query);
+void BaseJSON() {
+	std::cerr << "\tBaseJSON: ";
+	
+	std::ifstream in("tests/json_test_request.txt");
+	
+	trans_cat::TransportCatalogue trc;
+	trans_cat::InputReaderJSON hb(trc);
+	HandlerBase(in, trc, hb);
+	std::cerr << "\tok" << std::endl;
+}
+
+void StatStd() {
+	std::cerr << "\tStatStd: ";
+	std::stringstream ss_base(base_test_query);
 	
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd hb(trc);
 	hb.Read(ss_base);
 	hb.DoQueries();
 	
-	query = "6\n"
-		"Stop Chapaeva\n"
-		"Bus 128\n"
-		"Bus 256\n"
-		"Stop Tolstopaltsevo\n"
-		"Stop Marushkino\n"
-		"Bus 512\n"
-		;
-	std::stringstream ss_stat(query);
+	std::stringstream ss_stat(stat_test_query);
 	std::stringstream ss_out;
 	trans_cat::UserInterfaceStd ui(ss_out, trc);
 	trans_cat::StatReaderStd hs(trc, ui);
 	
 	hs.Read(ss_stat);
 	hs.DoQueries();	
-	std::string res = 
-		"Stop Chapaeva: not found\n"
-		"Bus 128: 3 stops on route, 2 unique stops, 3000 route length, 0.886001 curvature\n"
-		"Bus 256: 3 stops on route, 2 unique stops, 3000 route length, 0.886001 curvature\n"
-		"Stop Tolstopaltsevo: buses 128 256\n"
-		"Stop Marushkino: buses 128 256\n"
-		"Bus 512: not found\n";
 
-	assert((res == ss_out.str()));
+	assert((stat_test_result == ss_out.str()));
 	std::cerr << "\tok" << std::endl;
 }
 } // end ::tests
@@ -169,8 +177,9 @@ void TestSimple_StatStd() {
 
 void Tests() {
 	std::cerr << "Tests_Start" << std::endl;
-	trans_cat::tests::TestSimple_InputStd();
-	trans_cat::tests::TestSimple_StatStd();
+	trans_cat::tests::BaseStd();
+	trans_cat::tests::StatStd();
+	trans_cat::tests::BaseJSON();
 	std::cerr << "Tests_End" << std::endl;
 }
 
