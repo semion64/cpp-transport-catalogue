@@ -43,6 +43,10 @@ struct StatQuery {
 };
 
 class UserInterface;
+class RequestHandler;
+class RequestHandlerBase;
+class RequestHandlerStat;
+class RequestHandlerBaseStat;
 
 class RequestHandler {
 public:	
@@ -80,7 +84,7 @@ protected:
 class UserInterface {
 public:	
 	UserInterface(std::ostream& os, TransportCatalogue& trc) : os_(os), trc_(trc)  {}
-	virtual void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) = 0;
+	virtual void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const = 0;
 protected:
 	int ROUTE_STAT_PRECISION = 6;
 	std::ostream& os_;
@@ -94,6 +98,14 @@ public:
 	virtual void DoQueries() override;
 	virtual void DoBaseQueries();
 	virtual void DoStatQueries();
+	virtual ~RequestHandlerBaseStat() {
+		if(handler_base_) {
+			delete handler_base_;
+		}
+		if(handler_stat_) {
+			delete handler_stat_;
+		}
+	}
 protected:
 	RequestHandlerBase* handler_base_;
 	RequestHandlerStat* handler_stat_;

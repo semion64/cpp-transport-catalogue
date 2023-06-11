@@ -9,6 +9,10 @@
 #include "input_reader.h"
 
 namespace trans_cat {
+	
+class StatReaderStd;
+class UserInterfaceStd;
+class RequestStd;
 
 class StatReaderStd : public RequestHandlerStat {	
 public:	
@@ -19,10 +23,10 @@ public:
 class UserInterfaceStd : public UserInterface {
 public:	
 	UserInterfaceStd(std::ostream& os, TransportCatalogue& trc) : UserInterface(os, trc) {}
-	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& query);
+	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& query) const override;
 private:
-	void ShowBus(std::string_view bus_name);
-	void ShowStopBuses(std::string_view stop);
+	void ShowBus(std::string_view bus_name) const;
+	void ShowStopBuses(std::string_view stop) const;
 };
 
 class RequestStd : public RequestHandlerBaseStat  {

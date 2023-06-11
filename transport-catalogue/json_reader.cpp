@@ -2,13 +2,9 @@
 
 namespace trans_cat {
 	
-namespace detail{
-} // end ::detail
-
 void InputReaderJSON::Read(std::istream& is) {
 	root_ = json::Load(is).GetRoot();
 	ReadJSON(root_);
-    //throw ExceptionWrongInputFormat("use InputReaderJSON::ReadJSON(const json::Node& root) method instead InputReaderJSON::Read(std::istream& is)");
 }
 
 void InputReaderJSON::ReadJSON(const json::Node& root) {
@@ -81,7 +77,6 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 void StatReaderJSON::Read(std::istream& is) {
 	root_ = json::Load(is).GetRoot();
 	ReadJSON(root_);
-    //throw ExceptionWrongInputFormat("use InputReaderJSON::ReadJSON(const json::Node& root) method instead InputReaderJSON::Read(std::istream& is)");
 }
 
 void StatReaderJSON::ReadJSON(const json::Node& root) {
@@ -104,16 +99,7 @@ void StatReaderJSON::ReadJSON(const json::Node& root) {
 	}
 }
 
-void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) {
-	/*
-	 {
-	  "curvature": 2.18604,
-	  "request_id": 12345678,
-	  "route_length": 9300,
-	  "stop_count": 4,
-	  "unique_stop_count": 3
-	}  
-	*/
+void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
 	os_ << "[";
     bool is_first = true;
 	for(const auto& q: queries) {
@@ -123,65 +109,83 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
         else {
             is_first = false;
         }
-		os_ << "{";
-		if(q.type == StatQueryType::BUS) {
-			try {
-				const auto& bus = trc_.GetBus(q.name);
-				const auto& route = trc_.GetRouteStat(bus);
-				os_ << "\"curvature\":" << route.curvature << ","
-					<< "\"request_id\":" << q.id << ","
-					<< "\"route_length\":" << static_cast<double>(route.distance) << ","
-					<< "\"stop_count\":" << route.stops_count << ","
-					<< "\"unique_stop_count\":" << route.unique_stops << ","
-					<< "\"request_id\":" << q.id;
-			}
-			catch(ExceptionBusNotFound&) {
-				/*{
-				  "request_id": 12345,
-				  "error_message": "not found"
-				} */
-				os_ << "\"request_id\":" << q.id << ","
-					<< "\"error_message\":" << "\"not found\"";
-			}	
+        
+		os_ << "{" << "\"request_id\":" << q.id << ",";
+		switch (q.type) {
+			case StatQueryType::BUS:
+				ShowBus(q.name);
+			break;
+			case StatQueryType::STOP:
+				ShowStopBuses(q.name);
+			break;
+			default:
+				throw ExceptionWrongQueryType("");
+			break;
 		}
-		else if(q.type == StatQueryType::STOP) {
-			os_ << std::setprecision(ROUTE_STAT_PRECISION);
-			try {
-				const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(q.name));
-				/*{
-				  "buses": [
-					  "14", "22к"
-				  ],
-				  "request_id": 12345
-				} */
-				os_ << "\"buses\":[";
-				bool is_first = false;
-				for(const auto& bus : stop_buses) {
-					if(!is_first) {
-						is_first = true;
-					}
-					else {
-						os_ << ",";
-					}
-					os_ << "\"" << bus->name << "\"";
-				}
-				os_ << "],";
-				os_ << "\"request_id\":" << q.id;
-			}
-			catch(ExceptionBusNotFound&) {
-				os_ << "\"request_id\":" << q.id << ","
-					<< "\"buses\":" << "[]";
-			}
-			catch(ExceptionStopNotFound&) {
-				os_ << "\"request_id\":" << q.id << ","
-					<< "\"error_message\":" << "\"not found\"";
-			}
-		}
+		
 		os_ << "}";
 	}
 	
 	os_ << "]";	
     os_ << std::endl;
+}
+
+void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
+	/*
+	 {
+	  "curvature": 2.18604,
+	  "request_id": 12345678,
+	  "route_length": 9300,
+	  "stop_count": 4,
+	  "unique_stop_count": 3
+	}  
+	*/
+	try {
+		const auto& bus = trc_.GetBus(bus_name);
+		const auto& route = trc_.GetRouteStat(bus);
+		os_ << "\"curvature\":" << route.curvature << ","
+			<< "\"route_length\":" << static_cast<double>(route.distance) << ","
+			<< "\"stop_count\":" << route.stops_count << ","
+			<< "\"unique_stop_count\":" << route.unique_stops;
+	}
+	catch(ExceptionBusNotFound&) {
+		/*{
+		  "request_id": 12345,
+		  "error_message": "not found"
+		} */
+		os_ << "\"error_message\":" << "\"not found\"";
+	}	
+}
+
+void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
+	os_ << std::setprecision(ROUTE_STAT_PRECISION);
+	try {
+		const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(stop_name));
+		/*{
+		  "buses": [
+			  "14", "22к"
+		  ],
+		  "request_id": 12345
+		} */
+		os_ << "\"buses\":[";
+		bool is_first = false;
+		for(const auto& bus : stop_buses) {
+			if(!is_first) {
+				is_first = true;
+			}
+			else {
+				os_ << ",";
+			}
+			os_ << "\"" << bus->name << "\"";
+		}
+		os_ << "]";
+	}
+	catch(ExceptionBusNotFound&) {
+		os_ << "\"buses\":" << "[]";
+	}
+	catch(ExceptionStopNotFound&) {
+		os_ << "\"error_message\":" << "\"not found\"";
+	}
 }
 
 //---------------------------RequestJSON--------------------------------------------------------------------------------------------------------------------------

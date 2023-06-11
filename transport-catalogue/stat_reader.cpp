@@ -14,18 +14,24 @@ void StatReaderStd::Read(std::istream& is) {
 	}
 }
 
-void UserInterfaceStd::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) {
+void UserInterfaceStd::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
 	for(const auto& q: queries) {
-		if(q.type == StatQueryType::BUS) {
-			ShowBus(q.name);	
-		}
-		else if(q.type == StatQueryType::STOP) {
-			ShowStopBuses(q.name);	
+		switch (q.type) {
+			case StatQueryType::BUS:
+				ShowBus(q.name);
+			break;
+			case StatQueryType::STOP:
+				ShowStopBuses(q.name);
+			break;
+			default:
+				//throw ExceptionWrongQueryType("");
+			break;
 		}
 	}
+	os_ << std::endl;
 }
 
-void UserInterfaceStd::ShowBus(std::string_view bus_name) {
+void UserInterfaceStd::ShowBus(std::string_view bus_name) const {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	
 	try {
@@ -40,11 +46,9 @@ void UserInterfaceStd::ShowBus(std::string_view bus_name) {
 	catch(ExceptionBusNotFound&) {
 		os_ << "Bus " << bus_name << ": not found";
 	}
-	
-	os_ << std::endl;
 }
 
-void UserInterfaceStd::ShowStopBuses(std::string_view stop_name) {
+void UserInterfaceStd::ShowStopBuses(std::string_view stop_name) const {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	
 	try {
@@ -66,10 +70,7 @@ void UserInterfaceStd::ShowStopBuses(std::string_view stop_name) {
 	}
 	catch(ExceptionStopNotFound&) {
 		os_ << "Stop " << stop_name << ": not found";
-	}
-	
-	os_ << std::endl;
-	
+	}	
 }
 
 void RequestStd::Read(std::istream& is) {

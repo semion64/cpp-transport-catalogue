@@ -12,6 +12,9 @@
 #include "request_handler.h"
 
 namespace trans_cat {
+
+class InputReaderStd;
+
 namespace detail {
 namespace parser{
 template <typename T>

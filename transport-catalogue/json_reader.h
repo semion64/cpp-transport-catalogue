@@ -12,10 +12,11 @@
 #include "request_handler.h"
 
 namespace trans_cat {
-namespace detail {
-namespace parser{
-} // end ::parser
-} // end ::detail
+	
+class InputReaderJSON;
+class StatReaderJSON;
+class UserInterfaceJSON;
+class RequestJSON;
 
 class InputReaderJSON : public RequestHandlerBase {	
 public:	
@@ -48,10 +49,10 @@ private:
 class UserInterfaceJSON : public UserInterface {
 public:	
 	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc) : UserInterface(os, trc) {}
-	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) override;
+	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const override;
 private:	
-	void ShowBus(std::string_view bus_name);
-	void ShowStopBuses(std::string_view stop);
+	void ShowBus(std::string_view bus_name) const;
+	void ShowStopBuses(std::string_view stop_name) const;
 };
 
 class RequestJSON : public RequestHandlerBaseStat  {

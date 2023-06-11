@@ -9,6 +9,9 @@
 #include <vector>
 
 namespace json {
+	
+class Node;
+class Document;
 
 class ParsingError : public std::runtime_error {
 public:
@@ -21,9 +24,6 @@ struct Bool {
 		return value ? "true" : "false";
 	}
 };
-
-class Node;
-class Document;
 
 using Number = std::variant<int, double>;
 using Dict = std::map<std::string, Node>;
