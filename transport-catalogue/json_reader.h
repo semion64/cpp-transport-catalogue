@@ -48,9 +48,22 @@ private:
 class UserInterfaceJSON : public UserInterface {
 public:	
 	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc) : UserInterface(os, trc) {}
-	void ShowQueriesResult(RequestHandlerStat::StatQueryList queries) override;
+	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) override;
 private:	
 	void ShowBus(std::string_view bus_name);
 	void ShowStopBuses(std::string_view stop);
 };
+
+class RequestJSON : public RequestHandlerBaseStat  {
+public: 
+	RequestJSON(InputReaderJSON* handler_base, StatReaderJSON* handler_stat) 
+		: RequestHandlerBaseStat(handler_base, handler_stat) { }
+
+	RequestJSON(TransportCatalogue& trc, UserInterface& ui) 
+		: RequestHandlerBaseStat(new InputReaderJSON(trc), new StatReaderJSON(trc, ui))  { }
+	void Read(std::istream& is) override;
+private:
+	json::Document doc_ {nullptr};
+};
+
 } // end ::trans_cat

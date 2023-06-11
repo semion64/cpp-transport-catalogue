@@ -46,26 +46,21 @@ class UserInterface;
 
 class RequestHandler {
 public:	
-	RequestHandler (TransportCatalogue& trc) : trc_ (trc) {	}
-	
+	RequestHandler() { }
 	virtual void Read(std::istream& is) = 0;
 	virtual void DoQueries() = 0;
-	
 	virtual ~RequestHandler() = default;
-protected:
-	TransportCatalogue& trc_;
 };
 
 class RequestHandlerBase : public RequestHandler {
 public:	
-	RequestHandlerBase(TransportCatalogue& trc) : RequestHandler(trc) {	}
+	RequestHandlerBase(TransportCatalogue& trc) : trc_(trc) {	}
 	void DoQueries() override;
 protected:
 	using MapDiBetweenStops = std::unordered_map<std::string_view, std::unordered_map<std::string, int>>;
-	
+	TransportCatalogue& trc_;
 	virtual void AddStops(MapDiBetweenStops& stop_di) = 0; // function must fill stop_di_ map
 	virtual void AddBuses() = 0;
-	
 private:
 	MapDiBetweenStops stop_di_;
 	void AddDistanceBetweenStops();
@@ -74,9 +69,10 @@ private:
 class RequestHandlerStat : public RequestHandler {
 public:
 	using StatQueryList = std::list<StatQuery>;
-	RequestHandlerStat(TransportCatalogue& trc, UserInterface& ui) : RequestHandler(trc), ui_(ui) {	}
+	RequestHandlerStat(TransportCatalogue& trc, UserInterface& ui) : trc_(trc), ui_(ui) {	}
 	void DoQueries() override;
 protected:
+	TransportCatalogue& trc_;
 	UserInterface& ui_;
 	StatQueryList queries_;
 };
@@ -84,11 +80,22 @@ protected:
 class UserInterface {
 public:	
 	UserInterface(std::ostream& os, TransportCatalogue& trc) : os_(os), trc_(trc)  {}
-	virtual void ShowQueriesResult(RequestHandlerStat::StatQueryList queries) = 0;
+	virtual void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) = 0;
 protected:
 	int ROUTE_STAT_PRECISION = 6;
 	std::ostream& os_;
 	TransportCatalogue& trc_;
 };
 
+class RequestHandlerBaseStat : public RequestHandler {
+public: 
+	RequestHandlerBaseStat(RequestHandlerBase* handler_base, RequestHandlerStat* handler_stat);
+	virtual void Read(std::istream& is) = 0;
+	virtual void DoQueries() override;
+	virtual void DoBaseQueries();
+	virtual void DoStatQueries();
+protected:
+	RequestHandlerBase* handler_base_;
+	RequestHandlerStat* handler_stat_;
+};
 } // end ::trans_cat

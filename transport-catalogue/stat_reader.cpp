@@ -14,7 +14,7 @@ void StatReaderStd::Read(std::istream& is) {
 	}
 }
 
-void UserInterfaceStd::ShowQueriesResult(RequestHandlerStat::StatQueryList queries) {
+void UserInterfaceStd::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) {
 	for(const auto& q: queries) {
 		if(q.type == StatQueryType::BUS) {
 			ShowBus(q.name);	
@@ -70,5 +70,10 @@ void UserInterfaceStd::ShowStopBuses(std::string_view stop_name) {
 	
 	os_ << std::endl;
 	
+}
+
+void RequestStd::Read(std::istream& is) {
+	handler_base_->Read(is);
+	handler_stat_->Read(is);
 }
 } // end ::trans_cat

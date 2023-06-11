@@ -1,6 +1,4 @@
-/*
 
- */
  
 #include <cassert>
 #include <iostream>
@@ -8,13 +6,13 @@
 #include <sstream>
 #include <string>
 
-//#include "input_reader.h"
-//#include "stat_reader.h"
+#include "input_reader.h"
+#include "stat_reader.h"
 #include "json_reader.h"
 #include "transport_catalogue.h"
 
 using namespace std;
-/*
+
 namespace trans_cat {
 namespace tests {
 /*
@@ -77,9 +75,9 @@ struct RouteStat {
 	bool is_ring;
 };
 
-*/
 
-/*
+
+
 std::string ReadFile(std::string file_name) {
 	std::ifstream in(file_name);
 	std::string str;
@@ -170,6 +168,40 @@ void StatJSON() {
 	assert((ReadFile("tests/json_test_out.txt").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
 }
+
+void BaseStatStd() {
+	std::cerr << "\tBaseStatStd: ";
+	std::ifstream in("tests/std_test_in.txt");
+	std::stringstream ss_out;
+	
+	trans_cat::TransportCatalogue trc;
+	trans_cat::UserInterfaceStd ui(ss_out, trc);
+	trans_cat::RequestStd std_request(trc, ui);
+	std_request.Read(in);
+	std_request.DoQueries();
+	
+	assert((ReadFile("tests/std_test_out.txt").compare(ss_out.str())));
+	std::cerr << "\tok" << std::endl;
+	
+	in.close();
+}
+
+void BaseStatJSON() {
+	std::cerr << "\tBaseStatJSON: ";
+	std::ifstream in("tests/json_test_in.txt");
+	std::stringstream ss_out;
+	
+	trans_cat::TransportCatalogue trc;
+	trans_cat::UserInterfaceJSON ui(ss_out, trc);
+	trans_cat::RequestJSON json_request(trc, ui);
+	json_request.Read(in);
+	json_request.DoQueries();
+	
+	assert((ReadFile("tests/json_test_out.txt").compare(ss_out.str())));
+	std::cerr << "\tok" << std::endl;
+	
+	in.close();
+}
 } // end ::tests
 } // end ::trans_cat
 
@@ -179,6 +211,7 @@ void Tests() {
 	trans_cat::tests::StatStd();
 	trans_cat::tests::BaseJSON();
 	trans_cat::tests::StatJSON();
+	trans_cat::tests::BaseStatJSON();
 	std::cerr << "Tests_End" << std::endl;
 }
 
@@ -194,21 +227,13 @@ void RunStd(std::istream& is = std::cin) {
 	sr.DoQueries();
 }
 */
-void RunJSON(std::istream& is = std::cin) {
+
+void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
-	trans_cat::InputReaderJSON ir(trc);
-	std::stringstream ss_out;
-	trans_cat::UserInterfaceJSON ui(ss_out, trc);
-	trans_cat::StatReaderJSON sr(trc, ui);
-	
-	auto doc = json::Load(is);
-	const json::Node& data = doc.GetRoot();
-	
-	ir.ReadJSON(data);
-	ir.DoQueries();
-	sr.ReadJSON(data);
-	sr.DoQueries();
-	json::Print(json::Load(ss_out), std::cout);
+	trans_cat::UserInterfaceJSON ui(os, trc);
+	trans_cat::RequestJSON json_request(trc, ui);
+	json_request.Read(is);
+	json_request.DoQueries();
 }
 
 int main() {

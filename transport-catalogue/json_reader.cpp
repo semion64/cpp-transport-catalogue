@@ -104,7 +104,7 @@ void StatReaderJSON::ReadJSON(const json::Node& root) {
 	}
 }
 
-void UserInterfaceJSON::ShowQueriesResult(RequestHandlerStat::StatQueryList queries) {
+void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) {
 	/*
 	 {
 	  "curvature": 2.18604,
@@ -183,4 +183,13 @@ void UserInterfaceJSON::ShowQueriesResult(RequestHandlerStat::StatQueryList quer
 	os_ << "]";	
     os_ << std::endl;
 }
+
+//---------------------------RequestJSON--------------------------------------------------------------------------------------------------------------------------
+
+void RequestJSON::Read(std::istream& is) {
+	doc_ = json::Load(is);
+	(dynamic_cast<InputReaderJSON*> (handler_base_))->ReadJSON(doc_.GetRoot());
+	(dynamic_cast<StatReaderJSON*> (handler_stat_))->ReadJSON(doc_.GetRoot());
+}
+
 } // end ::trans_cat

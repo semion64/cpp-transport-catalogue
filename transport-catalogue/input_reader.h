@@ -45,4 +45,5 @@ private:
 	void AddBuses() override;
 	std::vector<const Stop*> ParseStopList(std::string_view args_line, bool* is_ring);
 };
+
 } // end ::trans_cat

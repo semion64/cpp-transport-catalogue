@@ -19,10 +19,18 @@ public:
 class UserInterfaceStd : public UserInterface {
 public:	
 	UserInterfaceStd(std::ostream& os, TransportCatalogue& trc) : UserInterface(os, trc) {}
-	void ShowQueriesResult(std::list<StatQuery> query);
+	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& query);
 private:
 	void ShowBus(std::string_view bus_name);
 	void ShowStopBuses(std::string_view stop);
 };
 
+class RequestStd : public RequestHandlerBaseStat  {
+public: 
+	RequestStd(InputReaderStd* hb, StatReaderStd* hs)
+		: RequestHandlerBaseStat(hb, hs) { }
+	RequestStd(TransportCatalogue& trc, UserInterface& ui) 
+		: RequestHandlerBaseStat(new InputReaderStd(trc), new StatReaderStd(trc, ui))  { }
+	void Read(std::istream& is) override;
+};
 } // end ::trans_cat
