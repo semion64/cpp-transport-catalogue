@@ -14,6 +14,17 @@ void StatReaderStd::Read(std::istream& is) {
 	}
 }
 
+void UserInterfaceStd::ShowQueriesResult(RequestHandlerStat::StatQueryList queries) {
+	for(const auto& q: queries) {
+		if(q.type == StatQueryType::BUS) {
+			ShowBus(q.name);	
+		}
+		else if(q.type == StatQueryType::STOP) {
+			ShowStopBuses(q.name);	
+		}
+	}
+}
+
 void UserInterfaceStd::ShowBus(std::string_view bus_name) {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	

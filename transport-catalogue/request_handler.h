@@ -72,21 +72,21 @@ private:
 };
 
 class RequestHandlerStat : public RequestHandler {
-public:	
+public:
+	using StatQueryList = std::list<StatQuery>;
 	RequestHandlerStat(TransportCatalogue& trc, UserInterface& ui) : RequestHandler(trc), ui_(ui) {	}
 	void DoQueries() override;
 protected:
 	UserInterface& ui_;
-	std::list<StatQuery> queries_;
+	StatQueryList queries_;
 };
 
 class UserInterface {
 public:	
 	UserInterface(std::ostream& os, TransportCatalogue& trc) : os_(os), trc_(trc)  {}
-	virtual void ShowBus(std::string_view bus_name) = 0;
-	virtual void ShowStopBuses(std::string_view stop) = 0;
+	virtual void ShowQueriesResult(RequestHandlerStat::StatQueryList queries) = 0;
 protected:
-	const int ROUTE_STAT_PRECISION = 6;
+	int ROUTE_STAT_PRECISION = 6;
 	std::ostream& os_;
 	TransportCatalogue& trc_;
 };

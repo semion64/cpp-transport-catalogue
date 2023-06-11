@@ -1,0 +1,12 @@
+4
+Stop Tolstopaltsevo: 55.611087, 37.20829, 1000m to Marushkino
+Stop Marushkino: 55.595884, 37.209755, 2000m to Tolstopaltsevo, 100m to Marushkino
+Bus 128: Tolstopaltsevo > Marushkino > Tolstopaltsevo
+Bus 256: Tolstopaltsevo - Marushkino
+6
+Stop Chapaeva
+Bus 128
+Bus 256
+Stop Tolstopaltsevo
+Stop Marushkino
+Bus 512

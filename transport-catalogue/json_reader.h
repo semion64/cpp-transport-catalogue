@@ -24,7 +24,6 @@ public:
 	void Read(std::istream& is) override;
 	void ReadJSON(const json::Node& root);
 private:
-
 	json::Node root_;
 	std::unordered_set<const json::Dict*> add_stop_queries_;
 	std::unordered_set<const json::Dict*> add_bus_queries_;
@@ -35,5 +34,23 @@ private:
 	void AddBuses() override;
 	
 	std::vector<const Stop*> ParseStopList(const json::Array& stop_list, bool is_ring);
+};
+
+class StatReaderJSON : public RequestHandlerStat {	
+public:	
+	StatReaderJSON(TransportCatalogue& trc, UserInterface& ui) : RequestHandlerStat(trc, ui) { } 
+	void Read(std::istream& is) override;
+	void ReadJSON(const json::Node& root);
+private:
+	json::Node root_;
+};
+
+class UserInterfaceJSON : public UserInterface {
+public:	
+	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc) : UserInterface(os, trc) {}
+	void ShowQueriesResult(RequestHandlerStat::StatQueryList queries) override;
+private:	
+	void ShowBus(std::string_view bus_name);
+	void ShowStopBuses(std::string_view stop);
 };
 } // end ::trans_cat

@@ -77,4 +77,108 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 	
 	return stops;
 }
+
+void StatReaderJSON::Read(std::istream& is) {
+	root_ = json::Load(is).GetRoot();
+	ReadJSON(root_);
+    //throw ExceptionWrongInputFormat("use InputReaderJSON::ReadJSON(const json::Node& root) method instead InputReaderJSON::Read(std::istream& is)");
+}
+
+void StatReaderJSON::ReadJSON(const json::Node& root) {
+	if(!root.IsMap()) {
+		throw ExceptionWrongQueryType("json root node has unsupported format");
+	}
+	
+	const auto& root_map = root.AsMap();
+	if(!root_map.count("stat_requests")) {
+		throw ExceptionWrongQueryType("json root node has unsupported format");
+	}
+	
+	for(const auto& request : root_map.at("stat_requests").AsArray()) {
+		json::Dict m = request.AsMap();
+		queries_.push_back({
+			m.at("id").AsInt(), 
+			StatQuery::GetType(m.at("type").AsString()), 
+			std::string(m.at("name").AsString())
+		});
+	}
+}
+
+void UserInterfaceJSON::ShowQueriesResult(RequestHandlerStat::StatQueryList queries) {
+	/*
+	 {
+	  "curvature": 2.18604,
+	  "request_id": 12345678,
+	  "route_length": 9300,
+	  "stop_count": 4,
+	  "unique_stop_count": 3
+	}  
+	*/
+	os_ << "[";
+	for(const auto& q: queries) {
+		os_ << "{";
+		if(q.type == StatQueryType::BUS) {
+			try {
+				const auto& bus = trc_.GetBus(q.name);
+				const auto& route = trc_.GetRouteStat(bus);
+				os_ << "\"curvature\":" << route.curvature << ","
+					<< "\"request_id\":" << q.id << ","
+					<< "\"route_length\":" << static_cast<double>(route.distance) << ","
+					<< "\"stop_count\":" << route.stops_count << ","
+					<< "\"unique_stop_count\":" << route.unique_stops << ","
+					<< "\"request_id\":" << q.id;
+			}
+			catch(ExceptionBusNotFound) {
+				/*{
+				  "request_id": 12345,
+				  "error_message": "not found"
+				} */
+				os_ << "\"request_id\":" << q.id << ","
+					<< "\"error_message\":" << "\"not found\"";
+			}	
+		}
+		else if(q.type == StatQueryType::STOP) {
+			os_ << std::setprecision(ROUTE_STAT_PRECISION);
+			try {
+				const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(q.name));
+				
+				/*{
+				  "buses": [
+					  "14", "22к"
+				  ],
+				  "request_id": 12345
+				} */
+				os_ << "\"buses\":[";
+				bool is_first = false;
+				for(const auto& bus : stop_buses) {
+					if(!is_first) {
+						is_first = true;
+					}
+					else {
+						os_ << ",";
+					}
+					os_ << "\"" << bus->name << "\"";
+				}
+				os_ << "]";
+				os_ << "\"request_id\":" << q.id;
+			}
+			catch(ExceptionBusNotFound) {
+				os_ << "\"request_id\":" << q.id << ","
+					<< "\"error_message\":" << "\"not found\"";
+			}
+			catch(ExceptionStopNotFound) {
+				os_ << "\"request_id\":" << q.id << ","
+					<< "\"error_message\":" << "\"not found\"";
+			}
+		}
+		os_ << "}";
+		os_ << ",";
+	}
+	
+	if(queries.size() > 0) {
+		os_ << "\b";
+	}
+	
+	os_ << "]";	
+}
 } // end ::trans_cat

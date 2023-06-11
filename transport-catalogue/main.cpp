@@ -79,30 +79,14 @@ struct RouteStat {
 
 */
 
-std::string base_test_query = 
-		"4"
-		"Stop Tolstopaltsevo: 55.611087, 37.20829, 1000m to Marushkino\n"
-		"Stop Marushkino: 55.595884, 37.209755, 2000m to Tolstopaltsevo, 100m to Marushkino\n"
-		"Bus 128: Tolstopaltsevo > Marushkino > Tolstopaltsevo\n"
-		"Bus 256: Tolstopaltsevo - Marushkino\n";
-		
-std::string stat_test_query = 
-		"6\n"
-		"Stop Chapaeva\n"
-		"Bus 128\n"
-		"Bus 256\n"
-		"Stop Tolstopaltsevo\n"
-		"Stop Marushkino\n"
-		"Bus 512\n";
-		
-std::string stat_test_result = 
-		"Stop Chapaeva: not found\n"
-		"Bus 128: 3 stops on route, 2 unique stops, 3000 route length, 0.886001 curvature\n"
-		"Bus 256: 3 stops on route, 2 unique stops, 3000 route length, 0.886001 curvature\n"
-		"Stop Tolstopaltsevo: buses 128 256\n"
-		"Stop Marushkino: buses 128 256\n"
-		"Bus 512: not found\n";
-				
+
+std::string ReadFile(std::string file_name) {
+	std::ifstream in(file_name);
+	std::string str;
+	std::getline(in, str);
+	in.close();
+	return str;
+}				
 void HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat::RequestHandlerBase& handler_base) {
 	handler_base.Read(is);
 	handler_base.DoQueries();
@@ -132,20 +116,16 @@ void HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat
 
 void BaseStd() {
 	std::cerr << "\tBaseStd: ";
-	
-	std::stringstream ss(base_test_query);
-	
+	std::ifstream in("tests/std_test_in.txt");
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd hb(trc);
-	HandlerBase(ss, trc, hb);
+	HandlerBase(in, trc, hb);
 	std::cerr << "\tok" << std::endl;
 }
 
 void BaseJSON() {
 	std::cerr << "\tBaseJSON: ";
-	
-	std::ifstream in("tests/json_test_request.txt");
-	
+	std::ifstream in("tests/json_test_in.txt");
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderJSON hb(trc);
 	HandlerBase(in, trc, hb);
@@ -154,22 +134,40 @@ void BaseJSON() {
 
 void StatStd() {
 	std::cerr << "\tStatStd: ";
-	std::stringstream ss_base(base_test_query);
+	std::ifstream in("tests/std_test_in.txt");
 	
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd hb(trc);
-	hb.Read(ss_base);
+	hb.Read(in);
 	hb.DoQueries();
 	
-	std::stringstream ss_stat(stat_test_query);
 	std::stringstream ss_out;
 	trans_cat::UserInterfaceStd ui(ss_out, trc);
 	trans_cat::StatReaderStd hs(trc, ui);
-	
-	hs.Read(ss_stat);
+	hs.Read(in);
 	hs.DoQueries();	
+	
+	assert((ReadFile("tests/std_test_out.txt").compare(ss_out.str())));
+	std::cerr << "\tok" << std::endl;
+}
 
-	assert((stat_test_result == ss_out.str()));
+void StatJSON() {
+	std::cerr << "\tStatJSON: ";
+	std::ifstream in("tests/json_test_in.txt");
+	trans_cat::TransportCatalogue trc;
+	trans_cat::InputReaderJSON hb(trc);
+	auto doc = json::Load(in);
+	const json::Node& data = doc.GetRoot();
+	hb.ReadJSON(data);
+	hb.DoQueries();
+	
+	std::stringstream ss_out;
+	trans_cat::UserInterfaceJSON ui(ss_out, trc);
+	trans_cat::StatReaderJSON hs(trc, ui);
+	hs.ReadJSON(data);
+	hs.DoQueries();	
+	//std::cerr << ss_out.str();
+	assert((ReadFile("tests/json_test_out.txt").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
 }
 } // end ::tests
@@ -180,10 +178,11 @@ void Tests() {
 	trans_cat::tests::BaseStd();
 	trans_cat::tests::StatStd();
 	trans_cat::tests::BaseJSON();
+	trans_cat::tests::StatJSON();
 	std::cerr << "Tests_End" << std::endl;
 }
 
-void Run(std::istream& is = std::cin) {
+void RunStd(std::istream& is = std::cin) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd ir(trc);
 	trans_cat::UserInterfaceStd ui(std::cout, trc);
@@ -195,8 +194,23 @@ void Run(std::istream& is = std::cin) {
 	sr.DoQueries();
 }
 
+void RunJSON(std::istream& is = std::cin) {
+	trans_cat::TransportCatalogue trc;
+	trans_cat::InputReaderJSON ir(trc);
+	trans_cat::UserInterfaceJSON ui(std::cout, trc);
+	trans_cat::StatReaderJSON sr(trc, ui);
+	
+	auto doc = json::Load(is);
+	const json::Node& data = doc.GetRoot();
+	
+	ir.ReadJSON(data);
+	ir.DoQueries();
+	sr.ReadJSON(data);
+	sr.DoQueries();
+}
+
 int main() {
 	//std::ifstream f("test1/tsA_case1_input.txt");
-	//Run();
-	Tests();
+	RunJSON();
+	//Tests();
 }

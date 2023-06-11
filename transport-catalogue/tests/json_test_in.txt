@@ -1,6 +1,35 @@
 {
 	"stat_requests": [
-		
+		{
+			"id": 1,
+			"type": "Stop",
+			"name": "Chapaeva"
+		},
+		{
+			"id": 2,
+			"type": "Bus",
+			"name": "128"
+		},
+		{
+			"id": 3,
+			"type": "Bus",
+			"name": "256"
+		},
+		{
+			"id": 4,
+			"type": "Stop",
+			"name": "Tolstopaltsevo"
+		},
+		{
+			"id": 5,
+			"type": "Stop",
+			"name": "Marushkino"
+		},
+		{
+			"id": 6,
+			"type": "Bus",
+			"name": "512"
+		}  
 	],
 	
 	"base_requests": [

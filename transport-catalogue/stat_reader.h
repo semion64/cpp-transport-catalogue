@@ -19,8 +19,10 @@ public:
 class UserInterfaceStd : public UserInterface {
 public:	
 	UserInterfaceStd(std::ostream& os, TransportCatalogue& trc) : UserInterface(os, trc) {}
-	void ShowBus(std::string_view bus_name) override;
-	void ShowStopBuses(std::string_view stop) override;
+	void ShowQueriesResult(std::list<StatQuery> query);
+private:
+	void ShowBus(std::string_view bus_name);
+	void ShowStopBuses(std::string_view stop);
 };
 
 } // end ::trans_cat
