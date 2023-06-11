@@ -8,13 +8,13 @@
 #include <sstream>
 #include <string>
 
-#include "input_reader.h"
-#include "stat_reader.h"
+//#include "input_reader.h"
+//#include "stat_reader.h"
 #include "json_reader.h"
 #include "transport_catalogue.h"
 
 using namespace std;
-
+/*
 namespace trans_cat {
 namespace tests {
 /*
@@ -79,7 +79,7 @@ struct RouteStat {
 
 */
 
-
+/*
 std::string ReadFile(std::string file_name) {
 	std::ifstream in(file_name);
 	std::string str;
@@ -193,11 +193,12 @@ void RunStd(std::istream& is = std::cin) {
 	sr.Read(is);
 	sr.DoQueries();
 }
-
+*/
 void RunJSON(std::istream& is = std::cin) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderJSON ir(trc);
-	trans_cat::UserInterfaceJSON ui(std::cout, trc);
+	std::stringstream ss_out;
+	trans_cat::UserInterfaceJSON ui(ss_out, trc);
 	trans_cat::StatReaderJSON sr(trc, ui);
 	
 	auto doc = json::Load(is);
@@ -207,6 +208,7 @@ void RunJSON(std::istream& is = std::cin) {
 	ir.DoQueries();
 	sr.ReadJSON(data);
 	sr.DoQueries();
+	json::Print(json::Load(ss_out), std::cout);
 }
 
 int main() {

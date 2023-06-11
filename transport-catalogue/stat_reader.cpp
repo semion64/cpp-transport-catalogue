@@ -37,7 +37,7 @@ void UserInterfaceStd::ShowBus(std::string_view bus_name) {
 					<< static_cast<double>(route.distance) << " route length, "
 					<< route.curvature << " curvature"; 
 	}
-	catch(ExceptionBusNotFound) {
+	catch(ExceptionBusNotFound&) {
 		os_ << "Bus " << bus_name << ": not found";
 	}
 	
@@ -61,10 +61,10 @@ void UserInterfaceStd::ShowStopBuses(std::string_view stop_name) {
 			os_ << bus->name;
 		}
 	}
-	catch(ExceptionBusNotFound) {
+	catch(ExceptionBusNotFound&) {
 		os_ << "Stop " << stop_name << ": no buses";
 	}
-	catch(ExceptionStopNotFound) {
+	catch(ExceptionStopNotFound&) {
 		os_ << "Stop " << stop_name << ": not found";
 	}
 	

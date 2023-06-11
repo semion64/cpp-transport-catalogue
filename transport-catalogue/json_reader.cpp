@@ -115,7 +115,14 @@ void UserInterfaceJSON::ShowQueriesResult(RequestHandlerStat::StatQueryList quer
 	}  
 	*/
 	os_ << "[";
+    bool is_first = true;
 	for(const auto& q: queries) {
+        if(!is_first) {
+            os_ << ",";
+        }
+        else {
+            is_first = false;
+        }
 		os_ << "{";
 		if(q.type == StatQueryType::BUS) {
 			try {
@@ -128,7 +135,7 @@ void UserInterfaceJSON::ShowQueriesResult(RequestHandlerStat::StatQueryList quer
 					<< "\"unique_stop_count\":" << route.unique_stops << ","
 					<< "\"request_id\":" << q.id;
 			}
-			catch(ExceptionBusNotFound) {
+			catch(ExceptionBusNotFound&) {
 				/*{
 				  "request_id": 12345,
 				  "error_message": "not found"
@@ -141,7 +148,6 @@ void UserInterfaceJSON::ShowQueriesResult(RequestHandlerStat::StatQueryList quer
 			os_ << std::setprecision(ROUTE_STAT_PRECISION);
 			try {
 				const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(q.name));
-				
 				/*{
 				  "buses": [
 					  "14", "22к"
@@ -159,26 +165,22 @@ void UserInterfaceJSON::ShowQueriesResult(RequestHandlerStat::StatQueryList quer
 					}
 					os_ << "\"" << bus->name << "\"";
 				}
-				os_ << "]";
+				os_ << "],";
 				os_ << "\"request_id\":" << q.id;
 			}
-			catch(ExceptionBusNotFound) {
+			catch(ExceptionBusNotFound&) {
 				os_ << "\"request_id\":" << q.id << ","
-					<< "\"error_message\":" << "\"not found\"";
+					<< "\"buses\":" << "[]";
 			}
-			catch(ExceptionStopNotFound) {
+			catch(ExceptionStopNotFound&) {
 				os_ << "\"request_id\":" << q.id << ","
 					<< "\"error_message\":" << "\"not found\"";
 			}
 		}
 		os_ << "}";
-		os_ << ",";
-	}
-	
-	if(queries.size() > 0) {
-		os_ << "\b";
 	}
 	
 	os_ << "]";	
+    os_ << std::endl;
 }
 } // end ::trans_cat
