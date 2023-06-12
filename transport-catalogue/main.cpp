@@ -10,7 +10,7 @@
 //#include "stat_reader.h"
 #include "json_reader.h"
 #include "transport_catalogue.h"
-
+#include "map_renderer.h"
 using namespace std;
 /*
 namespace trans_cat {
@@ -227,17 +227,63 @@ void RunStd(std::istream& is = std::cin) {
 	sr.DoQueries();
 }
 */
-
+/*
 void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::UserInterfaceJSON ui(os, trc);
 	trans_cat::RequestJSON json_request(trc, ui);
 	json_request.Read(is);
 	json_request.DoQueries();
+}*/
+
+void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
+	trans_cat::TransportCatalogue trc;
+	trans_cat::UserInterfaceJSON ui(os, trc);
+	trans_cat::RequestJSON json_request(trc, ui);
+	json_request.Read(is);
+	json_request.DoBaseQueries();
+	
+	auto unorder_buses = trc.GetBuses();
+	trans_cat::BusList order_buses;
+	std::for_each(unorder_buses.begin(), unorder_buses.end(), [&unorder_buses, &order_buses](trans_cat::Bus& bus) {
+		order_buses.push_back(&bus);
+	});
+	
+	std::sort(order_buses.begin(), order_buses.end(), trans_cat::detail::compareBusesByName{});
+	
+	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(trans_cat::RenderSettings{}, order_buses); 
+	map_renderer->RenderMap(os);
 }
 
+/*
 int main() {
-	//std::ifstream f("test1/tsA_case1_input.txt");
-	RunJSON();
+    using namespace std;
+
+    const double WIDTH = 600.0;
+    const double HEIGHT = 400.0;
+    const double PADDING = 50.0;
+    
+    // Точки, подлежащие проецированию
+    vector<geo::Coordinates> geo_coords = {
+        {43.587795, 39.716901}, {43.581969, 39.719848}, {43.598701, 39.730623},
+        {43.585586, 39.733879}, {43.590317, 39.746833}
+    };
+
+    // Создаём проектор сферических координат на карту
+    const SphereProjector proj{
+        geo_coords.begin(), geo_coords.end(), WIDTH, HEIGHT, PADDING
+    };
+
+    // Проецируем и выводим координаты
+    for (const auto geo_coord: geo_coords) {
+        const svg::Point screen_coord = proj(geo_coord);
+        cout << '(' << geo_coord.lat << ", "sv << geo_coord.lng << ") -> "sv;
+        cout << '(' << screen_coord.x << ", "sv << screen_coord.y << ')' << endl;
+    }
+}*/
+
+int main() {
+	std::ifstream f("tests/input_svg_1.json");
+	RunJSON_SVG(f, std::cout);
 	//Tests();
 }

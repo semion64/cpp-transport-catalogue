@@ -62,7 +62,6 @@ struct compareBusesByName {
 };
 
 using StopBuses = std::set<const Bus*, compareBusesByName>;
-using DistanceBetweenStop = std::unordered_map<std::pair<const Stop*, const Stop*>, int, DistanceBetweenStopHasher>;
-
+using DistanceBetweenStop = std::unordered_map<std::pair<const Stop*, const Stop*>, int, DistanceBetweenStopHasher>; 
 } // end ::detail	
 } // end ::trans_cat

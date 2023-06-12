@@ -16,4 +16,8 @@ double ComputeDistance(Coordinates from, Coordinates to) {
         * 6371000;
 }
 
+bool IsZero(double value) {
+    return std::abs(value) < EPSILON;
+}
+
 }  // namespace geo
