@@ -8,8 +8,6 @@
 
 namespace trans_cat {
 	
-
-
 class MapRenderer {
 public:
 	MapRenderer();
@@ -17,7 +15,7 @@ public:
 	virtual ~MapRenderer() = default;
 };
 
-using BusList = std::vector<const Bus*>;
+using BusList = std::vector<Bus>;
 class MapRendererSVG {
 public:
 	
@@ -27,7 +25,6 @@ public:
 	void RenderMap(std::ostream& os);
 private:
 	RenderSettings rs_;
-	svg::Document doc_;
 	BusList bus_list_;
 };
 

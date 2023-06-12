@@ -123,7 +123,7 @@ void BaseStd() {
 
 void BaseJSON() {
 	std::cerr << "\tBaseJSON: ";
-	std::ifstream in("tests/json_test_in.txt");
+	std::ifstream in("tests/test_in.json");
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderJSON hb(trc);
 	HandlerBase(in, trc, hb);
@@ -151,7 +151,7 @@ void StatStd() {
 
 void StatJSON() {
 	std::cerr << "\tStatJSON: ";
-	std::ifstream in("tests/json_test_in.txt");
+	std::ifstream in("tests/test_in.json");
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderJSON hb(trc);
 	auto doc = json::Load(in);
@@ -165,7 +165,7 @@ void StatJSON() {
 	hs.Read(data);
 	hs.Do();	
 	//std::cerr << ss_out.str();
-	assert((ReadFile("tests/json_test_out.txt").compare(ss_out.str())));
+	assert((ReadFile("tests/test_out.json").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
 }
 
@@ -189,7 +189,7 @@ void BaseStatStd() {
 
 void BaseStatJSON() {
 	std::cerr << "\tBaseStatJSON: ";
-	std::ifstream in("tests/json_test_in.txt");
+	std::ifstream in("tests/test_in.json");
 	std::stringstream ss_out;
 	
 	trans_cat::TransportCatalogue trc;
@@ -199,7 +199,7 @@ void BaseStatJSON() {
 	json_request.DoBase();
 	json_request.DoStat();
 	
-	assert((ReadFile("tests/json_test_out.txt").compare(ss_out.str())));
+	assert((ReadFile("tests/test_out.json").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
 	
 	in.close();
@@ -237,29 +237,30 @@ void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	json_request.Read(is);
 	json_request.DoQueries();
 }
-
+*/
 void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::UserInterfaceJSON ui(os, trc);
-	trans_cat::RequestJSON json_request(trc, ui);
+	trans_cat::RequestManagerJSON json_request(trc, ui);
 	json_request.Read(is);
-	json_request.DoBaseQueries();
 	
+	json_request.DoBase();
 	auto unorder_buses = trc.GetBuses();
-	trans_cat::BusList order_buses;
-	std::for_each(unorder_buses.begin(), unorder_buses.end(), [&unorder_buses, &order_buses](trans_cat::Bus& bus) {
-		order_buses.push_back(&bus);
+	trans_cat::BusList order_buses = trc.GetBusesSorted();/*
+	std::for_each(unorder_buses.begin(), unorder_buses.end(), [&unorder_buses, &order_buses](trans_cat::Bus bus) {
+		order_buses.push_back(bus);
 	});
-	
 	std::sort(order_buses.begin(), order_buses.end(), trans_cat::detail::compareBusesByName{});
-	
-	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(trans_cat::RenderSettings{}, order_buses); 
+	*/
+	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
+	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(rs, order_buses); 
 	map_renderer->RenderMap(os);
 }
-*/
+
 
 int main() {
-	//std::ifstream f("tests/input_svg_1.json");
-	//RunJSON_SVG(f, std::cout);
+	std::ifstream f("tests/test_in.json");
+	RunJSON_SVG(f, std::cout);
+	std::cout << std::endl;
 	Tests();
 }

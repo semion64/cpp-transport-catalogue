@@ -10,8 +10,13 @@
 #include "json.h"
 #include "transport_catalogue.h"
 #include "request_handler.h"
+#include "map_renderer.h"
 
 namespace trans_cat {
+	
+namespace detail {
+svg::Color ParseColor(const json::Node& node_color);
+}// end ::detail
 	
 class InputReaderJSON;
 class StatReaderJSON;
@@ -53,9 +58,12 @@ private:
 class RenderSettingsJSON : public RequestHandlerRenderSettings, public RequestReaderJSON {
 public:
 	RenderSettingsJSON(TransportCatalogue& trc) : RequestHandlerRenderSettings(trc) {	}
-	void Read(std::istream& is) override { }
-	void Read(const json::Node& root) override {}
+	void Read(std::istream& is) override;
+	void Read(const json::Node& root) override;
+	void ReadQuery(const json::Node& request);
 	void Do() override {}
+private:
+	json::Node root_;
 };
 
 class UserInterfaceJSON : public UserInterface {

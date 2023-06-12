@@ -11,7 +11,7 @@
 #include <unordered_set>
 #include <vector>
 #include "geo.h"
-
+#include <optional>
 namespace trans_cat {
 
 class ExceptionBusNotFound : public std::logic_error {
@@ -36,27 +36,18 @@ struct Bus {
 };
 
 struct RenderSettings {
-	double width = 1200.0;
-	double height = 1200.0;
-	double padding = 50.0;
-
-	double line_width =14.0;
-	double stop_radius = 5.0;
-
-	double bus_label_font_size = 20;
-	svg::Point bus_label_offset {7.0, 15.0};
-
-	uint32_t stop_label_font_size = 20;
-	svg::Point stop_label_offset {7.0, -3.0};
-
-	svg::Color underlayer_color = svg::Rgba{255, 255, 255, 0.85};
-	double underlayer_width = 3.0;
-
-	std::vector<svg::Color> color_palette = {
-		"green",
-		svg::Rgb {255, 160, 0},
-		"red"
-	};
+	std::optional<double> width;
+	std::optional<double> height;
+	std::optional<double> padding;
+	std::optional<double> line_width;
+	std::optional<double> stop_radius;
+	std::optional<uint32_t> bus_label_font_size;
+	std::optional<svg::Point> bus_label_offset;
+	std::optional<uint32_t> stop_label_font_size;
+	std::optional<svg::Point> stop_label_offset;
+	std::optional<svg::Color> underlayer_color;
+	std::optional<double> underlayer_width;
+	std::optional<std::vector<svg::Color>> color_palette;
 };
 
 namespace detail {

@@ -27,7 +27,17 @@ Bus& TransportCatalogue::AddBus(const std::string& name, std::vector<const Stop*
 std::string_view  TransportCatalogue::AddName(const std::string& name, std::unordered_set<std::string>& set) {
 	return *(set.insert(name).first);
 }
-
+std::vector<Bus> TransportCatalogue::GetBusesSorted() const {
+	std::vector<Bus> order_buses;
+	std::for_each(bus_.begin(), bus_.end(), [this, &order_buses](trans_cat::Bus bus) {
+		order_buses.push_back(bus);
+	});
+	std::sort(order_buses.begin(), order_buses.end(), [](Bus lhs, Bus rhs) {
+		return lhs.name < rhs.name;
+	});
+	
+	return order_buses;
+}
 void TransportCatalogue::SetDistance(const Stop* s1, const Stop* s2, int di) {
 	stop_di_[{s1, s2}] = di;
 }

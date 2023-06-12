@@ -25,6 +25,7 @@ public:
 	const Bus& GetBus(std::string_view bus_name) const;
 	const Stop& GetStop(std::string_view stop_name) const;
 	const std::deque<Bus>& GetBuses() const;
+	std::vector<Bus>GetBusesSorted() const;
 	const std::deque<Stop>& GetStops() const;
 	const detail::StopBuses& GetStopBuses(const Stop&) const;
 	const detail::RouteStat GetRouteStat(const Bus& bus) const;
