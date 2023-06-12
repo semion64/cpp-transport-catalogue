@@ -16,14 +16,18 @@ namespace trans_cat {
 class InputReaderJSON;
 class StatReaderJSON;
 class UserInterfaceJSON;
-class RequestJSON;
 
-class InputReaderJSON : public RequestHandlerBase {	
+class RequestReaderJSON {
+public:
+	virtual void Read(const json::Node& root) = 0;
+};
+
+class InputReaderJSON : public RequestHandlerBase, public RequestReaderJSON {	
 public:	
 	InputReaderJSON(TransportCatalogue& trc) : RequestHandlerBase (trc) {	}
 	
 	void Read(std::istream& is) override;
-	void ReadJSON(const json::Node& root);
+	void Read(const json::Node& root) override;
 private:
 	json::Node root_;
 	std::unordered_set<const json::Dict*> add_stop_queries_;
@@ -37,13 +41,21 @@ private:
 	std::vector<const Stop*> ParseStopList(const json::Array& stop_list, bool is_ring);
 };
 
-class StatReaderJSON : public RequestHandlerStat {	
+class StatReaderJSON : public RequestHandlerStat, public RequestReaderJSON {	
 public:	
 	StatReaderJSON(TransportCatalogue& trc, UserInterface& ui) : RequestHandlerStat(trc, ui) { } 
 	void Read(std::istream& is) override;
-	void ReadJSON(const json::Node& root);
+	void Read(const json::Node& root) override;
 private:
 	json::Node root_;
+};
+
+class RenderSettingsJSON : public RequestHandlerRenderSettings, public RequestReaderJSON {
+public:
+	RenderSettingsJSON(TransportCatalogue& trc) : RequestHandlerRenderSettings(trc) {	}
+	void Read(std::istream& is) override { }
+	void Read(const json::Node& root) override {}
+	void Do() override {}
 };
 
 class UserInterfaceJSON : public UserInterface {
@@ -55,14 +67,10 @@ private:
 	void ShowStopBuses(std::string_view stop_name) const;
 };
 
-class RequestJSON : public RequestHandlerBaseStat  {
+class RequestManagerJSON : public RequestManager {
 public: 
-	RequestJSON(InputReaderJSON* handler_base, StatReaderJSON* handler_stat) 
-		: RequestHandlerBaseStat(handler_base, handler_stat) { }
-
-	RequestJSON(TransportCatalogue& trc, UserInterface& ui) 
-		: RequestHandlerBaseStat(new InputReaderJSON(trc), new StatReaderJSON(trc, ui))  { }
-	void Read(std::istream& is) override;
+	RequestManagerJSON(TransportCatalogue& trc, UserInterface& ui) : RequestManager(trc, ui) {	}
+	void Read(std::istream& is) override;	
 private:
 	json::Document doc_ {nullptr};
 };

@@ -4,7 +4,7 @@ namespace trans_cat {
 	
 //---------------------------RequestHandlerBase--------------------------------------------------------------------------------------------------------------------------
 
-void RequestHandlerBase::DoQueries() {
+void RequestHandlerBase::Do() {
 	AddStops(stop_di_);
 	AddBuses();
 	AddDistanceBetweenStops();
@@ -22,7 +22,7 @@ void RequestHandlerBase::AddDistanceBetweenStops() {
 
 //---------------------------RequestHandlerStat--------------------------------------------------------------------------------------------------------------------------
 
-void RequestHandlerStat::DoQueries() {
+void RequestHandlerStat::Do() {
 	ui_.ShowQueriesResult(queries_);
 }
 
@@ -38,23 +38,18 @@ StatQueryType StatQuery::GetType(std::string_view type_str) {
 	//throw ExceptionWrongStatReaderQuery("incorrect query type: " + std::string(type_str));
 }
 
-//---------------------------RequestHandlerBaseStat--------------------------------------------------------------------------------------------------------------------------
-
-
-RequestHandlerBaseStat::RequestHandlerBaseStat(RequestHandlerBase* handler_base, RequestHandlerStat* handler_stat) 
-	: handler_base_(handler_base), handler_stat_(handler_stat){ }
-	
-void RequestHandlerBaseStat::DoBaseQueries() {
-	handler_base_->DoQueries();
+//---------------------------RequestManager--------------------------------------------------------------------------------------------------------------------------
+void RequestManager::DoBase() {
+	handler_base_->Do();
 }
 
-void RequestHandlerBaseStat::DoStatQueries() {
-	handler_stat_->DoQueries();
+void RequestManager::DoStat() {
+	handler_stat_->Do();
 }
 
-void RequestHandlerBaseStat::DoQueries() {
-	DoBaseQueries();
-	DoStatQueries();
+RenderSettings RequestManager::DoRenderSettings() {
+	handler_render_->Do();
+	return handler_render_->GetRenderSettings();
 }
 
 } // end ::trans_cat

@@ -4,10 +4,11 @@ namespace trans_cat {
 	
 void InputReaderJSON::Read(std::istream& is) {
 	root_ = json::Load(is).GetRoot();
-	ReadJSON(root_);
+	Read(root_);
 }
 
-void InputReaderJSON::ReadJSON(const json::Node& root) {
+void InputReaderJSON::Read(const json::Node& root) {
+	root_ = root;
     if(!root.IsMap()) {
 		throw ExceptionWrongQueryType("json root node has unsupported format");
 	}
@@ -76,10 +77,11 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 
 void StatReaderJSON::Read(std::istream& is) {
 	root_ = json::Load(is).GetRoot();
-	ReadJSON(root_);
+	Read(root_);
 }
 
-void StatReaderJSON::ReadJSON(const json::Node& root) {
+void StatReaderJSON::Read(const json::Node& root) {
+	root_ = root;
 	if(!root.IsMap()) {
 		throw ExceptionWrongQueryType("json root node has unsupported format");
 	}
@@ -190,10 +192,19 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 
 //---------------------------RequestJSON--------------------------------------------------------------------------------------------------------------------------
 
-void RequestJSON::Read(std::istream& is) {
+void RequestManagerJSON::Read(std::istream& is) {
 	doc_ = json::Load(is);
-	(dynamic_cast<InputReaderJSON*> (handler_base_))->ReadJSON(doc_.GetRoot());
-	(dynamic_cast<StatReaderJSON*> (handler_stat_))->ReadJSON(doc_.GetRoot());
+	auto handler_base = new InputReaderJSON(trc_); 
+	auto handler_stat = new StatReaderJSON(trc_, ui_); 
+	auto handler_render = new RenderSettingsJSON(trc_);
+	
+	handler_base->Read(doc_.GetRoot());
+	handler_stat->Read(doc_.GetRoot());
+	handler_render->Read(doc_.GetRoot());
+	
+	handler_base_ = handler_base;
+	handler_stat_ = handler_stat;
+	handler_render_ = handler_render;
+	
 }
-
 } // end ::trans_cat

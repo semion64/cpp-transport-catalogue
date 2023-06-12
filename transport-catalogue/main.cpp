@@ -6,16 +6,16 @@
 #include <sstream>
 #include <string>
 
-//#include "input_reader.h"
-//#include "stat_reader.h"
+#include "input_reader.h"
+#include "stat_reader.h"
 #include "json_reader.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
 using namespace std;
-/*
+
 namespace trans_cat {
 namespace tests {
-
+/*
 13
 Stop Tolstopaltsevo: 55.611087, 37.20829, 3900m to Marushkino
 Stop Marushkino: 55.595884, 37.209755, 9900m to Rasskazovka, 100m to Marushkino
@@ -75,7 +75,7 @@ struct RouteStat {
 	bool is_ring;
 };
 
-
+*/
 
 std::string ReadFile(std::string file_name) {
 	std::ifstream in(file_name);
@@ -87,7 +87,7 @@ std::string ReadFile(std::string file_name) {
 		
 void HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat::RequestHandlerBase& handler_base) {
 	handler_base.Read(is);
-	handler_base.DoQueries();
+	handler_base.Do();
 	assert((trc.GetStops().size() == 2));
 	assert((trc.GetBuses().size() == 2));
 	
@@ -137,13 +137,13 @@ void StatStd() {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd hb(trc);
 	hb.Read(in);
-	hb.DoQueries();
+	hb.Do();
 	
 	std::stringstream ss_out;
 	trans_cat::UserInterfaceStd ui(ss_out, trc);
 	trans_cat::StatReaderStd hs(trc, ui);
 	hs.Read(in);
-	hs.DoQueries();	
+	hs.Do();	
 	
 	assert((ReadFile("tests/std_test_out.txt").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
@@ -156,14 +156,14 @@ void StatJSON() {
 	trans_cat::InputReaderJSON hb(trc);
 	auto doc = json::Load(in);
 	const json::Node& data = doc.GetRoot();
-	hb.ReadJSON(data);
-	hb.DoQueries();
+	hb.Read(data);
+	hb.Do();
 	
 	std::stringstream ss_out;
 	trans_cat::UserInterfaceJSON ui(ss_out, trc);
 	trans_cat::StatReaderJSON hs(trc, ui);
-	hs.ReadJSON(data);
-	hs.DoQueries();	
+	hs.Read(data);
+	hs.Do();	
 	//std::cerr << ss_out.str();
 	assert((ReadFile("tests/json_test_out.txt").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
@@ -176,9 +176,10 @@ void BaseStatStd() {
 	
 	trans_cat::TransportCatalogue trc;
 	trans_cat::UserInterfaceStd ui(ss_out, trc);
-	trans_cat::RequestStd std_request(trc, ui);
+	trans_cat::RequestManagerSTD std_request(trc, ui);
 	std_request.Read(in);
-	std_request.DoQueries();
+	std_request.DoBase();
+	std_request.DoStat();
 	
 	assert((ReadFile("tests/std_test_out.txt").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
@@ -193,9 +194,10 @@ void BaseStatJSON() {
 	
 	trans_cat::TransportCatalogue trc;
 	trans_cat::UserInterfaceJSON ui(ss_out, trc);
-	trans_cat::RequestJSON json_request(trc, ui);
+	trans_cat::RequestManagerJSON json_request(trc, ui);
 	json_request.Read(in);
-	json_request.DoQueries();
+	json_request.DoBase();
+	json_request.DoStat();
 	
 	assert((ReadFile("tests/json_test_out.txt").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
@@ -222,11 +224,11 @@ void RunStd(std::istream& is = std::cin) {
 	trans_cat::StatReaderStd sr(trc, ui);
 	
 	ir.Read(is);
-	ir.DoQueries();
+	ir.Do();
 	sr.Read(is);
-	sr.DoQueries();
+	sr.Do();
 }
-*/
+
 /*
 void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
@@ -234,7 +236,7 @@ void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::RequestJSON json_request(trc, ui);
 	json_request.Read(is);
 	json_request.DoQueries();
-}*/
+}
 
 void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
@@ -254,36 +256,10 @@ void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(trans_cat::RenderSettings{}, order_buses); 
 	map_renderer->RenderMap(os);
 }
-
-/*
-int main() {
-    using namespace std;
-
-    const double WIDTH = 600.0;
-    const double HEIGHT = 400.0;
-    const double PADDING = 50.0;
-    
-    // Точки, подлежащие проецированию
-    vector<geo::Coordinates> geo_coords = {
-        {43.587795, 39.716901}, {43.581969, 39.719848}, {43.598701, 39.730623},
-        {43.585586, 39.733879}, {43.590317, 39.746833}
-    };
-
-    // Создаём проектор сферических координат на карту
-    const SphereProjector proj{
-        geo_coords.begin(), geo_coords.end(), WIDTH, HEIGHT, PADDING
-    };
-
-    // Проецируем и выводим координаты
-    for (const auto geo_coord: geo_coords) {
-        const svg::Point screen_coord = proj(geo_coord);
-        cout << '(' << geo_coord.lat << ", "sv << geo_coord.lng << ") -> "sv;
-        cout << '(' << screen_coord.x << ", "sv << screen_coord.y << ')' << endl;
-    }
-}*/
+*/
 
 int main() {
-	std::ifstream f("tests/input_svg_1.json");
-	RunJSON_SVG(f, std::cout);
-	//Tests();
+	//std::ifstream f("tests/input_svg_1.json");
+	//RunJSON_SVG(f, std::cout);
+	Tests();
 }

@@ -73,8 +73,14 @@ void UserInterfaceStd::ShowStopBuses(std::string_view stop_name) const {
 	}	
 }
 
-void RequestStd::Read(std::istream& is) {
+void RequestManagerSTD::Read(std::istream& is) {
+	handler_base_ = new InputReaderStd(trc_); 
+	handler_stat_ = new StatReaderStd(trc_, ui_); 
+	handler_render_ = new RenderSettingsStd(trc_);
+	
 	handler_base_->Read(is);
 	handler_stat_->Read(is);
+	handler_render_->Read(is);
 }
+
 } // end ::trans_cat

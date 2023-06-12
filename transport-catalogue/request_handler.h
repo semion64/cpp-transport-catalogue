@@ -43,26 +43,42 @@ struct StatQuery {
 };
 
 class UserInterface;
+class RequestReader;
 class RequestHandler;
 class RequestHandlerBase;
 class RequestHandlerStat;
-class RequestHandlerBaseStat;
 
-class RequestHandler {
+class UserInterface {
 public:	
-	RequestHandler() { }
+	UserInterface(std::ostream& os, TransportCatalogue& trc) : os_(os), trc_(trc)  {}
+	virtual void ShowQueriesResult(const std::list<StatQuery>& queries) const = 0;
+protected:
+	int ROUTE_STAT_PRECISION = 6;
+	std::ostream& os_;
+	TransportCatalogue& trc_;
+};
+
+class RequestReader {
+public:	
+	RequestReader(TransportCatalogue& trc) : trc_(trc) { }
 	virtual void Read(std::istream& is) = 0;
-	virtual void DoQueries() = 0;
-	virtual ~RequestHandler() = default;
+	virtual ~RequestReader() = default;
+protected:
+	TransportCatalogue& trc_;
+};
+
+class RequestHandler : public RequestReader {
+public:	
+	RequestHandler(TransportCatalogue& trc) : RequestReader(trc) { }
+	virtual void Do() = 0;
 };
 
 class RequestHandlerBase : public RequestHandler {
 public:	
-	RequestHandlerBase(TransportCatalogue& trc) : trc_(trc) {	}
-	void DoQueries() override;
+	RequestHandlerBase(TransportCatalogue& trc) : RequestHandler(trc) {	}
+	void Do() override;
 protected:
 	using MapDiBetweenStops = std::unordered_map<std::string_view, std::unordered_map<std::string, int>>;
-	TransportCatalogue& trc_;
 	virtual void AddStops(MapDiBetweenStops& stop_di) = 0; // function must fill stop_di_ map
 	virtual void AddBuses() = 0;
 private:
@@ -73,41 +89,58 @@ private:
 class RequestHandlerStat : public RequestHandler {
 public:
 	using StatQueryList = std::list<StatQuery>;
-	RequestHandlerStat(TransportCatalogue& trc, UserInterface& ui) : trc_(trc), ui_(ui) {	}
-	void DoQueries() override;
+	RequestHandlerStat(TransportCatalogue& trc, UserInterface& ui) : RequestHandler(trc), ui_(ui) {	}
+	void Do() override;
 protected:
-	TransportCatalogue& trc_;
 	UserInterface& ui_;
 	StatQueryList queries_;
 };
 
-class UserInterface {
-public:	
-	UserInterface(std::ostream& os, TransportCatalogue& trc) : os_(os), trc_(trc)  {}
-	virtual void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const = 0;
-protected:
-	int ROUTE_STAT_PRECISION = 6;
-	std::ostream& os_;
-	TransportCatalogue& trc_;
-};
-
-class RequestHandlerBaseStat : public RequestHandler {
-public: 
-	RequestHandlerBaseStat(RequestHandlerBase* handler_base, RequestHandlerStat* handler_stat);
-	virtual void Read(std::istream& is) = 0;
-	virtual void DoQueries() override;
-	virtual void DoBaseQueries();
-	virtual void DoStatQueries();
-	virtual ~RequestHandlerBaseStat() {
-		if(handler_base_) {
-			delete handler_base_;
-		}
-		if(handler_stat_) {
-			delete handler_stat_;
-		}
+class RequestHandlerRenderSettings : public RequestHandler {
+public:
+	RequestHandlerRenderSettings(TransportCatalogue& trc) : RequestHandler(trc) {	}
+	RenderSettings GetRenderSettings() {
+		return rs_;
 	}
 protected:
-	RequestHandlerBase* handler_base_;
-	RequestHandlerStat* handler_stat_;
+	RenderSettings rs_;
 };
+
+class RequestManager : public RequestReader {
+public: 
+	RequestManager(TransportCatalogue& trc, UserInterface& ui) : RequestReader(trc), ui_(ui) { }
+	void DoBase();
+	void DoStat();
+	RenderSettings DoRenderSettings();
+	~RequestManager() override {
+		if(handler_base_) delete handler_base_;
+		if(handler_stat_) delete handler_stat_;
+		if(handler_render_) delete handler_render_;
+	}
+protected:
+	UserInterface& ui_;
+	RequestHandlerBase* handler_base_;
+    RequestHandlerStat* handler_stat_;
+    RequestHandlerRenderSettings* handler_render_;
+};
+/*
+class RequestHandlerMap {
+public: 
+	using HandlerMap = std::unordered_map<std::string, RequestHandler*>;
+	RequestHandlerMap(HandlerMap handler_map) : handler_map_ (handler_map) { }
+	void AddHandler(std::pair<std::string, RequestHandler*>& handler) {
+		handler_map_.insert(handler); 
+	}
+	
+	void DoQueries(std::string_view handler_key) {
+		handler_map_.[handler_key].DoQueries(); 
+	}
+	
+	RequestHandler* GetHandler(std::string_view handler_key) {
+		handler_map_.[handler_key]; 
+	}
+	
+private:
+	HandlerMap handler_map_;
+};*/
 } // end ::trans_cat

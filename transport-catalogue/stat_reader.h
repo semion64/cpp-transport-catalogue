@@ -12,7 +12,6 @@ namespace trans_cat {
 	
 class StatReaderStd;
 class UserInterfaceStd;
-class RequestStd;
 
 class StatReaderStd : public RequestHandlerStat {	
 public:	
@@ -29,12 +28,17 @@ private:
 	void ShowStopBuses(std::string_view stop) const;
 };
 
-class RequestStd : public RequestHandlerBaseStat  {
-public: 
-	RequestStd(InputReaderStd* hb, StatReaderStd* hs)
-		: RequestHandlerBaseStat(hb, hs) { }
-	RequestStd(TransportCatalogue& trc, UserInterface& ui) 
-		: RequestHandlerBaseStat(new InputReaderStd(trc), new StatReaderStd(trc, ui))  { }
-	void Read(std::istream& is) override;
+class RenderSettingsStd : public RequestHandlerRenderSettings {
+public:
+	RenderSettingsStd (TransportCatalogue& trc) : RequestHandlerRenderSettings(trc) {	}
+	void Read(std::istream& is) override { }
+	void Do() override {}
 };
+
+class RequestManagerSTD : public RequestManager {
+public: 
+	RequestManagerSTD(TransportCatalogue& trc, UserInterface& ui) : RequestManager(trc, ui) { }
+	void Read(std::istream& is);
+};
+
 } // end ::trans_cat
