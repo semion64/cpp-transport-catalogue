@@ -204,6 +204,41 @@ void BaseStatJSON() {
 	
 	in.close();
 }
+
+void RoutesSVG() {
+	std::cerr << "\tRoutesSVG: ";
+	std::ifstream in("tests/input_svg.json");
+	std::stringstream ss_out;
+	
+	trans_cat::TransportCatalogue trc;
+	trans_cat::UserInterfaceJSON ui(ss_out, trc);
+	trans_cat::RequestManagerJSON json_request(trc, ui);
+	json_request.Read(in);
+	json_request.DoBase();
+	auto unorder_buses = trc.GetBuses();
+	trans_cat::BusList order_buses = trc.GetBusesSorted();/*
+	std::for_each(unorder_buses.begin(), unorder_buses.end(), [&unorder_buses, &order_buses](trans_cat::Bus bus) {
+		order_buses.push_back(bus);
+	});
+	std::sort(order_buses.begin(), order_buses.end(), trans_cat::detail::compareBusesByName{});
+	*/
+	std::string res = "";
+	for(trans_cat::Bus b : order_buses) {
+		res += b.name;
+	}
+	
+	assert((res == "ABCDE"));
+	
+	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
+	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(rs, order_buses); 
+	map_renderer->RenderMap(ss_out);
+	std::cout << ss_out.str() << std::endl;
+	std::string f = ReadFile("tests/output_svg.svg");
+	std::cout << f << std::endl;
+	assert((f.compare(ss_out.str())));
+	std::cerr << "\tok" << std::endl;
+	in.close();
+}
 } // end ::tests
 } // end ::trans_cat
 
@@ -214,6 +249,7 @@ void Tests() {
 	trans_cat::tests::BaseJSON();
 	trans_cat::tests::StatJSON();
 	trans_cat::tests::BaseStatJSON();
+	trans_cat::tests::RoutesSVG();
 	std::cerr << "Tests_End" << std::endl;
 }
 
@@ -257,10 +293,10 @@ void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	map_renderer->RenderMap(os);
 }
 
-
 int main() {
-	std::ifstream f("tests/test_in.json");
-	RunJSON_SVG(f, std::cout);
-	std::cout << std::endl;
+	std::ifstream f("tests/input_svg.json");
+	//TestOrder(f);
+	//RunJSON_SVG(f, std::cout);
+	//std::cout << std::endl;
 	Tests();
 }

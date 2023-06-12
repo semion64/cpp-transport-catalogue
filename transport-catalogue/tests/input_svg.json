@@ -1,0 +1,84 @@
+{
+  "base_requests": [
+		{
+			"type": "Stop",
+			"name": "Tolstopaltsevo",
+			"latitude": 55.611087,
+			"longitude": 37.20829,
+			"road_distances": {
+				"Marushkino": 1000
+			}
+		},
+		{
+			"type": "Stop",
+			"name": "Marushkino",
+			"latitude": 55.595884,
+			"longitude": 37.209755,
+			"road_distances": {
+				"Tolstopaltsevo": 2000,
+				"Marushkino", 100
+			}
+		},
+    {
+      "type": "Bus",
+      "name": "B",
+      "stops": ["Tolstopaltsevo"],
+      "is_roundtrip": false
+    },
+    {
+      "type": "Bus",
+      "name": "C",
+      "stops": ["Tolstopaltsevo", "Marushkino"],
+      "is_roundtrip": false
+    },
+     {
+      "type": "Bus",
+      "name": "E",
+      "stops": ["Tolstopaltsevo", "Marushkino", "Tolstopaltsevo"],
+      "is_roundtrip": false
+    }
+     {
+      "type": "Bus",
+      "name": "A",
+      "stops": [],
+      "is_roundtrip": true
+    },
+    {
+      "type": "Bus",
+      "name": "D",
+      "stops": ["Tolstopaltsevo", "Marushkino", "Tolstopaltsevo"],
+      "is_roundtrip": false
+    }
+  ],
+  "render_settings": {
+    "width": 600,
+    "height": 400,
+    "padding": 50,
+    "stop_radius": 5,
+    "line_width": 14,
+    "bus_label_font_size": 20,
+    "bus_label_offset": [
+      7,
+      15
+    ],
+    "stop_label_font_size": 20,
+    "stop_label_offset": [
+      7,
+      -3
+    ],
+    "underlayer_color": [
+      255,
+      255,
+      255,
+      0.85
+    ],
+    "underlayer_width": 3,
+    "color_palette": [
+      "green",
+      [255, 160, 0],
+      "red"
+    ]
+  },
+  "stat_requests": [
+  ]
+}
