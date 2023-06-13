@@ -79,10 +79,10 @@ struct RouteStat {
 
 std::string ReadFile(std::string file_name) {
 	std::ifstream in(file_name);
-	std::string str;
-	std::getline(in, str);
+	std::ostringstream sstr;
+    sstr << in.rdbuf();
 	in.close();
-	return str;
+    return sstr.str();
 }	
 		
 void HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat::RequestHandlerBase& handler_base) {
@@ -114,7 +114,7 @@ void HandlerBase(std::istream& is, trans_cat::TransportCatalogue& trc, trans_cat
 
 void BaseStd() {
 	std::cerr << "\tBaseStd: ";
-	std::ifstream in("tests/std_test_in.txt");
+	std::ifstream in("tests/input.std");
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd hb(trc);
 	HandlerBase(in, trc, hb);
@@ -123,7 +123,7 @@ void BaseStd() {
 
 void BaseJSON() {
 	std::cerr << "\tBaseJSON: ";
-	std::ifstream in("tests/test_in.json");
+	std::ifstream in("tests/input.json");
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderJSON hb(trc);
 	HandlerBase(in, trc, hb);
@@ -132,7 +132,7 @@ void BaseJSON() {
 
 void StatStd() {
 	std::cerr << "\tStatStd: ";
-	std::ifstream in("tests/std_test_in.txt");
+	std::ifstream in("tests/input.std");
 	
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd hb(trc);
@@ -145,13 +145,13 @@ void StatStd() {
 	hs.Read(in);
 	hs.Do();	
 	
-	assert((ReadFile("tests/std_test_out.txt").compare(ss_out.str())));
+	assert((ReadFile("tests/output.std").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
 }
 
 void StatJSON() {
 	std::cerr << "\tStatJSON: ";
-	std::ifstream in("tests/test_in.json");
+	std::ifstream in("tests/input.json");
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderJSON hb(trc);
 	auto doc = json::Load(in);
@@ -165,13 +165,13 @@ void StatJSON() {
 	hs.Read(data);
 	hs.Do();	
 	//std::cerr << ss_out.str();
-	assert((ReadFile("tests/test_out.json").compare(ss_out.str())));
+	assert((ReadFile("tests/uotput.json").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
 }
 
 void BaseStatStd() {
 	std::cerr << "\tBaseStatStd: ";
-	std::ifstream in("tests/std_test_in.txt");
+	std::ifstream in("tests/input.std");
 	std::stringstream ss_out;
 	
 	trans_cat::TransportCatalogue trc;
@@ -181,7 +181,7 @@ void BaseStatStd() {
 	std_request.DoBase();
 	std_request.DoStat();
 	
-	assert((ReadFile("tests/std_test_out.txt").compare(ss_out.str())));
+	assert((ReadFile("tests/output.std").compare(ss_out.str())));
 	std::cerr << "\tok" << std::endl;
 	
 	in.close();
@@ -189,7 +189,7 @@ void BaseStatStd() {
 
 void BaseStatJSON() {
 	std::cerr << "\tBaseStatJSON: ";
-	std::ifstream in("tests/test_in.json");
+	std::ifstream in("tests/input.json");
 	std::stringstream ss_out;
 	
 	trans_cat::TransportCatalogue trc;
@@ -199,7 +199,7 @@ void BaseStatJSON() {
 	json_request.DoBase();
 	json_request.DoStat();
 	
-	assert((ReadFile("tests/test_out.json").compare(ss_out.str())));
+	assert((ReadFile("tests/output.json").compare(ss_out.str()) == 0));
 	std::cerr << "\tok" << std::endl;
 	
 	in.close();
@@ -232,10 +232,7 @@ void RoutesSVG() {
 	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
 	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(rs, order_buses); 
 	map_renderer->RenderMap(ss_out);
-	std::cout << ss_out.str() << std::endl;
-	std::string f = ReadFile("tests/output_svg.svg");
-	std::cout << f << std::endl;
-	assert((f.compare(ss_out.str())));
+	assert((ReadFile("tests/output_svg.svg").compare(ss_out.str()) == 0));
 	std::cerr << "\tok" << std::endl;
 	in.close();
 }
@@ -265,15 +262,16 @@ void RunStd(std::istream& is = std::cin) {
 	sr.Do();
 }
 
-/*
+
 void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::UserInterfaceJSON ui(os, trc);
-	trans_cat::RequestJSON json_request(trc, ui);
+	trans_cat::RequestManagerJSON json_request(trc, ui);
 	json_request.Read(is);
-	json_request.DoQueries();
+	json_request.DoBase();
+	json_request.DoStat();
 }
-*/
+
 void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::UserInterfaceJSON ui(os, trc);
@@ -295,8 +293,8 @@ void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 
 int main() {
 	std::ifstream f("tests/input_svg.json");
-	//TestOrder(f);
+	RunJSON();
 	//RunJSON_SVG(f, std::cout);
 	//std::cout << std::endl;
-	Tests();
+	//Tests();
 }

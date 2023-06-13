@@ -22,48 +22,66 @@ class InputReaderJSON;
 class StatReaderJSON;
 class UserInterfaceJSON;
 
-class RequestReaderJSON {
+class LoaderJSON {
 public:
+	LoaderJSON() {}
 	virtual void Read(const json::Node& root) = 0;
+protected:
+	void ReadFromStream(std::istream& is) {
+		doc_ = json::Load(is);
+		Read(doc_.GetRoot());
+	}
+
+	void ReadFromJSON(const json::Node& root, std::string request_name = "") {
+		if(!root.IsMap()) {
+			throw ExceptionWrongQueryType("json root node has unsupported format");
+		}
+		
+		if(request_name.empty()) { 
+			root_ = root;
+			return;
+		}
+		const auto& root_map = root.AsMap();
+		if(!root_map.count(request_name)) {
+			throw ExceptionWrongQueryType("request node (" + std::string(request_name) + ") not find");
+		}
+		
+		root_ = root_map.at(request_name);		
+	}
+protected:
+	json::Node root_;
+private:
+	json::Document doc_ {nullptr};
 };
 
-class InputReaderJSON : public RequestHandlerBase, public RequestReaderJSON {	
+class InputReaderJSON : public RequestHandlerBase, public LoaderJSON {	
 public:	
 	InputReaderJSON(TransportCatalogue& trc) : RequestHandlerBase (trc) {	}
 	
-	void Read(std::istream& is) override;
+	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node& root) override;
 private:
-	json::Node root_;
 	std::unordered_set<const json::Dict*> add_stop_queries_;
 	std::unordered_set<const json::Dict*> add_bus_queries_;
-	
 	void ReadQuery(const json::Node& request);
-	
 	void AddStops(MapDiBetweenStops& stop_di) override;
 	void AddBuses() override;
-	
 	std::vector<const Stop*> ParseStopList(const json::Array& stop_list, bool is_ring);
 };
 
-class StatReaderJSON : public RequestHandlerStat, public RequestReaderJSON {	
+class StatReaderJSON : public RequestHandlerStat, public LoaderJSON {	
 public:	
 	StatReaderJSON(TransportCatalogue& trc, UserInterface& ui) : RequestHandlerStat(trc, ui) { } 
-	void Read(std::istream& is) override;
+	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node& root) override;
-private:
-	json::Node root_;
 };
 
-class RenderSettingsJSON : public RequestHandlerRenderSettings, public RequestReaderJSON {
+class RenderSettingsJSON : public RequestHandlerRenderSettings, public LoaderJSON {
 public:
 	RenderSettingsJSON(TransportCatalogue& trc) : RequestHandlerRenderSettings(trc) {	}
-	void Read(std::istream& is) override;
+	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node& root) override;
-	void ReadQuery(const json::Node& request);
 	void Do() override {}
-private:
-	json::Node root_;
 };
 
 class UserInterfaceJSON : public UserInterface {
@@ -75,12 +93,11 @@ private:
 	void ShowStopBuses(std::string_view stop_name) const;
 };
 
-class RequestManagerJSON : public RequestManager {
+class RequestManagerJSON : public RequestManager, public LoaderJSON {
 public: 
 	RequestManagerJSON(TransportCatalogue& trc, UserInterface& ui) : RequestManager(trc, ui) {	}
-	void Read(std::istream& is) override;	
-private:
-	json::Document doc_ {nullptr};
+	void Read(std::istream& is) override { ReadFromStream(is); }
+	void Read(const json::Node& root) override;	
 };
 
 } // end ::trans_cat

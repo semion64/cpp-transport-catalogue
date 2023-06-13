@@ -1,31 +1,97 @@
 #include "json_reader.h"
 
 namespace trans_cat {
-
-void InputReaderJSON::Read(std::istream& is) {
-	root_ = json::Load(is).GetRoot();
-	Read(root_);
-}
-
-void InputReaderJSON::Read(const json::Node& root) {
-	root_ = root;
-    if(!root.IsMap()) {
-		throw ExceptionWrongQueryType("json root node has unsupported format");
-	}
 	
-	const auto& root_map = root.AsMap();
-	if(!root_map.count("base_requests")) {
-		throw ExceptionWrongQueryType("json root node has unsupported format");
+void InputReaderJSON::Read(const json::Node& root) { 
+	try {	
+		ReadFromJSON(root, "base_requests"); 
 	}
+	catch(ExceptionWrongQueryType&) {
+		std::cerr << "request node (base_requests) not find" << std::endl;
+		return;
+	} 
 	
-	for(const auto& request : root_map.at("base_requests").AsArray()) {
+	for(const auto& request : root_.AsArray()) {
 		ReadQuery(request);
 	}
 }
 
+void StatReaderJSON::Read(const json::Node& root) { 
+	try {
+		ReadFromJSON(root, "stat_requests");
+	}
+	catch(ExceptionWrongQueryType&) {
+		std::cerr << "request node (stat_requests) not find" << std::endl;
+		return;
+	} 
+	
+	for(const auto& request : root_.AsArray()) {
+		json::Dict m = request.AsMap();
+		queries_.push_back({
+			m.at("id").AsInt(), 
+			StatQuery::GetType(m.at("type").AsString()), 
+			std::string(m.at("name").AsString())
+		});
+	}
+}
+
+void RenderSettingsJSON::Read(const json::Node& root) { // , std::string request_name
+	try {
+		ReadFromJSON(root, "render_settings");
+	}
+	catch(ExceptionWrongQueryType&) {
+		std::cerr << "request node (render_settings) not find" << std::endl;
+		return;
+	}
+	auto m = root_.AsMap();
+	
+	if(m.count("bus_label_offset")) {
+		auto& blo = m.at("bus_label_offset").AsArray();
+		rs_.bus_label_offset 	= svg::Point {blo[0].AsDouble(), blo[1].AsDouble()};
+	}
+	
+	if(m.count("stop_label_offset")) {
+		auto& slo = m.at("stop_label_offset").AsArray();
+		rs_.stop_label_offset 	= svg::Point {slo[0].AsDouble(), slo[1].AsDouble()};
+	}
+	
+	if(m.count("color_palette")) {
+		std::vector<svg::Color> color_palette;
+		for(auto& node_color : m.at("color_palette").AsArray()) {
+			color_palette.push_back(detail::ParseColor(node_color));
+		}
+		
+		rs_.color_palette =  color_palette;
+	}
+	
+	if(m.count("width"))	rs_.width				= m.at("width").AsDouble();
+	if(m.count("height")) rs_.height 				= m.at("height").AsDouble();
+	if(m.count("padding")) rs_.padding 			= m.at("padding").AsDouble();
+	if(m.count("line_width")) rs_.line_width 			= m.at("line_width").AsDouble();
+	if(m.count("stop_radius")) rs_.stop_radius 		= m.at("stop_radius").AsDouble();
+	if(m.count("bus_label_font_size")) rs_.bus_label_font_size = m.at("bus_label_font_size").AsInt();
+	if(m.count("stop_label_font_size")) rs_.stop_label_font_size = m.at("stop_label_font_size").AsInt();
+	if(m.count("underlayer_color")) rs_.underlayer_color 	=  detail::ParseColor(m.at("underlayer_color"));
+	if(m.count("underlayer_width")) rs_.underlayer_width 	=  m.at("underlayer_width").AsDouble();
+}
+
+void RequestManagerJSON::Read(const json::Node& root) {
+	ReadFromJSON(root);
+	auto handler_base = new InputReaderJSON(trc_); 
+	auto handler_stat = new StatReaderJSON(trc_, ui_); 
+	auto handler_render = new RenderSettingsJSON(trc_);
+	
+	handler_base->Read(root_);
+	handler_stat->Read(root_);
+	handler_render->Read(root_);
+	
+	handler_base_ = handler_base;
+	handler_stat_ = handler_stat;
+	handler_render_ = handler_render;
+}
+
 void InputReaderJSON::ReadQuery(const json::Node& request) {
 	const json::Dict* m = &request.AsMap();
-
 	if(m->at("type").AsString() == "Stop") {
 		add_stop_queries_.insert(m);
 	}
@@ -75,32 +141,6 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 	return stops;
 }
 
-void StatReaderJSON::Read(std::istream& is) {
-	root_ = json::Load(is).GetRoot();
-	Read(root_);
-}
-
-void StatReaderJSON::Read(const json::Node& root) {
-	root_ = root;
-	if(!root.IsMap()) {
-		throw ExceptionWrongQueryType("json root node has unsupported format");
-	}
-	
-	const auto& root_map = root.AsMap();
-	if(!root_map.count("stat_requests")) {
-		throw ExceptionWrongQueryType("json root node has unsupported format");
-	}
-	
-	for(const auto& request : root_map.at("stat_requests").AsArray()) {
-		json::Dict m = request.AsMap();
-		queries_.push_back({
-			m.at("id").AsInt(), 
-			StatQuery::GetType(m.at("type").AsString()), 
-			std::string(m.at("name").AsString())
-		});
-	}
-}
-
 void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
 	os_ << "[";
     bool is_first = true;
@@ -133,15 +173,6 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 }
 
 void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
-	/*
-	 {
-	  "curvature": 2.18604,
-	  "request_id": 12345678,
-	  "route_length": 9300,
-	  "stop_count": 4,
-	  "unique_stop_count": 3
-	}  
-	*/
 	try {
 		const auto& bus = trc_.GetBus(bus_name);
 		const auto& route = trc_.GetRouteStat(bus);
@@ -151,10 +182,6 @@ void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
 			<< "\"unique_stop_count\":" << route.unique_stops;
 	}
 	catch(ExceptionBusNotFound&) {
-		/*{
-		  "request_id": 12345,
-		  "error_message": "not found"
-		} */
 		os_ << "\"error_message\":" << "\"not found\"";
 	}	
 }
@@ -163,12 +190,6 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	try {
 		const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(stop_name));
-		/*{
-		  "buses": [
-			  "14", "22к"
-		  ],
-		  "request_id": 12345
-		} */
 		os_ << "\"buses\":[";
 		bool is_first = false;
 		for(const auto& bus : stop_buses) {
@@ -190,131 +211,6 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 	}
 }
 
-//---------------------------RequestManagerJSON--------------------------------------------------------------------------------------------------------------------------
-
-void RequestManagerJSON::Read(std::istream& is) {
-	doc_ = json::Load(is);
-	auto handler_base = new InputReaderJSON(trc_); 
-	auto handler_stat = new StatReaderJSON(trc_, ui_); 
-	auto handler_render = new RenderSettingsJSON(trc_);
-	
-	handler_base->Read(doc_.GetRoot());
-	handler_stat->Read(doc_.GetRoot());
-	handler_render->Read(doc_.GetRoot());
-	
-	handler_base_ = handler_base;
-	handler_stat_ = handler_stat;
-	handler_render_ = handler_render;
-	
-}
-
-void RenderSettingsJSON::Read(std::istream& is) { 
-	root_ = json::Load(is).GetRoot();
-	Read(root_);
-}
-
-void RenderSettingsJSON::Read(const json::Node& root) { // , std::string request_name
-	root_ = root;
-    if(!root.IsMap()) {
-		return;
-		throw ExceptionWrongQueryType("json root node has unsupported format");
-	}
-	
-	const auto& root_map = root.AsMap();
-	if(!root_map.count("render_settings")) {
-		return;
-		throw ExceptionWrongQueryType("json root node has unsupported format");
-	}
-	
-	ReadQuery(root_map.at("render_settings"));
-}
-/*
-struct RenderSettings {
-	double width = 1200.0;
-	double height = 1200.0;
-	double padding = 50.0;
-
-	double line_width =14.0;
-	double stop_radius = 5.0;
-
-	uint32_t bus_label_font_size = 20;
-	svg::Point bus_label_offset {7.0, 15.0};
-
-	uint32_t stop_label_font_size = 20;
-	svg::Point stop_label_offset {7.0, -3.0};
-
-	svg::Color underlayer_color = svg::Rgba{255, 255, 255, 0.85};
-	double underlayer_width = 3.0;
-
-	std::vector<svg::Color> color_palette = {
-		"green",
-		svg::Rgb {255, 160, 0},
-		"red"
-	};
-};*/
-
-	
-void RenderSettingsJSON::ReadQuery(const json::Node& request) { 
-	const json::Dict* m = &request.AsMap();
-	
-	if(m->count("bus_label_offset")) {
-		auto& blo = m->at("bus_label_offset").AsArray();
-		rs_.bus_label_offset 	= svg::Point {blo[0].AsDouble(), blo[1].AsDouble()};
-	}
-	
-	if(m->count("stop_label_offset")) {
-		auto& slo = m->at("stop_label_offset").AsArray();
-		rs_.stop_label_offset 	= svg::Point {slo[0].AsDouble(), slo[1].AsDouble()};
-	}
-	if(m->count("color_palette")) {
-		std::vector<svg::Color> color_palette;
-		for(auto& node_color : m->at("color_palette").AsArray()) {
-			color_palette.push_back(detail::ParseColor(node_color));
-		}
-		
-		rs_.color_palette =  color_palette;
-	}
-	
-	if(m->count("width"))	rs_.width				= m->at("width").AsDouble();
-	if(m->count("height")) rs_.height 				= m->at("height").AsDouble();
-	if(m->count("padding")) rs_.padding 			= m->at("padding").AsDouble();
-	if(m->count("line_width")) rs_.line_width 			= m->at("line_width").AsDouble();
-	if(m->count("stop_radius")) rs_.stop_radius 		= m->at("stop_radius").AsDouble();
-	if(m->count("bus_label_font_size")) rs_.bus_label_font_size = m->at("bus_label_font_size").AsInt();
-	if(m->count("stop_label_font_size")) rs_.stop_label_font_size = m->at("stop_label_font_size").AsInt();
-	if(m->count("underlayer_color")) rs_.underlayer_color 	=  detail::ParseColor(m->at("underlayer_color"));
-	if(m->count("underlayer_width")) rs_.underlayer_width 	=  m->at("underlayer_width").AsDouble();
-}
-
-/*
- 
- {
-  "width": 1200.0,
-  "height": 1200.0,
-
-  "padding": 50.0,
-
-  "line_width": 14.0,
-  "stop_radius": 5.0,
-
-  "bus_label_font_size": 20,
-  "bus_label_offset": [7.0, 15.0],
-
-  "stop_label_font_size": 20,
-  "stop_label_offset": [7.0, -3.0],
-
-  "underlayer_color": [255, 255, 255, 0.85],
-  "underlayer_width": 3.0,
-
-  "color_palette": [
-    "green",
-    [255, 160, 0],
-    "red"
-  ]
-} 
-
- */
- 
 namespace detail {
 svg::Color ParseColor(const json::Node& node_color) {
 	if(node_color.IsArray()) {

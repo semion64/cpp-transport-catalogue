@@ -35,21 +35,6 @@ struct Bus {
 	bool is_ring;
 };
 
-struct RenderSettings {
-	std::optional<double> width;
-	std::optional<double> height;
-	std::optional<double> padding;
-	std::optional<double> line_width;
-	std::optional<double> stop_radius;
-	std::optional<uint32_t> bus_label_font_size;
-	std::optional<svg::Point> bus_label_offset;
-	std::optional<uint32_t> stop_label_font_size;
-	std::optional<svg::Point> stop_label_offset;
-	std::optional<svg::Color> underlayer_color;
-	std::optional<double> underlayer_width;
-	std::optional<std::vector<svg::Color>> color_palette;
-};
-
 namespace detail {
 struct RouteStat {
 	size_t stops_count;

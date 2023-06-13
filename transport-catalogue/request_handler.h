@@ -11,6 +11,7 @@
 #include <vector>
 
 #include "transport_catalogue.h"
+#include "map_renderer.h"
 
 namespace trans_cat {
 class ExceptionWrongQueryType : public std::logic_error {
