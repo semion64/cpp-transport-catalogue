@@ -2,7 +2,7 @@
 
 namespace trans_cat {
 	
-void InputReaderJSON::Read(const json::Node& root) { 
+void InputReaderJSON::Read(const json::Node* root) { 
 	try {	
 		ReadFromJSON(root, "base_requests"); 
 	}
@@ -11,12 +11,12 @@ void InputReaderJSON::Read(const json::Node& root) {
 		return;
 	} 
 	
-	for(const auto& request : root_.AsArray()) {
+	for(const auto& request : root_->AsArray()) {
 		ReadQuery(request);
 	}
 }
 
-void StatReaderJSON::Read(const json::Node& root) { 
+void StatReaderJSON::Read(const json::Node* root) { 
 	try {
 		ReadFromJSON(root, "stat_requests");
 	}
@@ -25,7 +25,7 @@ void StatReaderJSON::Read(const json::Node& root) {
 		return;
 	} 
 	
-	for(const auto& request : root_.AsArray()) {
+	for(const auto& request : root_->AsArray()) {
 		json::Dict m = request.AsMap();
 		queries_.push_back({
 			m.at("id").AsInt(), 
@@ -35,7 +35,7 @@ void StatReaderJSON::Read(const json::Node& root) {
 	}
 }
 
-void RenderSettingsJSON::Read(const json::Node& root) { // , std::string request_name
+void RenderSettingsJSON::Read(const json::Node* root) { // , std::string request_name
 	try {
 		ReadFromJSON(root, "render_settings");
 	}
@@ -43,7 +43,8 @@ void RenderSettingsJSON::Read(const json::Node& root) { // , std::string request
 		std::cerr << "request node (render_settings) not find" << std::endl;
 		return;
 	}
-	auto m = root_.AsMap();
+	
+	const auto& m = root_->AsMap();
 	
 	if(m.count("bus_label_offset")) {
 		auto& blo = m.at("bus_label_offset").AsArray();
@@ -75,7 +76,7 @@ void RenderSettingsJSON::Read(const json::Node& root) { // , std::string request
 	if(m.count("underlayer_width")) rs_.underlayer_width 	=  m.at("underlayer_width").AsDouble();
 }
 
-void RequestManagerJSON::Read(const json::Node& root) {
+void RequestManagerJSON::Read(const json::Node* root) {
 	ReadFromJSON(root);
 	auto handler_base = new InputReaderJSON(trc_); 
 	auto handler_stat = new StatReaderJSON(trc_, ui_); 
@@ -91,12 +92,12 @@ void RequestManagerJSON::Read(const json::Node& root) {
 }
 
 void InputReaderJSON::ReadQuery(const json::Node& request) {
-	const json::Dict* m = &request.AsMap();
-	if(m->at("type").AsString() == "Stop") {
-		add_stop_queries_.insert(m);
+	const auto& m = request.AsMap();
+	if(m.at("type").AsString() == "Stop") {
+		add_stop_queries_.insert(&m);
 	}
-	else if(m->at("type").AsString() == "Bus") {
-		add_bus_queries_.insert(m);
+	else if(m.at("type").AsString() == "Bus") {
+		add_bus_queries_.insert(&m);
 	}
 	//else {
 		//throw ExceptionWrongQueryType(std::string(type));
@@ -104,9 +105,9 @@ void InputReaderJSON::ReadQuery(const json::Node& request) {
 }
 
 void InputReaderJSON::AddStops(MapDiBetweenStops& stop_di) {
-	for(const json::Dict* request : add_stop_queries_) {
-		auto& stop = trc_.AddStop(request->at("name").AsString(), {request->at("latitude").AsDouble(), request->at("longitude").AsDouble()});
-		for(const auto& [name, di] : request->at("road_distances").AsMap()) {
+	for(const auto* q : add_stop_queries_) {
+		auto& stop = trc_.AddStop(q->at("name").AsString(), {q->at("latitude").AsDouble(), q->at("longitude").AsDouble()});
+		for(const auto& [name, di] : q->at("road_distances").AsMap()) {
 			stop_di[stop.name][name] = di.AsInt();
 		}
 	}
@@ -115,10 +116,10 @@ void InputReaderJSON::AddStops(MapDiBetweenStops& stop_di) {
 }
 
 void InputReaderJSON::AddBuses() { 
-	for(const auto& request : add_bus_queries_) {
-		bool is_ring = request->at("is_roundtrip").AsBool();
-		std::vector<const Stop*> bus_stops = ParseStopList(request->at("stops").AsArray(), is_ring);
-		trc_.AddBus(request->at("name").AsString(), bus_stops, is_ring);
+	for(const auto& q : add_bus_queries_) {
+		bool is_ring = q->at("is_roundtrip").AsBool();
+		std::vector<const Stop*> bus_stops = ParseStopList(q->at("stops").AsArray(), is_ring);
+		trc_.AddBus(q->at("name").AsString(), bus_stops, is_ring);
 	}
 	
 	add_bus_queries_.clear();
@@ -161,7 +162,7 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 				ShowStopBuses(q.name);
 			break;
 			default:
-				throw ExceptionWrongQueryType("");
+				//throw ExceptionWrongQueryType("");
 			break;
 		}
 		
@@ -214,7 +215,7 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 namespace detail {
 svg::Color ParseColor(const json::Node& node_color) {
 	if(node_color.IsArray()) {
-		auto& a = node_color.AsArray();
+		const auto& a = node_color.AsArray();
 		if(a.size() == 4) {
 			return svg::Rgba(a[0].AsInt(), a[1].AsInt(), a[2].AsInt(), a[3].AsDouble());
 		}

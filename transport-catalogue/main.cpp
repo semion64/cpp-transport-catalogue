@@ -155,14 +155,13 @@ void StatJSON() {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderJSON hb(trc);
 	auto doc = json::Load(in);
-	const json::Node& data = doc.GetRoot();
-	hb.Read(data);
+	hb.Read(&doc.GetRoot());
 	hb.Do();
 	
 	std::stringstream ss_out;
 	trans_cat::UserInterfaceJSON ui(ss_out, trc);
 	trans_cat::StatReaderJSON hs(trc, ui);
-	hs.Read(data);
+	hs.Read(&doc.GetRoot());
 	hs.Do();	
 	//std::cerr << ss_out.str();
 	assert((ReadFile("tests/uotput.json").compare(ss_out.str())));
@@ -291,10 +290,87 @@ void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	map_renderer->RenderMap(os);
 }
 
+void RunSTD_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
+	std::ifstream trc_in("test3/tsC_case1_input.txt");
+	std::ifstream rs_in("tests/input.json");
+	trans_cat::TransportCatalogue trc;
+	trans_cat::UserInterfaceJSON ui(os, trc);
+	trans_cat::InputReaderStd ir(trc);
+	trans_cat::StatReaderStd sr(trc, ui);
+	ir.Read(trc_in);
+	ir.Do();
+	std::cout << "bus_count: " << trc.GetBuses().size() << std::endl;
+	sr.Read(trc_in);
+	sr.Do();
+	trans_cat::RenderSettingsJSON rs(trc);
+	rs.Read(rs_in);
+	rs.Do();
+	auto rs_ = rs.GetRenderSettings();
+	auto unorder_buses = trc.GetBuses();
+	trans_cat::BusList order_buses = trc.GetBusesSorted();/*
+	std::for_each(unorder_buses.begin(), unorder_buses.end(), [&unorder_buses, &order_buses](trans_cat::Bus bus) {
+		order_buses.push_back(bus);
+	});
+	std::sort(order_buses.begin(), order_buses.end(), trans_cat::detail::compareBusesByName{});
+	*/
+	std::ofstream out("std_out.svg");
+	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(rs_, order_buses); 
+	map_renderer->RenderMap(out);
+}
+
 int main() {
-	std::ifstream f("tests/input_svg.json");
-	RunJSON();
+	std::ifstream f("tests3/tsC_case1_input.txt");
+	//RunSTD_SVG();
+	//RunJSON();
+	//RunJSON_SVG(f, std::cout);
+	//std::cout << std::endl;
+	Tests();
+}
+
+/*
+ 
+ 
+ 
+#include <cassert>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+#include <string>
+
+#include "json_reader.h"
+#include "transport_catalogue.h"
+#include "map_renderer.h"
+using namespace std;
+
+
+void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
+	trans_cat::TransportCatalogue trc;
+	trans_cat::UserInterfaceJSON ui(os, trc);
+	trans_cat::RequestManagerJSON json_request(trc, ui);
+	json_request.Read(is);
+	json_request.DoBase();
+	json_request.DoStat();
+}
+
+void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
+	trans_cat::TransportCatalogue trc;
+	trans_cat::UserInterfaceJSON ui(os, trc);
+	trans_cat::RequestManagerJSON json_request(trc, ui);
+	json_request.Read(is);
+	
+	json_request.DoBase();
+	auto unorder_buses = trc.GetBuses();
+	trans_cat::BusList order_buses = trc.GetBusesSorted();
+	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
+	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(rs, order_buses); 
+	map_renderer->RenderMap(os);
+}
+int main() {
+	//std::ifstream f("tests3/tsC_case1_input.txt");
+	RunJSON_SVG();
+	//RunJSON();
 	//RunJSON_SVG(f, std::cout);
 	//std::cout << std::endl;
 	//Tests();
-}
+}  
+ */

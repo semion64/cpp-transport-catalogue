@@ -69,10 +69,11 @@ using namespace std;
 void InputReaderStd::Read(std::istream& is) {
 	int N;
 	is >> N;
-	
+	std::cerr << N << std::endl;
 	while(N >= 0) {
 		std::string line;
 		std::getline(is, line);
+		
 		ReadQuery(line);
 		--N;
 	}

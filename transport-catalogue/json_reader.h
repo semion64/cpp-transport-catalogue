@@ -25,15 +25,15 @@ class UserInterfaceJSON;
 class LoaderJSON {
 public:
 	LoaderJSON() {}
-	virtual void Read(const json::Node& root) = 0;
+	virtual void Read(const json::Node* root) = 0;
 protected:
 	void ReadFromStream(std::istream& is) {
 		doc_ = json::Load(is);
-		Read(doc_.GetRoot());
+		Read(&doc_.GetRoot());
 	}
 
-	void ReadFromJSON(const json::Node& root, std::string request_name = "") {
-		if(!root.IsMap()) {
+	void ReadFromJSON(const json::Node* root, std::string request_name = "") {
+		if(!root->IsMap()) {
 			throw ExceptionWrongQueryType("json root node has unsupported format");
 		}
 		
@@ -41,15 +41,16 @@ protected:
 			root_ = root;
 			return;
 		}
-		const auto& root_map = root.AsMap();
+		
+		const auto& root_map = root->AsMap();
 		if(!root_map.count(request_name)) {
 			throw ExceptionWrongQueryType("request node (" + std::string(request_name) + ") not find");
 		}
 		
-		root_ = root_map.at(request_name);		
+		root_ = &root_map.at(request_name);		
 	}
 protected:
-	json::Node root_;
+	const json::Node* root_;
 private:
 	json::Document doc_ {nullptr};
 };
@@ -59,7 +60,7 @@ public:
 	InputReaderJSON(TransportCatalogue& trc) : RequestHandlerBase (trc) {	}
 	
 	void Read(std::istream& is) override { ReadFromStream(is); }
-	void Read(const json::Node& root) override;
+	void Read(const json::Node* root) override;
 private:
 	std::unordered_set<const json::Dict*> add_stop_queries_;
 	std::unordered_set<const json::Dict*> add_bus_queries_;
@@ -73,14 +74,14 @@ class StatReaderJSON : public RequestHandlerStat, public LoaderJSON {
 public:	
 	StatReaderJSON(TransportCatalogue& trc, UserInterface& ui) : RequestHandlerStat(trc, ui) { } 
 	void Read(std::istream& is) override { ReadFromStream(is); }
-	void Read(const json::Node& root) override;
+	void Read(const json::Node* root) override;
 };
 
 class RenderSettingsJSON : public RequestHandlerRenderSettings, public LoaderJSON {
 public:
 	RenderSettingsJSON(TransportCatalogue& trc) : RequestHandlerRenderSettings(trc) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
-	void Read(const json::Node& root) override;
+	void Read(const json::Node* root) override;
 	void Do() override {}
 };
 
@@ -97,7 +98,7 @@ class RequestManagerJSON : public RequestManager, public LoaderJSON {
 public: 
 	RequestManagerJSON(TransportCatalogue& trc, UserInterface& ui) : RequestManager(trc, ui) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
-	void Read(const json::Node& root) override;	
+	void Read(const json::Node* root) override;	
 };
 
 } // end ::trans_cat
