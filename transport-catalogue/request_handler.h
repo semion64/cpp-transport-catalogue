@@ -36,7 +36,7 @@ enum class StatQueryType {
 };
 
 struct StatQuery {
-	size_t id;
+	int64_t id;
 	StatQueryType type;
 	std::string name;
 	
