@@ -25,10 +25,10 @@ struct Bool {
 	}
 };
 
-using Number = std::variant<int, double>;
+using Number = std::variant<uint64_t, double>;
 using Dict = std::map<std::string, Node>;
 using Array = std::vector<Node>;
-using Value = std::variant<std::nullptr_t, Array, Dict, Bool, int, double, std::string>;
+using Value = std::variant<std::nullptr_t, Array, Dict, Bool, uint64_t, double, std::string>;
 
 bool operator==(const Node& r, const Node& l);
 bool operator!=(const Node& r, const Node& l);
@@ -43,7 +43,7 @@ public:
     Node(Array array);
     Node(Dict map);
 	Node(bool value);
-    Node(int value);
+    Node(uint64_t value);
     Node(double value);
     Node(std::nullptr_t);
     Node(std::string value);
@@ -59,7 +59,7 @@ public:
 	
 	const Array& AsArray() const;
 	const Dict& AsMap() const;
-	int AsInt() const;
+	uint64_t AsInt() const;
 	double AsDouble() const;
 	bool AsBool() const;
 	const std::string& AsString() const;

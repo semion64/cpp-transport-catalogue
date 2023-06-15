@@ -27,7 +27,7 @@ bool operator!=(const Bool& r, const Bool& l) {
 Node::Node(Array array) : value_(move(array)) {}
 Node::Node(Dict map) : value_(move(map)) {}
 Node::Node(bool value) : value_(Bool{value}) {}
-Node::Node(int value) : value_(value) {}
+Node::Node(uint64_t value) : value_(value) {}
 Node::Node(double value) : value_(value) {}
 Node::Node(string value) : value_(move(value)) {}
 Node::Node(std::nullptr_t) : Node() {} 
@@ -36,8 +36,8 @@ const Value& Node::GetValue() const { return value_; }
 
 bool Node::IsArray() const {return CheckType<Array>(); }
 bool Node::IsMap() const {return CheckType<Dict>(); }
-bool Node::IsInt() const {return CheckType<int>(); }
-bool Node::IsDouble() const {return CheckType<int>() || CheckType<double>(); }
+bool Node::IsInt() const {return CheckType<uint64_t>(); }
+bool Node::IsDouble() const {return CheckType<uint64_t>() || CheckType<double>(); }
 bool Node::IsPureDouble() const {return CheckType<double>(); }
 bool Node::IsBool() const {return CheckType<Bool>(); }
 bool Node::IsString() const {return CheckType<std::string>(); }
@@ -52,15 +52,15 @@ const Dict& Node::AsMap() const {
 	//PrintValue(value_, cerr);
 	return std::get<Dict>(value_);
 }
-int Node::AsInt() const {
+uint64_t Node::AsInt() const {
 	if(IsInt()){  
-		return get<int>(value_);
+		return get<uint64_t>(value_);
 	}
 	throw std::logic_error("value is not int");
 }
 double Node::AsDouble() const  {
 	if(IsInt()){ 
-		return std::get<int>(value_);
+		return std::get<uint64_t>(value_);
 	}
 	
 	if(IsDouble()){ 
@@ -158,7 +158,7 @@ Number ExtractNumber(std::istream& input) {
         if (is_int) {
             // Сначала пробуем преобразовать строку в int
             try {
-                return std::stoi(parsed_num);
+                return std::stoull(parsed_num);
             } 
 			catch (...) {
                 // В случае неудачи, например, при переполнении,
@@ -289,8 +289,8 @@ Node LoadNode(istream& input) {
 
 Node LoadNumber(istream& input) {
 	Number n = parser::ExtractNumber(input);
-	if(std::holds_alternative<int>(n)) {
-		return Node(get<int>(n));
+	if(std::holds_alternative<uint64_t>(n)) {
+		return Node(get<uint64_t>(n));
 	}
 	
 	if(std::holds_alternative<double>(n)) {

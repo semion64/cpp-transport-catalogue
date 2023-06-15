@@ -26,10 +26,12 @@ void StatReaderJSON::Read(const json::Node* root) {
 	} 
 	
 	for(const auto& request : root_->AsArray()) {
-		json::Dict m = request.AsMap();
+		const auto& m = request.AsMap();
+		std::string type = m.at("type").AsString();
+		if(type == "Bus" || type == "Stop")
 		queries_.push_back({
 			m.at("id").AsInt(), 
-			StatQuery::GetType(m.at("type").AsString()), 
+			StatQuery::GetType(type), 
 			std::string(m.at("name").AsString())
 		});
 	}

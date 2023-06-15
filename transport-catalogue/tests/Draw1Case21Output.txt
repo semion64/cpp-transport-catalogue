@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<svg xmlns="http://www.w3.org/2000/svg" version="1.1">
+  <polyline points="2344.55,4698.41 3493.19,3073.9 3684.32,3259.36 3493.19,3073.9 2344.55,4698.41" fill="none" stroke="rgb(30,255,169)" stroke-width="849.126" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="1616.18,419.859 509.268,784.238 2747.23,1256.49 1616.18,419.859" fill="none" stroke="aqua" stroke-width="849.126" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="1254.44,472.625 419.859,3144.25 538.094,2003.92 1254.44,472.625" fill="none" stroke="coral" stroke-width="849.126" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>
