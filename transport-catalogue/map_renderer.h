@@ -40,19 +40,7 @@ using StopsInfo = std::map<std::string_view, const Stop*>;
 class MapRendererSVG : public MapRenderer {
 public:
 	MapRendererSVG(TransportCatalogue& trc, const RenderSettings& render_settings) : MapRenderer(trc), rs_(render_settings) {
-		bus_label_templ_
-			.SetFillColor("none")
-			.SetOffset(rs_.bus_label_offset)
-			.SetFontSize(rs_.bus_label_font_size)
-			.SetFontFamily("Verdana")
-			.SetFontWeight("bold");
-		
-		bus_label_templ_bckg_ = bus_label_templ_;
-		bus_label_templ_bckg_
-			.SetFillColor(rs_.underlayer_color)
-			.SetStrokeColor(rs_.underlayer_color)
-			.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
-			.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+		SetDefaultTemplates();
 	}
 	
 	void RenderMap(std::ostream& os_) override;
@@ -60,15 +48,24 @@ private:
 	RenderSettings rs_;
 	BusesInfo buses_info_;
 	StopsInfo stops_info_;
+	
 	svg::Text bus_label_templ_;
 	svg::Text bus_label_templ_bckg_;
+	svg::Text stop_label_templ_;
+	svg::Text stop_label_templ_bckg_;
+	
 	std::map<std::string_view, int> buses_color_;	
 	
+	void SetDefaultTemplates();
 	geo::SphereProjector CreateSphereProjector();
 	void LoadBusesStopsInfo();
 	
-	void DrawBusLabels(svg::Document& doc, const geo::SphereProjector& proj);
 	void DrawBusLines(svg::Document& doc, const geo::SphereProjector& proj);
+	void DrawBusLabels(svg::Document& doc, const geo::SphereProjector& proj);
+	void DrawStopSymbols(svg::Document& doc, const geo::SphereProjector& proj);
+	void DrawStopLabels(svg::Document& doc, const geo::SphereProjector& proj);
+	
+	void DrawLabel(svg::Document& doc, std::string_view name, svg::Point pos, svg::Text& templ, svg::Text& templ_bckg, svg::Color clr_fill);
 };
 
 }

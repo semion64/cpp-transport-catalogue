@@ -25,7 +25,7 @@ namespace details {
 template <typename Value>
 void attr_out(std::ostream& out, std::string_view name, Value value) {
 	using namespace std::literals; 
-	out << name << "=\""sv << value << "\" "sv;
+	out << " " << name << "=\""sv << value << "\""sv;
 }
 
 void replace_all(std::string& str, const std::string& from, const std::string& to);
@@ -136,19 +136,19 @@ protected:
 		using namespace std::literals;
 
 		if (fill_color_/* && !std::holds_alternative<std::monostate>(*fill_color_)*/) {
-			out << "fill=\""sv << *fill_color_ << "\" "sv;
+			out << " fill=\""sv << *fill_color_ << "\""sv;
 		}
 		if (stroke_color_/* && !std::holds_alternative<std::monostate>(*stroke_color_)*/) {
-			out << "stroke=\""sv << *stroke_color_ << "\" "sv;
+			out << " stroke=\""sv << *stroke_color_ << "\""sv;
 		}
 		if (stroke_width_) {
-			out << "stroke-width=\""sv << *stroke_width_ << "\" "sv;
+			out << " stroke-width=\""sv << *stroke_width_ << "\""sv;
 		}
 		if (line_cap_) {
-			out << "stroke-linecap=\""sv << *line_cap_ << "\" "sv;
+			out << " stroke-linecap=\""sv << *line_cap_ << "\""sv;
 		}
 		if (line_join_) {
-			out << "stroke-linejoin=\""sv << *line_join_ << "\" "sv;
+			out << " stroke-linejoin=\""sv << *line_join_ << "\""sv;
 		}
 	}
 

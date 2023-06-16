@@ -1,21 +1,26 @@
 #include "map_renderer.h"
 
 namespace trans_cat {
-
-void MapRendererSVG::DrawBusLabels(svg::Document& doc, const geo::SphereProjector& proj) {
-	for(const auto& [bus_name, bus]: buses_info_) {
-		if(!bus->stops.size()) { 
-			return;
-		}
-		svg::Text label_start = bus_label_templ_;
-		
-		/*label_start
-			.SetPosition(proj(bus->stops[0]->coord))
-			.SetData(std::string(bus_name))
-			.SetFillColor();
-		*/
-		//doc.Add(route_polilyne);
-	}
+	
+void MapRendererSVG::DrawLabel(
+					svg::Document& doc, 
+					std::string_view name, 
+					svg::Point pos, 
+					svg::Text& templ, 
+					svg::Text& templ_bckg, 
+					svg::Color clr_fill) {
+	svg::Text label_bckg = templ_bckg;
+	svg::Text label = templ;
+	label_bckg
+		.SetPosition(pos)
+		.SetData(std::string(name));
+	label
+		.SetPosition(pos)
+		.SetData(std::string(name))
+		.SetFillColor(clr_fill);
+	
+	doc.Add(label_bckg);
+	doc.Add(label);
 }
 
 void MapRendererSVG::DrawBusLines(svg::Document& doc, const geo::SphereProjector& proj) {
@@ -35,6 +40,66 @@ void MapRendererSVG::DrawBusLines(svg::Document& doc, const geo::SphereProjector
 	}
 }
 
+void MapRendererSVG::DrawBusLabels(svg::Document& doc, const geo::SphereProjector& proj) {
+   /*
+    auto draw_label = [&doc, &proj, this] (const Bus* bus, const Stop* stop) {
+		svg::Text label_start_bckg = bus_label_templ_bckg_;
+		svg::Text label_start = bus_label_templ_;
+		label_start_bckg
+			.SetPosition(proj(stop->coord))
+			.SetData(std::string(bus->name));
+		label_start
+			.SetPosition(proj(stop->coord))
+			.SetData(std::string(bus->name))
+			.SetFillColor(rs_.color_palette[buses_color_.at(bus->name)]);
+		
+		doc.Add(label_start_bckg);
+		doc.Add(label_start);
+	};
+   */
+	
+	for(const auto& [bus_name, bus]: buses_info_) {
+		auto& clr = rs_.color_palette[buses_color_.at(bus->name)];
+		DrawLabel(doc, 
+			bus_name, 
+			proj(bus->stops.front()->coord), 
+			bus_label_templ_, 
+			bus_label_templ_bckg_, 
+			clr);
+		auto end_stop = bus->stops[bus->stops.size() / 2];//rs_.color_palette[buses_color_.at(bus->name)]
+		if(!bus->is_ring && bus->stops.front() != end_stop) {
+			DrawLabel(doc, 
+				bus_name, 
+				proj(end_stop->coord), 
+				bus_label_templ_, 
+				bus_label_templ_bckg_, 
+				clr);	
+		}
+	}
+}
+
+void MapRendererSVG::DrawStopSymbols(svg::Document& doc, const geo::SphereProjector& proj) {
+	for(const auto& [stop_name, stop]: stops_info_) {
+		svg::Circle circle;
+		circle
+			.SetCenter(proj(stop->coord))
+			.SetRadius(rs_.stop_radius)
+			.SetFillColor("white");
+		doc.Add(circle);
+	}
+}
+
+void MapRendererSVG::DrawStopLabels(svg::Document& doc, const geo::SphereProjector& proj) {
+	for(const auto& [stop_name, stop]: stops_info_) {
+		DrawLabel(doc, 
+			stop_name, 
+			proj(stop->coord), 
+			stop_label_templ_, 
+			stop_label_templ_bckg_, 
+			"black");	
+	}
+}
+
 geo::SphereProjector MapRendererSVG::CreateSphereProjector() {
 	// Точки, подлежащие проецированию
 	std::vector<geo::Coordinates> geo_coords;
@@ -46,6 +111,35 @@ geo::SphereProjector MapRendererSVG::CreateSphereProjector() {
 	return geo::SphereProjector(
 		geo_coords.begin(), geo_coords.end(), rs_.width, rs_.height, rs_.padding
 	);
+}
+
+void MapRendererSVG::SetDefaultTemplates() {
+	bus_label_templ_
+			.SetFillColor("none")
+			.SetOffset(rs_.bus_label_offset)
+			.SetFontSize(rs_.bus_label_font_size)
+			.SetFontFamily("Verdana")
+			.SetFontWeight("bold");
+		
+	bus_label_templ_bckg_ = bus_label_templ_;
+	bus_label_templ_bckg_
+		.SetFillColor(rs_.underlayer_color)
+		.SetStrokeColor(rs_.underlayer_color)
+		.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
+		.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
+	
+	stop_label_templ_
+		.SetFillColor("none")
+		.SetOffset(rs_.stop_label_offset)
+		.SetFontSize(rs_.stop_label_font_size)
+		.SetFontFamily("Verdana");
+	
+	stop_label_templ_bckg_ = stop_label_templ_;
+	stop_label_templ_bckg_
+		.SetFillColor(rs_.underlayer_color)
+		.SetStrokeColor(rs_.underlayer_color)
+		.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
+		.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
 }
 
 void MapRendererSVG::LoadBusesStopsInfo() {
@@ -76,7 +170,9 @@ void MapRendererSVG::RenderMap(std::ostream& os) {
 	LoadBusesStopsInfo();
 	const auto& proj = CreateSphereProjector();
 	DrawBusLines(doc, proj);
-	
+	DrawBusLabels(doc, proj);
+	DrawStopSymbols(doc, proj);
+	DrawStopLabels(doc, proj);
 	doc.Render(os);
 }
 } // end ::trans_cat

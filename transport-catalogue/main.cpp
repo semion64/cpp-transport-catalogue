@@ -263,30 +263,18 @@ void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::UserInterfaceJSON ui(os, trc);
 	trans_cat::RequestManagerJSON json_request(trc, ui);
 	json_request.Read(is);
-	/*
+	
 	json_request.DoBase();
-	auto unorder_buses = trc.GetBuses();
-	trans_cat::BusList order_buses = trc.GetBusesSorted();
-	* 
-	* 
-	* 
-	std::for_each(unorder_buses.begin(), unorder_buses.end(), [&unorder_buses, &order_buses](trans_cat::Bus bus) {
-		order_buses.push_back(bus);
-	});
-	std::sort(order_buses.begin(), order_buses.end(), trans_cat::detail::compareBusesByName{});
-	
-	
-	
 	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
-	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(rs, order_buses); 
-	map_renderer->RenderMap(os);*/
+	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(trc, rs); 
+	map_renderer->RenderMap(os);
 }
 
 int main() {
-	std::ifstream f("tests/Draw1Case21.txt");
+	std::ifstream f("tests/input_labels.json");
 	//RunSTD_SVG();
 	//RunJSON();
-	//RunJSON_SVG(f, std::cout);
+	RunJSON_SVG(f, std::cout);
 	//std::cout << std::endl;
 	Tests();
 }

@@ -77,8 +77,8 @@ Circle& Circle::SetRadius(double radius)  {
 
 void Circle::RenderObject(const RenderContext& context) const {
     auto& out = context.out;
-    out << "<circle cx=\""sv << center_.x << "\" cy=\""sv << center_.y << "\" "sv;
-    out << "r=\""sv << radius_ << "\" "sv;
+    out << "<circle cx=\""sv << center_.x << "\" cy=\""sv << center_.y << "\""sv;
+    out << " r=\""sv << radius_ << "\""sv;
 	RenderAttrs(out);
     out << "/>"sv;
 }
@@ -103,7 +103,7 @@ void Polyline::RenderObject(const RenderContext& context) const {
 		}
 		out << pt.x << ","sv << pt.y;
 	}
-    out << "\" "sv;
+    out << "\""sv;
 	RenderAttrs(out);
 	out << "/>"sv;
 }
@@ -147,7 +147,7 @@ Text& Text::SetData(std::string data) {
 
 void Text::RenderObject(const RenderContext& context) const {
     auto& out = context.out;
-    out << "<text "sv;
+    out << "<text"sv;
     details::attr_out(out, "x"sv, pos_.x);
     details::attr_out(out, "y"sv, pos_.y);
     details::attr_out(out, "dx"sv, offset_.x);
