@@ -2,23 +2,23 @@
 
 namespace trans_cat {
 
-void MapRendererSVG::DrawBusLabels() {
+void MapRendererSVG::DrawBusLabels(svg::Document& doc, const geo::SphereProjector& proj) {
 	for(const auto& [bus_name, bus]: buses_info_) {
 		if(!bus->stops.size()) { 
 			return;
 		}
-		/*svg::Text bus_label;
-		bus_label.
-			.SetFillColor("none")
-			.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
-			.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-		doc_.Add(route_polilyne);*/
+		svg::Text label_start = bus_label_templ_;
 		
-		
+		/*label_start
+			.SetPosition(proj(bus->stops[0]->coord))
+			.SetData(std::string(bus_name))
+			.SetFillColor();
+		*/
+		//doc.Add(route_polilyne);
 	}
 }
-void MapRendererSVG::DrawBusLines(const geo::SphereProjector& proj) {
-	int curr_color = 0;
+
+void MapRendererSVG::DrawBusLines(svg::Document& doc, const geo::SphereProjector& proj) {
 	for(const auto& [bus_name, bus]: buses_info_) {
 		svg::Polyline route_polilyne;
 		std::for_each(bus->stops.begin(), bus->stops.end(), [&route_polilyne, &proj](const Stop* stop) {
@@ -26,17 +26,12 @@ void MapRendererSVG::DrawBusLines(const geo::SphereProjector& proj) {
 		});
 		
 		route_polilyne.SetStrokeWidth(rs_.line_width); 
-		route_polilyne.SetStrokeColor(rs_.color_palette[curr_color]);
+		route_polilyne.SetStrokeColor(rs_.color_palette[buses_color_.at(bus_name)]);
 		route_polilyne
 			.SetFillColor("none")
 			.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
 			.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
-		doc_.Add(route_polilyne);
-		
-		if(++curr_color == static_cast<int>(rs_.color_palette.size())) {
-			curr_color = 0;
-		}
-		
+		doc.Add(route_polilyne);
 	}
 }
 
@@ -48,31 +43,37 @@ geo::SphereProjector MapRendererSVG::CreateSphereProjector() {
 	}
 	
 	// Создаём проектор сферических координат на карту
-	const geo::SphereProjector proj{
+	return geo::SphereProjector(
 		geo_coords.begin(), geo_coords.end(), rs_.width, rs_.height, rs_.padding
-	};
-	
-	return proj;
+	);
 }
 
 void MapRendererSVG::LoadBusesStopsInfo() {
+	int curr_color = 0;
 	for(const auto& bus : trc_.GetBuses()) {
 		if(!bus.stops.size()) {
 			continue;
 		}
 		
 		buses_info_[bus.name] = &bus;
+		
+		buses_color_[bus.name] = curr_color;
 		for(const auto* stop : bus.stops) {
 			stops_info_[stop->name] = stop;
+		}
+		
+		if(++curr_color == static_cast<int>(rs_.color_palette.size())) {
+			curr_color = 0;
 		}
 	}
 }
 
 void MapRendererSVG::RenderMap(std::ostream& os) {
+	svg::Document doc;
 	LoadBusesStopsInfo();
-	const auto proj = CreateSphereProjector();
-	DrawBusLines(proj);
+	const auto& proj = CreateSphereProjector();
+	DrawBusLines(doc, proj);
 	
-	doc_.Render(os);
+	doc.Render(os);
 }
 } // end ::trans_cat
