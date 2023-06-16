@@ -49,7 +49,7 @@ geo::SphereProjector MapRendererSVG::CreateSphereProjector() {
 }
 
 void MapRendererSVG::LoadBusesStopsInfo() {
-	int curr_color = 0;
+	
 	for(const auto& bus : trc_.GetBuses()) {
 		if(!bus.stops.size()) {
 			continue;
@@ -57,11 +57,14 @@ void MapRendererSVG::LoadBusesStopsInfo() {
 		
 		buses_info_[bus.name] = &bus;
 		
-		buses_color_[bus.name] = curr_color;
 		for(const auto* stop : bus.stops) {
 			stops_info_[stop->name] = stop;
 		}
-		
+	}
+	
+	int curr_color = 0;
+	for(const auto& [bus_name, bus] : buses_info_) {
+		buses_color_[bus_name] = curr_color;
 		if(++curr_color == static_cast<int>(rs_.color_palette.size())) {
 			curr_color = 0;
 		}
