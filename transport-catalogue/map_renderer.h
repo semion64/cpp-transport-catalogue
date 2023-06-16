@@ -1,46 +1,60 @@
 #pragma once
 
 #include <vector>
-#include <unordered_set>
+#include <map>
+#include <string_view>
 #include "svg.h"
 #include "domain.h"
 #include "geo.h"
+#include "transport_catalogue.h"
 
 namespace trans_cat {
 
 struct RenderSettings {
-	std::optional<double> width;
-	std::optional<double> height;
-	std::optional<double> padding;
-	std::optional<double> line_width;
-	std::optional<double> stop_radius;
-	std::optional<uint32_t> bus_label_font_size;
-	std::optional<svg::Point> bus_label_offset;
-	std::optional<uint32_t> stop_label_font_size;
-	std::optional<svg::Point> stop_label_offset;
-	std::optional<svg::Color> underlayer_color;
-	std::optional<double> underlayer_width;
-	std::optional<std::vector<svg::Color>> color_palette;
+	double width;
+	double height;
+	double padding;
+	double line_width;
+	double stop_radius;
+	uint32_t bus_label_font_size;
+	svg::Point bus_label_offset;
+	uint32_t stop_label_font_size;
+	svg::Point stop_label_offset;
+	svg::Color underlayer_color;
+	double underlayer_width;
+	std::vector<svg::Color> color_palette;
 };
 
 class MapRenderer {
 public:
-	MapRenderer();
-	virtual void RenderMap(std::ostream& os) = 0;
+	MapRenderer(TransportCatalogue& trc) : trc_(trc) { }
+	virtual void RenderMap(std::ostream& os_) = 0;
 	virtual ~MapRenderer() = default;
+protected:
+	TransportCatalogue& trc_;	
 };
 
-using BusList = std::vector<Bus>;
-class MapRendererSVG {
+using BusesInfo = std::map<std::string_view, const Bus*>;
+using StopsInfo = std::map<std::string_view, const Stop*>;
+
+class MapRendererSVG : public MapRenderer {
 public:
 	
-	MapRendererSVG(const RenderSettings& render_settings, BusList bus_list) : rs_(render_settings), bus_list_ (bus_list) {
+	MapRendererSVG(TransportCatalogue& trc, const RenderSettings& render_settings) : MapRenderer(trc), rs_(render_settings) {
 	}
 	
-	void RenderMap(std::ostream& os);
+	void RenderMap(std::ostream& os_) override;
 private:
+	svg::Document doc_;
 	RenderSettings rs_;
-	BusList bus_list_;
+	BusesInfo buses_info_;
+	StopsInfo stops_info_;
+	
+	geo::SphereProjector CreateSphereProjector();
+	
+	void LoadBusesStopsInfo();
+	void DrawBusLabels();
+	void DrawBusLines(const geo::SphereProjector& proj);
 };
 
 }

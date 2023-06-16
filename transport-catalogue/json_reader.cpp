@@ -47,35 +47,27 @@ void RenderSettingsJSON::Read(const json::Node* root) { // , std::string request
 	}
 	
 	const auto& m = root_->AsMap();
+	auto& blo = m.at("bus_label_offset").AsArray();
+	rs_.bus_label_offset 	= svg::Point {blo[0].AsDouble(), blo[1].AsDouble()};
 	
-	if(m.count("bus_label_offset")) {
-		auto& blo = m.at("bus_label_offset").AsArray();
-		rs_.bus_label_offset 	= svg::Point {blo[0].AsDouble(), blo[1].AsDouble()};
+	auto& slo = m.at("stop_label_offset").AsArray();
+	rs_.stop_label_offset 	= svg::Point {slo[0].AsDouble(), slo[1].AsDouble()};
+	
+	std::vector<svg::Color> color_palette;
+	for(auto& node_color : m.at("color_palette").AsArray()) {
+		color_palette.push_back(detail::ParseColor(node_color));
 	}
 	
-	if(m.count("stop_label_offset")) {
-		auto& slo = m.at("stop_label_offset").AsArray();
-		rs_.stop_label_offset 	= svg::Point {slo[0].AsDouble(), slo[1].AsDouble()};
-	}
-	
-	if(m.count("color_palette")) {
-		std::vector<svg::Color> color_palette;
-		for(auto& node_color : m.at("color_palette").AsArray()) {
-			color_palette.push_back(detail::ParseColor(node_color));
-		}
-		
-		rs_.color_palette =  color_palette;
-	}
-	
-	if(m.count("width"))	rs_.width				= m.at("width").AsDouble();
-	if(m.count("height")) rs_.height 				= m.at("height").AsDouble();
-	if(m.count("padding")) rs_.padding 			= m.at("padding").AsDouble();
-	if(m.count("line_width")) rs_.line_width 			= m.at("line_width").AsDouble();
-	if(m.count("stop_radius")) rs_.stop_radius 		= m.at("stop_radius").AsDouble();
-	if(m.count("bus_label_font_size")) rs_.bus_label_font_size = m.at("bus_label_font_size").AsInt();
-	if(m.count("stop_label_font_size")) rs_.stop_label_font_size = m.at("stop_label_font_size").AsInt();
-	if(m.count("underlayer_color")) rs_.underlayer_color 	=  detail::ParseColor(m.at("underlayer_color"));
-	if(m.count("underlayer_width")) rs_.underlayer_width 	=  m.at("underlayer_width").AsDouble();
+	rs_.color_palette 		=  color_palette;
+	rs_.width				= m.at("width").AsDouble();
+	rs_.height 				= m.at("height").AsDouble();
+	rs_.padding 			= m.at("padding").AsDouble();
+	rs_.line_width 			= m.at("line_width").AsDouble();
+	rs_.stop_radius 		= m.at("stop_radius").AsDouble();
+	rs_.bus_label_font_size = m.at("bus_label_font_size").AsInt();
+	rs_.stop_label_font_size = m.at("stop_label_font_size").AsInt();
+	rs_.underlayer_color 	=  detail::ParseColor(m.at("underlayer_color"));
+	rs_.underlayer_width 	=  m.at("underlayer_width").AsDouble();
 }
 
 void RequestManagerJSON::Read(const json::Node* root) {
