@@ -222,6 +222,27 @@ void RoutesSVG() {
 	std::cerr << "\tok" << std::endl;
 	in.close();
 }
+
+void RoutesAndLabelsSVG() {
+	std::cerr << "\tRoutesAndLabelsSVG: ";
+	std::ifstream in("tests/input_labels.json");
+	std::stringstream ss_out;
+	
+	trans_cat::TransportCatalogue trc;
+	trans_cat::UserInterfaceJSON ui(ss_out, trc);
+	trans_cat::RequestManagerJSON json_request(trc, ui);
+	json_request.Read(in);
+	
+	json_request.DoBase();
+	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
+	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(trc, rs); 
+	map_renderer->RenderMap(ss_out);
+	
+	assert((ReadFile("tests/output_labels.svg").compare(ss_out.str()) == 0));
+	std::cerr << "\tok" << std::endl;
+	in.close();
+}
+
 } // end ::tests
 } // end ::trans_cat
 
@@ -274,7 +295,7 @@ int main() {
 	std::ifstream f("tests/input_labels.json");
 	//RunSTD_SVG();
 	//RunJSON();
-	RunJSON_SVG(f, std::cout);
+	//RunJSON_SVG(f, std::cout);
 	//std::cout << std::endl;
 	Tests();
 }

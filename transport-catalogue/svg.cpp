@@ -148,6 +148,9 @@ Text& Text::SetData(std::string data) {
 void Text::RenderObject(const RenderContext& context) const {
     auto& out = context.out;
     out << "<text"sv;
+    
+	RenderAttrs(out);
+	
     details::attr_out(out, "x"sv, pos_.x);
     details::attr_out(out, "y"sv, pos_.y);
     details::attr_out(out, "dx"sv, offset_.x);
@@ -162,7 +165,6 @@ void Text::RenderObject(const RenderContext& context) const {
 		details::attr_out(out, "font-weight"sv, font_weight_);
 	}
 	
-	RenderAttrs(out);
     out << ">"sv << data_ << "</text>"sv;
 }
 

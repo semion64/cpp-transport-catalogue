@@ -41,23 +41,6 @@ void MapRendererSVG::DrawBusLines(svg::Document& doc, const geo::SphereProjector
 }
 
 void MapRendererSVG::DrawBusLabels(svg::Document& doc, const geo::SphereProjector& proj) {
-   /*
-    auto draw_label = [&doc, &proj, this] (const Bus* bus, const Stop* stop) {
-		svg::Text label_start_bckg = bus_label_templ_bckg_;
-		svg::Text label_start = bus_label_templ_;
-		label_start_bckg
-			.SetPosition(proj(stop->coord))
-			.SetData(std::string(bus->name));
-		label_start
-			.SetPosition(proj(stop->coord))
-			.SetData(std::string(bus->name))
-			.SetFillColor(rs_.color_palette[buses_color_.at(bus->name)]);
-		
-		doc.Add(label_start_bckg);
-		doc.Add(label_start);
-	};
-   */
-	
 	for(const auto& [bus_name, bus]: buses_info_) {
 		auto& clr = rs_.color_palette[buses_color_.at(bus->name)];
 		DrawLabel(doc, 
@@ -124,6 +107,7 @@ void MapRendererSVG::SetDefaultTemplates() {
 	bus_label_templ_bckg_ = bus_label_templ_;
 	bus_label_templ_bckg_
 		.SetFillColor(rs_.underlayer_color)
+		.SetStrokeWidth(rs_.underlayer_width)
 		.SetStrokeColor(rs_.underlayer_color)
 		.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
 		.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);
@@ -137,6 +121,7 @@ void MapRendererSVG::SetDefaultTemplates() {
 	stop_label_templ_bckg_ = stop_label_templ_;
 	stop_label_templ_bckg_
 		.SetFillColor(rs_.underlayer_color)
+		.SetStrokeWidth(rs_.underlayer_width)
 		.SetStrokeColor(rs_.underlayer_color)
 		.SetStrokeLineCap(svg::StrokeLineCap::ROUND)
 		.SetStrokeLineJoin(svg::StrokeLineJoin::ROUND);

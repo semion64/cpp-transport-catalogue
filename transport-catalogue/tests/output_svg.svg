@@ -1,7 +1,23 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1">
-  <polyline points="50,50" fill="none" stroke="green" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
-  <polyline points="50,50 78.9088,350 50,50" fill="none" stroke="rgb(255,160,0)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
-  <polyline points="50,50 78.9088,350 50,50 78.9088,350 50,50" fill="none" stroke="red" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
-  <polyline points="50,50 78.9088,350 50,50 78.9088,350 50,50" fill="none" stroke="green" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" />
+  <polyline points="50,50" fill="none" stroke="green" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="50,50 78.9088,350 50,50" fill="none" stroke="rgb(255,160,0)" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="50,50 78.9088,350 50,50 78.9088,350 50,50" fill="none" stroke="red" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <polyline points="50,50 78.9088,350 50,50 78.9088,350 50,50" fill="none" stroke="green" stroke-width="14" stroke-linecap="round" stroke-linejoin="round"/>
+  <text fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x="50" y="50" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">B</text>
+  <text fill="green" x="50" y="50" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">B</text>
+  <text fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x="50" y="50" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">C</text>
+  <text fill="rgb(255,160,0)" x="50" y="50" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">C</text>
+  <text fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x="78.9088" y="350" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">C</text>
+  <text fill="rgb(255,160,0)" x="78.9088" y="350" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">C</text>
+  <text fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x="50" y="50" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">D</text>
+  <text fill="red" x="50" y="50" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">D</text>
+  <text fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x="50" y="50" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">E</text>
+  <text fill="green" x="50" y="50" dx="7" dy="15" font-size="20" font-family="Verdana" font-weight="bold">E</text>
+  <circle cx="78.9088" cy="350" r="5" fill="white"/>
+  <circle cx="50" cy="50" r="5" fill="white"/>
+  <text fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x="78.9088" y="350" dx="7" dy="-3" font-size="20" font-family="Verdana">Marushkino</text>
+  <text fill="black" x="78.9088" y="350" dx="7" dy="-3" font-size="20" font-family="Verdana">Marushkino</text>
+  <text fill="rgba(255,255,255,0.85)" stroke="rgba(255,255,255,0.85)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" x="50" y="50" dx="7" dy="-3" font-size="20" font-family="Verdana">Tolstopaltsevo</text>
+  <text fill="black" x="50" y="50" dx="7" dy="-3" font-size="20" font-family="Verdana">Tolstopaltsevo</text>
 </svg>
