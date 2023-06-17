@@ -150,6 +150,11 @@ void MapRendererSVG::LoadBusesStopsInfo() {
 	}
 }
 
+void MapRendererSVG::SetRenderSettings(const RenderSettings& rs) {
+	rs_ = rs;
+	SetDefaultTemplates();
+}
+
 void MapRendererSVG::RenderMap(std::ostream& os) {
 	svg::Document doc;
 	LoadBusesStopsInfo();

@@ -33,6 +33,9 @@ StatQueryType StatQuery::GetType(std::string_view type_str) {
 	else if(type_str == "Stop") {
 		return StatQueryType::STOP;
 	}
+	else if(type_str == "Map") {
+		return StatQueryType::MAP;
+	}
 	
 	return StatQueryType::NONE;
 	//throw ExceptionWrongStatReaderQuery("incorrect query type: " + std::string(type_str));
@@ -47,7 +50,7 @@ void RequestManager::DoStat() {
 	handler_stat_->Do();
 }
 
-RenderSettings RequestManager::DoRenderSettings() {
+RenderSettings RequestManager::GetSettingsMapRenderer() {
 	handler_render_->Do();
 	return handler_render_->GetRenderSettings();
 }

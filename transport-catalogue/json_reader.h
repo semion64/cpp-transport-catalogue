@@ -87,11 +87,13 @@ public:
 
 class UserInterfaceJSON : public UserInterface {
 public:	
-	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc) : UserInterface(os, trc) {}
+	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, MapRenderer* map_renderer = nullptr) : UserInterface(os, trc, map_renderer) {}
 	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const override;
 private:	
 	void ShowBus(std::string_view bus_name) const;
 	void ShowStopBuses(std::string_view stop_name) const;
+	void ShowMap() const;
+	void replace_all(std::string& str, const std::string& from, const std::string& to) const;
 };
 
 class RequestManagerJSON : public RequestManager, public LoaderJSON {

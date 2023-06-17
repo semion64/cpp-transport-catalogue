@@ -29,10 +29,16 @@ public:
 	ExceptionWrongInputFormat(std::string what = "") : logic_error(what) { }
 };
 
+class ExceptionMapRendererNullPtr : public std::invalid_argument {
+public:	
+	ExceptionMapRendererNullPtr(std::string what = "") : invalid_argument(what) { }
+};
+
 enum class StatQueryType {
 	NONE,
 	BUS,
-	STOP
+	STOP,
+	MAP
 };
 
 struct StatQuery {
@@ -51,12 +57,13 @@ class RequestHandlerStat;
 
 class UserInterface {
 public:	
-	UserInterface(std::ostream& os, TransportCatalogue& trc) : os_(os), trc_(trc)  {}
+	UserInterface(std::ostream& os, TransportCatalogue& trc, MapRenderer* map_renderer = nullptr) : os_(os), trc_(trc), map_renderer_(map_renderer)  {}
 	virtual void ShowQueriesResult(const std::list<StatQuery>& queries) const = 0;
 protected:
 	int ROUTE_STAT_PRECISION = 6;
 	std::ostream& os_;
 	TransportCatalogue& trc_;
+	MapRenderer* map_renderer_;
 };
 
 class RequestReader {
@@ -112,7 +119,7 @@ public:
 	RequestManager(TransportCatalogue& trc, UserInterface& ui) : RequestReader(trc), ui_(ui) { }
 	void DoBase();
 	void DoStat();
-	RenderSettings DoRenderSettings();
+	RenderSettings GetSettingsMapRenderer();
 	~RequestManager() override {
 		if(handler_base_) delete handler_base_;
 		if(handler_stat_) delete handler_stat_;

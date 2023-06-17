@@ -215,7 +215,7 @@ void RoutesSVG() {
 	json_request.Read(in);
 	json_request.DoBase();
 	
-	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
+	trans_cat::RenderSettings rs = json_request.GetSettingsMapRenderer();
 	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(trc,rs); 
 	map_renderer->RenderMap(ss_out);
 	assert((ReadFile("tests/output_svg.svg").compare(ss_out.str()) == 0));
@@ -234,7 +234,7 @@ void RoutesAndLabelsSVG() {
 	json_request.Read(in);
 	
 	json_request.DoBase();
-	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
+	trans_cat::RenderSettings rs = json_request.GetSettingsMapRenderer();
 	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(trc, rs); 
 	map_renderer->RenderMap(ss_out);
 	
@@ -257,7 +257,9 @@ void Tests() {
 	std::cerr << "Tests_End" << std::endl;
 }
 
-void RunStd(std::istream& is = std::cin) {
+
+// ---------------------- various ways to use transport catalogue interface--------------------
+void RunStd_BASE_STAT(std::istream& is = std::cin) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::InputReaderStd ir(trc);
 	trans_cat::UserInterfaceStd ui(std::cout, trc);
@@ -269,8 +271,7 @@ void RunStd(std::istream& is = std::cin) {
 	sr.Do();
 }
 
-
-void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
+void RunJSON_BASE_STAT(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::UserInterfaceJSON ui(os, trc);
 	trans_cat::RequestManagerJSON json_request(trc, ui);
@@ -279,23 +280,33 @@ void RunJSON(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	json_request.DoStat();
 }
 
-void RunJSON_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
+void RunJSON_BASE_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::UserInterfaceJSON ui(os, trc);
 	trans_cat::RequestManagerJSON json_request(trc, ui);
 	json_request.Read(is);
-	
 	json_request.DoBase();
-	trans_cat::RenderSettings rs = json_request.DoRenderSettings();
-	trans_cat::MapRendererSVG* map_renderer = new trans_cat::MapRendererSVG(trc, rs); 
-	map_renderer->RenderMap(os);
+	
+	trans_cat::MapRendererSVG map_renderer(trc, json_request.GetSettingsMapRenderer()); // using MapRenderer separately from UserInterface
+	map_renderer.RenderMap(os);
+}
+
+void RunJSON_BASE_STAT_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
+	trans_cat::TransportCatalogue trc;
+	trans_cat::MapRendererSVG map_renderer(trc);
+	trans_cat::UserInterfaceJSON ui(os, trc, &map_renderer);
+	trans_cat::RequestManagerJSON json_request(trc, ui);
+	json_request.Read(is); // read json text from input stream
+	map_renderer.SetRenderSettings(json_request.GetSettingsMapRenderer()); // not forget set render settings, otherwise was use defaults zero values
+	json_request.DoBase(); // fill transport catalogue
+	json_request.DoStat(); // do stat queries 
 }
 
 int main() {
-	std::ifstream f("tests/input_labels.json");
-	//RunSTD_SVG();
-	//RunJSON();
-	//RunJSON_SVG(f, std::cout);
-	//std::cout << std::endl;
+	std::ifstream f("tests/input_map.json");
+	//RunSTD_SVG(f);
+	//RunJSON(f);
+	//RunJSON_SVG(f);
+	RunJSON_BASE_STAT_SVG(f);
 	Tests();
 }

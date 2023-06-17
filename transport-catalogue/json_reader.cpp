@@ -28,11 +28,10 @@ void StatReaderJSON::Read(const json::Node* root) {
 	for(const auto& request : root_->AsArray()) {
 		const auto& m = request.AsMap();
 		std::string type = m.at("type").AsString();
-		if(type == "Bus" || type == "Stop")
 		queries_.push_back({
 			m.at("id").AsInt(), 
 			StatQuery::GetType(type), 
-			std::string(m.at("name").AsString())
+			std::string((type == "Bus" || type == "Stop") ? m.at("name").AsString() : "")
 		});
 	}
 }
@@ -155,6 +154,9 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 			case StatQueryType::STOP:
 				ShowStopBuses(q.name);
 			break;
+			case StatQueryType::MAP:
+				ShowMap();
+			break;
 			default:
 				//throw ExceptionWrongQueryType("");
 			break;
@@ -165,6 +167,33 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 	
 	os_ << "]";	
     os_ << std::endl;
+}
+
+void UserInterfaceJSON::replace_all(std::string& str, const std::string& from, const std::string& to) const {
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+}
+
+void UserInterfaceJSON::ShowMap() const {
+	using namespace std::literals;
+	if(!map_renderer_) {
+		throw ExceptionMapRendererNullPtr("map renderer not set (nullptr)");
+	}
+	
+    std::stringstream ss;
+	map_renderer_->RenderMap(ss);
+	std::string s = ss.str();
+	
+	replace_all(s, "\\"s, "\\\\"s);
+	replace_all(s, "\""s, "\\\""s);
+	replace_all(s, "\n"s, "\\n"s);
+	replace_all(s, "\r"s, "\\r"s);
+	
+    os_ << "\"map\": \""sv << s << "\""sv;
+    	
 }
 
 void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
