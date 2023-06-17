@@ -1,7 +1,9 @@
 #include "json_reader.h"
 
 namespace trans_cat {
-	
+
+using namespace std::literals;	
+
 void InputReaderJSON::Read(const json::Node* root) { 
 	try {	
 		ReadFromJSON(root, "base_requests"); 
@@ -169,30 +171,16 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
     os_ << std::endl;
 }
 
-void UserInterfaceJSON::replace_all(std::string& str, const std::string& from, const std::string& to) const {
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-    }
-}
-
 void UserInterfaceJSON::ShowMap() const {
-	using namespace std::literals;
 	if(!map_renderer_) {
-		throw ExceptionMapRendererNullPtr("map renderer not set (nullptr)");
+		throw ExceptionMapRendererNullPtr("map renderer not set (nullptr)"s);
 	}
 	
     std::stringstream ss;
 	map_renderer_->RenderMap(ss);
-	std::string s = ss.str();
-	
-	replace_all(s, "\\"s, "\\\\"s);
-	replace_all(s, "\""s, "\\\""s);
-	replace_all(s, "\n"s, "\\n"s);
-	replace_all(s, "\r"s, "\\r"s);
-	
-    os_ << "\"map\": \""sv << s << "\""sv;
+	std::string map = ss.str();
+	json::detail::escaping_chars(map);
+    os_ << "\"map\": \""sv << map << "\""sv;
     	
 }
 
@@ -200,13 +188,13 @@ void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
 	try {
 		const auto& bus = trc_.GetBus(bus_name);
 		const auto& route = trc_.GetRouteStat(bus);
-		os_ << "\"curvature\":" << route.curvature << ","
-			<< "\"route_length\":" << static_cast<double>(route.distance) << ","
-			<< "\"stop_count\":" << route.stops_count << ","
-			<< "\"unique_stop_count\":" << route.unique_stops;
+		os_ << "\"curvature\":"sv << route.curvature << ","sv
+			<< "\"route_length\":"sv << static_cast<double>(route.distance) << ","sv
+			<< "\"stop_count\":"sv << route.stops_count << ","sv
+			<< "\"unique_stop_count\":"sv << route.unique_stops;
 	}
 	catch(ExceptionBusNotFound&) {
-		os_ << "\"error_message\":" << "\"not found\"";
+		os_ << "\"error_message\":"sv << "\"not found\""sv;
 	}	
 }
 

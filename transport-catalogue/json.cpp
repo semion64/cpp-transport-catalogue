@@ -3,6 +3,25 @@
 using namespace std;
 
 namespace json {
+using namespace std::literals;	
+namespace detail {
+void replace_all(std::string& str, const std::string& from, const std::string& to);
+
+void escaping_chars(std::string& s) {
+	replace_all(s, "\\"s, "\\\\"s);
+	replace_all(s, "\""s, "\\\""s);
+	replace_all(s, "\n"s, "\\n"s);
+	replace_all(s, "\r"s, "\\r"s);
+}
+
+void replace_all(std::string& str, const std::string& from, const std::string& to) {
+    size_t start_pos = 0;
+    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
+        str.replace(start_pos, from.length(), to);
+        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
+    }
+}
+} //end ::detail
 
 bool operator==(const Node& r, const Node& l) {
 	return r.GetValue().index() == l.GetValue().index() && r.GetValue() == l.GetValue();
@@ -80,7 +99,7 @@ const std::string& Node::AsString() const {
 }
 
 // ----------------------------------------------------------------------Parsing extract functions-------------------------------------------------------------
-namespace detail {
+
 namespace parser {
 	
 std::string ExtractKeyWord(std::istream& input);
@@ -344,24 +363,15 @@ Node LoadDict(istream& input) {
 
 
 // ------------------------------------------------Print functions----------------------------------------------------------------------
-namespace print {
-void replace_all(std::string& str, const std::string& from, const std::string& to);
 
+namespace print {
+	
 void PrintNode(const Node& node, std::ostream& out, const PrintContext& ctx);
 void PrintValue(const std::nullptr_t&, std::ostream& out, const PrintContext& ctx);
 void PrintValue(const Array& arr, std::ostream& out, const PrintContext& ctx);
 void PrintValue(const Dict& Dict, std::ostream& out, const PrintContext& ctx);
 void PrintValue(const std::string& s, std::ostream& out, const PrintContext& ctx);
 void PrintValue(const Bool& value, std::ostream& out, const PrintContext& ctx);
-
-void replace_all(std::string& str, const std::string& from, const std::string& to) {
-    size_t start_pos = 0;
-    while((start_pos = str.find(from, start_pos)) != std::string::npos) {
-        str.replace(start_pos, from.length(), to);
-        start_pos += to.length(); // Handles case where 'to' is a substring of 'from'
-    }
-}
-
 // Шаблон, подходящий для вывода double и int
 template <typename V>
 void PrintValue(const V& value, std::ostream& out, const PrintContext& ctx) {
@@ -391,12 +401,7 @@ void PrintValue(const Bool& value, std::ostream& out, const PrintContext& ctx) {
 void PrintValue(const std::string& str, std::ostream& out, const PrintContext& ctx) {
 	ctx.PrintIndent();
 	std::string s = str;
-	
-	replace_all(s, "\\"s, "\\\\"s);
-	replace_all(s, "\""s, "\\\""s);
-	replace_all(s, "\n"s, "\\n"s);
-	replace_all(s, "\r"s, "\\r"s);
-	
+	detail::escaping_chars(s);
     out << "\""sv << s << "\""sv;
 }
 
@@ -446,7 +451,6 @@ void PrintValue(const Dict& Dict, std::ostream& out, const PrintContext& ctx) {
 	out << "}"sv;
 }
 } // namespace print
-} // namespace detail
 
 // -----------------------------------------Document declaration------------------------------------------------------------------
 Document::Document(Node root)
@@ -458,11 +462,11 @@ const Node& Document::GetRoot() const {
 }
 
 Document Load(istream& input) {
-    return Document{detail::load::LoadNode(input)};
+    return Document{load::LoadNode(input)};
 }
 
 void Print(const Document& doc, std::ostream& output) {
-    detail::print::PrintNode(doc.GetRoot(), output, {output, 4, 0});
+	print::PrintNode(doc.GetRoot(), output, {output, 4, 0});
 }
 
 }  // namespace json

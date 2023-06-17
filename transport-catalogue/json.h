@@ -109,4 +109,8 @@ struct PrintContext {
     }
 };
 
+namespace detail {
+	void escaping_chars(std::string& str);
+} // namespace detail
+
 }  // namespace json
