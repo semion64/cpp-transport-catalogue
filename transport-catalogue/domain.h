@@ -63,6 +63,21 @@ struct compareBusesByName {
 	}
 };
 
+enum class StatQueryType {
+	NONE,
+	BUS,
+	STOP,
+	MAP
+};
+
+struct StatQuery {
+	int64_t id;
+	StatQueryType type;
+	std::string name;
+	
+	static StatQueryType GetType(std::string_view type_str);
+};
+
 using StopBuses = std::set<const Bus*, compareBusesByName>;
 using DistanceBetweenStop = std::unordered_map<std::pair<const Stop*, const Stop*>, int, DistanceBetweenStopHasher>; 
 } // end ::detail	

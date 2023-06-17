@@ -44,47 +44,40 @@ bool operator!=(const Bool& r, const Bool& l) {
 }
 
 // ----------------------------------------------------------- Node declaration--------------------------------------------------------------------
-Node::Node(Array array) : value_(move(array)) {}
-Node::Node(Dict map) : value_(move(map)) {}
-Node::Node(bool value) : value_(Bool{value}) {}
-Node::Node(int64_t value) : value_(value) {}
-Node::Node(double value) : value_(value) {}
-Node::Node(string value) : value_(move(value)) {}
-Node::Node(std::nullptr_t) : Node() {} 
 
-const Value& Node::GetValue() const { return value_; }
+const Value& Node::GetValue() const { return *this; }
 
 bool Node::IsArray() const {return CheckType<Array>(); }
 bool Node::IsMap() const {return CheckType<Dict>(); }
 bool Node::IsInt() const {return CheckType<int64_t>(); }
 bool Node::IsDouble() const {return CheckType<int64_t>() || CheckType<double>(); }
 bool Node::IsPureDouble() const {return CheckType<double>(); }
-bool Node::IsBool() const {return CheckType<Bool>(); }
+bool Node::IsBool() const {return CheckType<bool>(); }
 bool Node::IsString() const {return CheckType<std::string>(); }
 bool Node::IsNull() const {return CheckType<std::nullptr_t>(); }
 
 const Array& Node::AsArray() const {
 	if(!IsArray()){ throw std::logic_error("value is not array"s); }
-	return std::get<Array>(value_);
+	return std::get<Array>(*this);
 }
 const Dict& Node::AsMap() const {
 	if(!IsMap()){ throw std::logic_error("value is not map"s); }
-	//PrintValue(value_, cerr);
-	return std::get<Dict>(value_);
+	//PrintValue(*this, cerr);
+	return std::get<Dict>(*this);
 }
 int64_t Node::AsInt() const {
 	if(IsInt()){  
-		return get<int64_t>(value_);
+		return get<int64_t>(*this);
 	}
 	throw std::logic_error("value is not int"s);
 }
 double Node::AsDouble() const  {
 	if(IsInt()){ 
-		return std::get<int64_t>(value_);
+		return std::get<int64_t>(*this);
 	}
 	
 	if(IsDouble()){ 
-		return std::get<double>(value_);
+		return std::get<double>(*this);
 	}	
 	
 	throw std::logic_error("value is not double"s);
@@ -92,11 +85,11 @@ double Node::AsDouble() const  {
 
 bool Node::AsBool() const {
 	if(!IsBool()){ throw std::logic_error("value is not bool"s); }
-	return std::get<Bool>(value_).value;
+	return std::get<bool>(*this);
 }
 const std::string& Node::AsString() const {
 	if(!IsString()){ throw std::logic_error("value is not string"s); }
-	return std::get<std::string>(value_);
+	return std::get<std::string>(*this);
 }
 
 // ----------------------------------------------------------------------Parsing extract functions-------------------------------------------------------------
@@ -372,7 +365,7 @@ void PrintValue(const std::nullptr_t&, std::ostream& out, const PrintContext& ct
 void PrintValue(const Array& arr, std::ostream& out, const PrintContext& ctx);
 void PrintValue(const Dict& Dict, std::ostream& out, const PrintContext& ctx);
 void PrintValue(const std::string& s, std::ostream& out, const PrintContext& ctx);
-void PrintValue(const Bool& value, std::ostream& out, const PrintContext& ctx);
+void PrintValue(const bool& value, std::ostream& out, const PrintContext& ctx);
 // Шаблон, подходящий для вывода double и int
 template <typename V>
 void PrintValue(const V& value, std::ostream& out, const PrintContext& ctx) {
@@ -393,9 +386,9 @@ void PrintValue(const std::nullptr_t&, std::ostream& out, const PrintContext& ct
 }
 
 // Перегрузка функции PrintValue для вывода значений null
-void PrintValue(const Bool& value, std::ostream& out, const PrintContext& ctx) {
+void PrintValue(const bool& value, std::ostream& out, const PrintContext& ctx) {
 	ctx.PrintIndent();
-    out << value.ToString();
+    out << value ? "true"sv : "false"sv;
 }
 
 // Перегрузка функции PrintValue для вывода значений null

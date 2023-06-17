@@ -28,7 +28,7 @@ struct Bool {
 using Number = std::variant<int64_t, double>;
 using Dict = std::map<std::string, Node>;
 using Array = std::vector<Node>;
-using Value = std::variant<std::nullptr_t, Array, Dict, Bool, int64_t, double, std::string>;
+using Value = std::variant<std::nullptr_t, Array, Dict, bool, int64_t, double, std::string>;
 
 bool operator==(const Node& r, const Node& l);
 bool operator!=(const Node& r, const Node& l);
@@ -37,16 +37,10 @@ bool operator!=(const Document& r, const Document& l);
 bool operator==(const Bool& r, const Bool& l);
 bool operator!=(const Bool& r, const Bool& l);
 
-class Node {
+class Node : private std::variant<std::nullptr_t, Array, Dict, bool, int64_t, double, std::string> {
 public:
-	Node() = default;
-    Node(Array array);
-    Node(Dict map);
-	Node(bool value);
-    Node(int64_t value);
-    Node(double value);
-    Node(std::nullptr_t);
-    Node(std::string value);
+   // Делаем доступными все конструкторы родительского класса variant
+    using variant::variant;
 	
 	bool IsArray() const;
 	bool IsMap() const;
@@ -67,15 +61,13 @@ public:
 	const Value& GetValue() const;
 
 private:
-    Value value_;
-	
 	template <typename T>	
 	bool CheckType() const;
 };
 
 template <typename T>	
 bool Node::CheckType() const {
-	return std::holds_alternative<T>(value_);
+	return std::holds_alternative<T>(*this);
 }
 
 class Document {

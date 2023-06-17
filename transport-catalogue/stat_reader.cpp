@@ -10,7 +10,7 @@ void StatReaderStd::Read(std::istream& is) {
 		std::string line;
 		std::getline(is, line);
 		auto [type_str, name]= detail::parser::Split(line, ' ');
-		queries_.push_back({0, StatQuery::GetType(type_str), std::string(name)});
+		queries_.push_back({0, detail::StatQuery::GetType(type_str), std::string(name)});
 		--N;
 	}
 }
@@ -18,10 +18,10 @@ void StatReaderStd::Read(std::istream& is) {
 void UserInterfaceStd::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
 	for(const auto& q: queries) {
 		switch (q.type) {
-			case StatQueryType::BUS:
+			case detail::StatQueryType::BUS:
 				ShowBus(q.name);
 			break;
-			case StatQueryType::STOP:
+			case detail::StatQueryType::STOP:
 				ShowStopBuses(q.name);
 			break;
 			default:

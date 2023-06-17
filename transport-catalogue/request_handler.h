@@ -10,6 +10,7 @@
 #include <unordered_set>
 #include <vector>
 
+#include "domain.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
 
@@ -34,21 +35,6 @@ public:
 	ExceptionMapRendererNullPtr(std::string what = "") : invalid_argument(what) { }
 };
 
-enum class StatQueryType {
-	NONE,
-	BUS,
-	STOP,
-	MAP
-};
-
-struct StatQuery {
-	int64_t id;
-	StatQueryType type;
-	std::string name;
-	
-	static StatQueryType GetType(std::string_view type_str);
-};
-
 class UserInterface;
 class RequestReader;
 class RequestHandler;
@@ -58,7 +44,7 @@ class RequestHandlerStat;
 class UserInterface {
 public:	
 	UserInterface(std::ostream& os, TransportCatalogue& trc, MapRenderer* map_renderer = nullptr) : os_(os), trc_(trc), map_renderer_(map_renderer)  {}
-	virtual void ShowQueriesResult(const std::list<StatQuery>& queries) const = 0;
+	virtual void ShowQueriesResult(const std::list<detail::StatQuery>& queries) const = 0;
 protected:
 	int ROUTE_STAT_PRECISION = 6;
 	std::ostream& os_;
@@ -96,7 +82,7 @@ private:
 
 class RequestHandlerStat : public RequestHandler {
 public:
-	using StatQueryList = std::list<StatQuery>;
+	using StatQueryList = std::list<detail::StatQuery>;
 	RequestHandlerStat(TransportCatalogue& trc, UserInterface* ui) : RequestHandler(trc), ui_(ui) {	}
 	void Do() override;
 protected:

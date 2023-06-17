@@ -32,7 +32,7 @@ void StatReaderJSON::Read(const json::Node* root) {
 		std::string type = m.at("type"s).AsString();
 		queries_.push_back({
 			m.at("id"s).AsInt(), 
-			StatQuery::GetType(type), 
+			detail::StatQuery::GetType(type), 
 			std::string((type == "Bus"s || type == "Stop"s) ? m.at("name"s).AsString() : ""s)
 		});
 	}
@@ -150,13 +150,13 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
         
 		os_ << "{" << "\"request_id\":"sv << q.id << ","sv;
 		switch (q.type) {
-			case StatQueryType::BUS:
+			case detail::StatQueryType::BUS:
 				ShowBus(q.name);
 			break;
-			case StatQueryType::STOP:
+			case detail::StatQueryType::STOP:
 				ShowStopBuses(q.name);
 			break;
-			case StatQueryType::MAP:
+			case detail::StatQueryType::MAP:
 				ShowMap();
 			break;
 			default:

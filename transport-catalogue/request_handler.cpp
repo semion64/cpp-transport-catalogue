@@ -26,21 +26,6 @@ void RequestHandlerStat::Do() {
 	ui_->ShowQueriesResult(queries_);
 }
 
-StatQueryType StatQuery::GetType(std::string_view type_str) {
-	if(type_str == "Bus"s) {
-		return StatQueryType::BUS;
-	}
-	else if(type_str == "Stop"s) {
-		return StatQueryType::STOP;
-	}
-	else if(type_str == "Map"s) {
-		return StatQueryType::MAP;
-	}
-	
-	return StatQueryType::NONE;
-	//throw ExceptionWrongStatReaderQuery("incorrect query type: " + std::string(type_str));
-}
-
 //---------------------------RequestManager--------------------------------------------------------------------------------------------------------------------------
 void RequestManager::DoBase() {
 	handler_base_->Do();
