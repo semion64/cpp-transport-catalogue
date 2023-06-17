@@ -92,19 +92,7 @@ std::ostream& operator<<(std::ostream& os, const StrokeLineCap& line_cap);
 
 std::ostream& operator<<(std::ostream& os, const StrokeLineJoin& line_join);
 
-std::ostream& operator<<(std::ostream& os, const Color& clr);
-/*
-class Attr {
-public: 
-    virtual void Out(ostream& os) = 0;
-private:
-    std::string name;
-}
-class Color : public Attr {
-public:
-    
-}*/
-    
+std::ostream& operator<<(std::ostream& os, const Color& clr);  
     
 template <typename Owner>
 class PathProps {
@@ -135,10 +123,10 @@ protected:
     void RenderAttrs(std::ostream& out) const {
 		using namespace std::literals;
 
-		if (fill_color_/* && !std::holds_alternative<std::monostate>(*fill_color_)*/) {
+		if (fill_color_) {
 			out << " fill=\""sv << *fill_color_ << "\""sv;
 		}
-		if (stroke_color_/* && !std::holds_alternative<std::monostate>(*stroke_color_)*/) {
+		if (stroke_color_) {
 			out << " stroke=\""sv << *stroke_color_ << "\""sv;
 		}
 		if (stroke_width_) {
@@ -306,7 +294,6 @@ public:
      Document doc;
      doc.Add(Circle().SetCenter({20, 30}).SetRadius(15));
     */
-   
 
     // Добавляет в svg-документ объект-наследник svg::Object
     void AddPtr(std::unique_ptr<Object>&& obj) override;

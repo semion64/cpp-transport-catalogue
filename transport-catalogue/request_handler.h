@@ -97,10 +97,10 @@ private:
 class RequestHandlerStat : public RequestHandler {
 public:
 	using StatQueryList = std::list<StatQuery>;
-	RequestHandlerStat(TransportCatalogue& trc, UserInterface& ui) : RequestHandler(trc), ui_(ui) {	}
+	RequestHandlerStat(TransportCatalogue& trc, UserInterface* ui) : RequestHandler(trc), ui_(ui) {	}
 	void Do() override;
 protected:
-	UserInterface& ui_;
+	UserInterface* ui_;
 	StatQueryList queries_;
 };
 
@@ -116,7 +116,7 @@ protected:
 
 class RequestManager : public RequestReader {
 public: 
-	RequestManager(TransportCatalogue& trc, UserInterface& ui) : RequestReader(trc), ui_(ui) { }
+	RequestManager(TransportCatalogue& trc, UserInterface* ui) : RequestReader(trc), ui_(ui) { }
 	void DoBase();
 	void DoStat();
 	RenderSettings GetSettingsMapRenderer();
@@ -126,29 +126,9 @@ public:
 		if(handler_render_) delete handler_render_;
 	}
 protected:
-	UserInterface& ui_;
+	UserInterface* ui_;
 	RequestHandlerBase* handler_base_;
     RequestHandlerStat* handler_stat_;
     RequestHandlerRenderSettings* handler_render_;
 };
-/*
-class RequestHandlerMap {
-public: 
-	using HandlerMap = std::unordered_map<std::string, RequestHandler*>;
-	RequestHandlerMap(HandlerMap handler_map) : handler_map_ (handler_map) { }
-	void AddHandler(std::pair<std::string, RequestHandler*>& handler) {
-		handler_map_.insert(handler); 
-	}
-	
-	void DoQueries(std::string_view handler_key) {
-		handler_map_.[handler_key].DoQueries(); 
-	}
-	
-	RequestHandler* GetHandler(std::string_view handler_key) {
-		handler_map_.[handler_key]; 
-	}
-	
-private:
-	HandlerMap handler_map_;
-};*/
 } // end ::trans_cat

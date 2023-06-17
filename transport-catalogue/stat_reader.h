@@ -15,7 +15,7 @@ class UserInterfaceStd;
 
 class StatReaderStd : public RequestHandlerStat {	
 public:	
-	StatReaderStd(TransportCatalogue& trc, UserInterface& ui) : RequestHandlerStat(trc, ui) { } 
+	StatReaderStd(TransportCatalogue& trc, UserInterface* ui) : RequestHandlerStat(trc, ui) { } 
 	void Read(std::istream& is) override;
 };
 
@@ -37,7 +37,7 @@ public:
 
 class RequestManagerSTD : public RequestManager {
 public: 
-	RequestManagerSTD(TransportCatalogue& trc, UserInterface& ui) : RequestManager(trc, ui) { }
+	RequestManagerSTD(TransportCatalogue& trc, UserInterface* ui) : RequestManager(trc, ui) { }
 	void Read(std::istream& is);
 };
 

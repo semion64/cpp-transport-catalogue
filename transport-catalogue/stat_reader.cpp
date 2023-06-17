@@ -1,6 +1,7 @@
 #include "stat_reader.h"
 
 namespace trans_cat {
+using namespace std::literals;
 
 void StatReaderStd::Read(std::istream& is) {
 	int N;
@@ -37,14 +38,14 @@ void UserInterfaceStd::ShowBus(std::string_view bus_name) const {
 	try {
  		const auto& bus = trc_.GetBus(bus_name);
 		const auto& route = trc_.GetRouteStat(bus);
- 		os_ << "Bus " << bus.name << ": ";
-		os_	<< route.stops_count << " stops on route, " 
-					<< route.unique_stops << " unique stops, " 
-					<< static_cast<double>(route.distance) << " route length, "
-					<< route.curvature << " curvature"; 
+ 		os_ << "Bus "sv << bus.name << ": "sv;
+		os_	<< route.stops_count << " stops on route, "sv 
+					<< route.unique_stops << " unique stops, "sv 
+					<< static_cast<double>(route.distance) << " route length, "sv
+					<< route.curvature << " curvature"sv; 
 	}
 	catch(ExceptionBusNotFound&) {
-		os_ << "Bus " << bus_name << ": not found";
+		os_ << "Bus "sv << bus_name << ": not found"sv;
 	}
 }
 
@@ -53,23 +54,23 @@ void UserInterfaceStd::ShowStopBuses(std::string_view stop_name) const {
 	
 	try {
  		const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(stop_name));
-		os_ << "Stop " << stop_name << ": buses ";
+		os_ << "Stop "sv << stop_name << ": buses "sv;
 		bool is_first = false;
 		for(const auto& bus : stop_buses) {
 			if(!is_first) {
 				is_first = true;
 			}
 			else {
-				os_ << " ";
+				os_ << " "sv;
 			}
 			os_ << bus->name;
 		}
 	}
 	catch(ExceptionBusNotFound&) {
-		os_ << "Stop " << stop_name << ": no buses";
+		os_ << "Stop "sv << stop_name << ": no buses"sv;
 	}
 	catch(ExceptionStopNotFound&) {
-		os_ << "Stop " << stop_name << ": not found";
+		os_ << "Stop "sv << stop_name << ": not found"sv;
 	}	
 }
 

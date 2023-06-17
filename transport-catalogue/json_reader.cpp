@@ -6,10 +6,10 @@ using namespace std::literals;
 
 void InputReaderJSON::Read(const json::Node* root) { 
 	try {	
-		ReadFromJSON(root, "base_requests"); 
+		ReadFromJSON(root, "base_requests"s); 
 	}
 	catch(ExceptionWrongQueryType&) {
-		std::cerr << "request node (base_requests) not find" << std::endl;
+		std::cerr << "request node (base_requests) not find"sv << std::endl;
 		return;
 	} 
 	
@@ -20,55 +20,55 @@ void InputReaderJSON::Read(const json::Node* root) {
 
 void StatReaderJSON::Read(const json::Node* root) { 
 	try {
-		ReadFromJSON(root, "stat_requests");
+		ReadFromJSON(root, "stat_requests"s);
 	}
 	catch(ExceptionWrongQueryType&) {
-		std::cerr << "request node (stat_requests) not find" << std::endl;
+		std::cerr << "request node (stat_requests) not find"sv << std::endl;
 		return;
 	} 
 	
 	for(const auto& request : root_->AsArray()) {
 		const auto& m = request.AsMap();
-		std::string type = m.at("type").AsString();
+		std::string type = m.at("type"s).AsString();
 		queries_.push_back({
-			m.at("id").AsInt(), 
+			m.at("id"s).AsInt(), 
 			StatQuery::GetType(type), 
-			std::string((type == "Bus" || type == "Stop") ? m.at("name").AsString() : "")
+			std::string((type == "Bus"s || type == "Stop"s) ? m.at("name"s).AsString() : ""s)
 		});
 	}
 }
 
 void RenderSettingsJSON::Read(const json::Node* root) { // , std::string request_name
 	try {
-		ReadFromJSON(root, "render_settings");
+		ReadFromJSON(root, "render_settings"s);
 	}
 	catch(ExceptionWrongQueryType&) {
-		std::cerr << "request node (render_settings) not find" << std::endl;
+		std::cerr << "request node (render_settings) not find"sv << std::endl;
 		return;
 	}
 	
 	const auto& m = root_->AsMap();
-	auto& blo = m.at("bus_label_offset").AsArray();
+	auto& blo = m.at("bus_label_offset"s).AsArray();
 	rs_.bus_label_offset 	= svg::Point {blo[0].AsDouble(), blo[1].AsDouble()};
 	
-	auto& slo = m.at("stop_label_offset").AsArray();
+	auto& slo = m.at("stop_label_offset"s).AsArray();
 	rs_.stop_label_offset 	= svg::Point {slo[0].AsDouble(), slo[1].AsDouble()};
 	
 	std::vector<svg::Color> color_palette;
-	for(auto& node_color : m.at("color_palette").AsArray()) {
+	for(auto& node_color : m.at("color_palette"s).AsArray()) {
 		color_palette.push_back(detail::ParseColor(node_color));
 	}
 	
 	rs_.color_palette 		=  color_palette;
-	rs_.width				= m.at("width").AsDouble();
-	rs_.height 				= m.at("height").AsDouble();
-	rs_.padding 			= m.at("padding").AsDouble();
-	rs_.line_width 			= m.at("line_width").AsDouble();
-	rs_.stop_radius 		= m.at("stop_radius").AsDouble();
-	rs_.bus_label_font_size = m.at("bus_label_font_size").AsInt();
-	rs_.stop_label_font_size = m.at("stop_label_font_size").AsInt();
-	rs_.underlayer_color 	=  detail::ParseColor(m.at("underlayer_color"));
-	rs_.underlayer_width 	=  m.at("underlayer_width").AsDouble();
+	rs_.width				= m.at("width"s).AsDouble();
+	rs_.height 				= m.at("height"s).AsDouble();
+	rs_.padding 			= m.at("padding"s).AsDouble();
+	rs_.line_width 			= m.at("line_width"s).AsDouble();
+	rs_.stop_radius 		= m.at("stop_radius"s).AsDouble();
+	rs_.bus_label_font_size = m.at("bus_label_font_size"s).AsInt();
+	rs_.stop_label_font_size = m.at("stop_label_font_size"s).AsInt();
+	rs_.underlayer_color 	=  detail::ParseColor(m.at("underlayer_color"s));
+	rs_.underlayer_width 	=  m.at("underlayer_width"s).AsDouble();
 }
 
 void RequestManagerJSON::Read(const json::Node* root) {
@@ -88,10 +88,10 @@ void RequestManagerJSON::Read(const json::Node* root) {
 
 void InputReaderJSON::ReadQuery(const json::Node& request) {
 	const auto& m = request.AsMap();
-	if(m.at("type").AsString() == "Stop") {
+	if(m.at("type"s).AsString() == "Stop"s) {
 		add_stop_queries_.insert(&m);
 	}
-	else if(m.at("type").AsString() == "Bus") {
+	else if(m.at("type"s).AsString() == "Bus"s) {
 		add_bus_queries_.insert(&m);
 	}
 	//else {
@@ -101,8 +101,8 @@ void InputReaderJSON::ReadQuery(const json::Node& request) {
 
 void InputReaderJSON::AddStops(MapDiBetweenStops& stop_di) {
 	for(const auto* q : add_stop_queries_) {
-		auto& stop = trc_.AddStop(q->at("name").AsString(), {q->at("latitude").AsDouble(), q->at("longitude").AsDouble()});
-		for(const auto& [name, di] : q->at("road_distances").AsMap()) {
+		auto& stop = trc_.AddStop(q->at("name"s).AsString(), {q->at("latitude"s).AsDouble(), q->at("longitude"s).AsDouble()});
+		for(const auto& [name, di] : q->at("road_distances"s).AsMap()) {
 			stop_di[stop.name][name] = di.AsInt();
 		}
 	}
@@ -112,9 +112,9 @@ void InputReaderJSON::AddStops(MapDiBetweenStops& stop_di) {
 
 void InputReaderJSON::AddBuses() { 
 	for(const auto& q : add_bus_queries_) {
-		bool is_ring = q->at("is_roundtrip").AsBool();
-		std::vector<const Stop*> bus_stops = ParseStopList(q->at("stops").AsArray(), is_ring);
-		trc_.AddBus(q->at("name").AsString(), bus_stops, is_ring);
+		bool is_ring = q->at("is_roundtrip"s).AsBool();
+		std::vector<const Stop*> bus_stops = ParseStopList(q->at("stops"s).AsArray(), is_ring);
+		trc_.AddBus(q->at("name"s).AsString(), bus_stops, is_ring);
 	}
 	
 	add_bus_queries_.clear();
@@ -138,17 +138,17 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 }
 
 void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
-	os_ << "[";
+	os_ << "["sv;
     bool is_first = true;
 	for(const auto& q: queries) {
         if(!is_first) {
-            os_ << ",";
+            os_ << ","sv;
         }
         else {
             is_first = false;
         }
         
-		os_ << "{" << "\"request_id\":" << q.id << ",";
+		os_ << "{" << "\"request_id\":"sv << q.id << ","sv;
 		switch (q.type) {
 			case StatQueryType::BUS:
 				ShowBus(q.name);
@@ -202,24 +202,24 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	try {
 		const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(stop_name));
-		os_ << "\"buses\":[";
+		os_ << "\"buses\":["sv;
 		bool is_first = false;
 		for(const auto& bus : stop_buses) {
 			if(!is_first) {
 				is_first = true;
 			}
 			else {
-				os_ << ",";
+				os_ << ","sv;
 			}
-			os_ << "\"" << bus->name << "\"";
+			os_ << "\""sv << bus->name << "\""sv;
 		}
-		os_ << "]";
+		os_ << "]"sv;
 	}
 	catch(ExceptionBusNotFound&) {
-		os_ << "\"buses\":" << "[]";
+		os_ << "\"buses\":" << "[]"sv;
 	}
 	catch(ExceptionStopNotFound&) {
-		os_ << "\"error_message\":" << "\"not found\"";
+		os_ << "\"error_message\":"sv << "\"not found\""sv;
 	}
 }
 

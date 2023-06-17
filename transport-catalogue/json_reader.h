@@ -72,7 +72,7 @@ private:
 
 class StatReaderJSON : public RequestHandlerStat, public LoaderJSON {	
 public:	
-	StatReaderJSON(TransportCatalogue& trc, UserInterface& ui) : RequestHandlerStat(trc, ui) { } 
+	StatReaderJSON(TransportCatalogue& trc, UserInterface* ui) : RequestHandlerStat(trc, ui) { } 
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;
 };
@@ -97,7 +97,7 @@ private:
 
 class RequestManagerJSON : public RequestManager, public LoaderJSON {
 public: 
-	RequestManagerJSON(TransportCatalogue& trc, UserInterface& ui) : RequestManager(trc, ui) {	}
+	RequestManagerJSON(TransportCatalogue& trc, UserInterface* ui) : RequestManager(trc, ui) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;	
 };

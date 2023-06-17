@@ -4,14 +4,16 @@
 #include <deque>
 #include <iomanip>
 #include <iostream>
+#include <optional>
 #include <set>
 #include <string>
 #include <string_view>
 #include <unordered_map>
 #include <unordered_set>
 #include <vector>
+
 #include "geo.h"
-#include <optional>
+
 namespace trans_cat {
 
 class ExceptionBusNotFound : public std::logic_error {

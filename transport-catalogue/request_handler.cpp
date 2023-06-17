@@ -1,7 +1,7 @@
 #include "request_handler.h"
 
 namespace trans_cat {
-	
+using namespace std::literals;	
 //---------------------------RequestHandlerBase--------------------------------------------------------------------------------------------------------------------------
 
 void RequestHandlerBase::Do() {
@@ -23,17 +23,17 @@ void RequestHandlerBase::AddDistanceBetweenStops() {
 //---------------------------RequestHandlerStat--------------------------------------------------------------------------------------------------------------------------
 
 void RequestHandlerStat::Do() {
-	ui_.ShowQueriesResult(queries_);
+	ui_->ShowQueriesResult(queries_);
 }
 
 StatQueryType StatQuery::GetType(std::string_view type_str) {
-	if(type_str == "Bus") {
+	if(type_str == "Bus"s) {
 		return StatQueryType::BUS;
 	}
-	else if(type_str == "Stop") {
+	else if(type_str == "Stop"s) {
 		return StatQueryType::STOP;
 	}
-	else if(type_str == "Map") {
+	else if(type_str == "Map"s) {
 		return StatQueryType::MAP;
 	}
 	
@@ -51,7 +51,6 @@ void RequestManager::DoStat() {
 }
 
 RenderSettings RequestManager::GetSettingsMapRenderer() {
-	handler_render_->Do();
 	return handler_render_->GetRenderSettings();
 }
 

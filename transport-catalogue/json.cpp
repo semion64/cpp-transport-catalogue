@@ -3,6 +3,7 @@
 using namespace std;
 
 namespace json {
+	
 using namespace std::literals;	
 namespace detail {
 void replace_all(std::string& str, const std::string& from, const std::string& to);
@@ -63,11 +64,11 @@ bool Node::IsString() const {return CheckType<std::string>(); }
 bool Node::IsNull() const {return CheckType<std::nullptr_t>(); }
 
 const Array& Node::AsArray() const {
-	if(!IsArray()){ throw std::logic_error("value is not array"); }
+	if(!IsArray()){ throw std::logic_error("value is not array"s); }
 	return std::get<Array>(value_);
 }
 const Dict& Node::AsMap() const {
-	if(!IsMap()){ throw std::logic_error("value is not map"); }
+	if(!IsMap()){ throw std::logic_error("value is not map"s); }
 	//PrintValue(value_, cerr);
 	return std::get<Dict>(value_);
 }
@@ -75,7 +76,7 @@ int64_t Node::AsInt() const {
 	if(IsInt()){  
 		return get<int64_t>(value_);
 	}
-	throw std::logic_error("value is not int");
+	throw std::logic_error("value is not int"s);
 }
 double Node::AsDouble() const  {
 	if(IsInt()){ 
@@ -86,15 +87,15 @@ double Node::AsDouble() const  {
 		return std::get<double>(value_);
 	}	
 	
-	throw std::logic_error("value is not double");
+	throw std::logic_error("value is not double"s);
 }
 
 bool Node::AsBool() const {
-	if(!IsBool()){ throw std::logic_error("value is not bool"); }
+	if(!IsBool()){ throw std::logic_error("value is not bool"s); }
 	return std::get<Bool>(value_).value;
 }
 const std::string& Node::AsString() const {
-	if(!IsString()){ throw std::logic_error("value is not string"); }
+	if(!IsString()){ throw std::logic_error("value is not string"s); }
 	return std::get<std::string>(value_);
 }
 
@@ -203,7 +204,7 @@ std::string ExtractString(std::istream& input) {
     while (true) {
         if (it == end) {
             // Поток закончился до того, как встретили закрывающую кавычку?
-            throw ParsingError("String parsing error");
+            throw ParsingError("String parsing error"s);
         }
 		
         const char ch = *it;
@@ -217,7 +218,7 @@ std::string ExtractString(std::istream& input) {
             ++it;
             if (it == end) {
                 // Поток завершился сразу после символа обратной косой черты
-                throw ParsingError("String parsing error");
+                throw ParsingError("String parsing error"s);
             }
             const char escaped_char = *(it);
             // Обрабатываем одну из последовательностей: \\, \n, \t, \r, \"
@@ -292,17 +293,17 @@ Node LoadNode(istream& input) {
 		input.putback(c);
 		std::string key = move(parser::ExtractKeyWord(input));
 		
-		if(key == "null") {
+		if(key == "null"s) {
 			return Node();
 		} 
-		else if(key == "true") {
+		else if(key == "true"s) {
 			return Node(true);
 		}
-		else if(key == "false") {
+		else if(key == "false"s) {
 			return Node(false);
 		}
 		
-        throw ParsingError("Key word (" + key + ") not supported");
+        throw ParsingError("Key word ("s + key + ") not supported"s);
 	}
 }
 
@@ -316,7 +317,7 @@ Node LoadNumber(istream& input) {
 		return Node(get<double>(n));
 	}
 	
-    throw ParsingError("Load number exception");
+    throw ParsingError("Load number exception"s);
 }
 
 Node LoadString(istream& input) {
@@ -334,7 +335,7 @@ Node LoadArray(istream& input) {
     }
 	
 	if(c != ']') {
-		throw ParsingError("expected ']' int the end of Array");
+		throw ParsingError("expected ']' int the end of Array"s);
 	}
 	
     return Node(move(result));
@@ -354,7 +355,7 @@ Node LoadDict(istream& input) {
     }
 	
 	if(c != '}') {
-		throw ParsingError("expected ']' int the end of Array");
+		throw ParsingError("expected ']' int the end of Array"s);
 	}
 
     return Node(move(result));
@@ -441,7 +442,7 @@ void PrintValue(const Dict& Dict, std::ostream& out, const PrintContext& ctx) {
 		}
 		
 		curr_ctx.PrintIndent();
-		out << "\"" << key << "\"" << ": ";
+		out << "\""sv << key << "\""sv << ": "sv;
 		PrintNode(value, out, curr_ctx.Indented(true));
 	}
 	
