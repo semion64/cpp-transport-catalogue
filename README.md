@@ -31,6 +31,6 @@ compile.cmd
 ```
 для Linux:
 ```
-  sudo cmod +x compile.sh
+  sudo chmod +x compile.sh
   sudo ./compile.sh
 ```
