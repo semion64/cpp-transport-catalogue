@@ -28,7 +28,7 @@ void StatReaderJSON::Read(const json::Node* root) {
 	} 
 	
 	for(const auto& request : root_->AsArray()) {
-		const auto& m = request.AsMap();
+		const auto& m = request.AsDict();
 		std::string type = m.at("type"s).AsString();
 		queries_.push_back({
 			m.at("id"s).AsInt(), 
@@ -47,7 +47,7 @@ void RenderSettingsJSON::Read(const json::Node* root) { // , std::string request
 		return;
 	}
 	
-	const auto& m = root_->AsMap();
+	const auto& m = root_->AsDict();
 	auto& blo = m.at("bus_label_offset"s).AsArray();
 	rs_.bus_label_offset 	= svg::Point {blo[0].AsDouble(), blo[1].AsDouble()};
 	
@@ -87,7 +87,7 @@ void RequestManagerJSON::Read(const json::Node* root) {
 }
 
 void InputReaderJSON::ReadQuery(const json::Node& request) {
-	const auto& m = request.AsMap();
+	const auto& m = request.AsDict();
 	if(m.at("type"s).AsString() == "Stop"s) {
 		add_stop_queries_.insert(&m);
 	}
@@ -102,7 +102,7 @@ void InputReaderJSON::ReadQuery(const json::Node& request) {
 void InputReaderJSON::AddStops(MapDiBetweenStops& stop_di) {
 	for(const auto* q : add_stop_queries_) {
 		auto& stop = trc_.AddStop(q->at("name"s).AsString(), {q->at("latitude"s).AsDouble(), q->at("longitude"s).AsDouble()});
-		for(const auto& [name, di] : q->at("road_distances"s).AsMap()) {
+		for(const auto& [name, di] : q->at("road_distances"s).AsDict()) {
 			stop_di[stop.name][name] = di.AsInt();
 		}
 	}
@@ -138,17 +138,13 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 }
 
 void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
-	os_ << "["sv;
-    bool is_first = true;
+	json_build_ = json::Builder();
+	json_build_.StartArray();//os_ << "["sv;
+    //bool is_first = true;
 	for(const auto& q: queries) {
-        if(!is_first) {
-            os_ << ","sv;
-        }
-        else {
-            is_first = false;
-        }
-        
-		os_ << "{" << "\"request_id\":"sv << q.id << ","sv;
+       
+		json_build_.StartDict()
+				.Key("request_id").Value(q.id);//os_ << "{" << "\"request_id\":"sv << q.id << ","sv;
 		switch (q.type) {
 			case detail::StatQueryType::BUS:
 				ShowBus(q.name);
@@ -164,11 +160,14 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 			break;
 		}
 		
-		os_ << "}";
+		json_build_.EndDict();//os_ << "}";
 	}
 	
-	os_ << "]";	
-    os_ << std::endl;
+	json_build_.EndArray();//os_ << "]";	
+	
+	json::Print(
+        json::Document{json_build_.Build()}, os_);
+    //os_ << std::endl;
 }
 
 void UserInterfaceJSON::ShowMap() const {
@@ -178,9 +177,9 @@ void UserInterfaceJSON::ShowMap() const {
 	
     std::stringstream ss;
 	map_renderer_->RenderMap(ss);
-	std::string map = ss.str();
-	json::detail::escaping_chars(map);
-    os_ << "\"map\": \""sv << map << "\""sv;
+	//std::string map = ss.str();
+	//json::detail::escaping_chars(map);
+    json_build_.Key("map").Value(ss.str()); //os_ << "\"map\": \""sv << map << "\""sv;
     	
 }
 
@@ -188,13 +187,20 @@ void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
 	try {
 		const auto& bus = trc_.GetBus(bus_name);
 		const auto& route = trc_.GetRouteStat(bus);
+		json_build_
+			.Key("curvature").Value(route.curvature)
+			.Key("route_length").Value(static_cast<double>(route.distance))
+			.Key("stop_count").Value(route.stops_count)
+			.Key("unique_stop_count").Value(route.unique_stops);
+			/*
 		os_ << "\"curvature\":"sv << route.curvature << ","sv
 			<< "\"route_length\":"sv << static_cast<double>(route.distance) << ","sv
 			<< "\"stop_count\":"sv << route.stops_count << ","sv
-			<< "\"unique_stop_count\":"sv << route.unique_stops;
+			<< "\"unique_stop_count\":"sv << route.unique_stops;*/
 	}
 	catch(ExceptionBusNotFound&) {
-		os_ << "\"error_message\":"sv << "\"not found\""sv;
+		json_build_.Key("error_message").Value("not found");
+		//os_ << "\"error_message\":"sv << "\"not found\""sv;
 	}	
 }
 
@@ -202,24 +208,25 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	try {
 		const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(stop_name));
-		os_ << "\"buses\":["sv;
-		bool is_first = false;
+		json_build_.Key("buses").StartArray();//os_ << "\"buses\":["sv;
+		//bool is_first = false;
 		for(const auto& bus : stop_buses) {
-			if(!is_first) {
+			/*if(!is_first) {
 				is_first = true;
 			}
 			else {
 				os_ << ","sv;
-			}
-			os_ << "\""sv << bus->name << "\""sv;
+			}*/
+			json_build_.Value(std::string(bus->name));//os_ << "\""sv << bus->name << "\""sv;
 		}
-		os_ << "]"sv;
+		json_build_.EndArray();//os_ << "]"sv;
 	}
 	catch(ExceptionBusNotFound&) {
-		os_ << "\"buses\":" << "[]"sv;
+		json_build_.Key("buses").StartArray().EndArray();//os_ << "\"buses\":" << "[]"sv;
 	}
 	catch(ExceptionStopNotFound&) {
-		os_ << "\"error_message\":"sv << "\"not found\""sv;
+		json_build_.Key("error_message").Value("not found");
+		//os_ << "\"error_message\":"sv << "\"not found\""sv;
 	}
 }
 

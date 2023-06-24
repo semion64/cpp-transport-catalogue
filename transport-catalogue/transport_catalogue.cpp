@@ -113,8 +113,8 @@ size_t TransportCatalogue::GetUniqueStopsCount(const Bus& bus) const {
 	
 const detail::RouteStat TransportCatalogue::GetRouteStat(const Bus& bus) const {
 	return {
-		bus.stops.size(),
-		GetUniqueStopsCount(bus),
+		static_cast<int>(bus.stops.size()),
+		static_cast<int>(GetUniqueStopsCount(bus)),
 		GetDistance(bus),
 		GetCurvature(bus),
 		bus.is_ring

@@ -6,13 +6,13 @@
 #include <sstream>
 #include <string>
 
-//#include "input_reader.h"
-//#include "stat_reader.h"
+#include "input_reader.h"
+#include "stat_reader.h"
 #include "json_reader.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
 using namespace std;
-/*
+
 namespace trans_cat {
 namespace tests {
 
@@ -246,7 +246,8 @@ void RunJSON_BASE_SVG(std::istream& is = std::cin, std::ostream& os = std::cout)
 	trans_cat::MapRendererSVG map_renderer(trc, json_request.GetSettingsMapRenderer()); // using MapRenderer separately from UserInterface
 	map_renderer.RenderMap(os);
 }
-*/
+
+
 void RunJSON_BASE_STAT_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::MapRenderer* map_renderer = new trans_cat::MapRendererSVG(trc);
@@ -263,6 +264,6 @@ int main() {
 	//RunStd_BASE_STAT(f);
 	//RunJSON_BASE_STATf);
 	//RunJSON_BASE_SVG(f);
-	RunJSON_BASE_STAT_SVG();
-	//Tests();
+	//RunJSON_BASE_STAT_SVG();
+	Tests();
 }

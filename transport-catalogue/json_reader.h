@@ -11,7 +11,7 @@
 #include "transport_catalogue.h"
 #include "request_handler.h"
 #include "map_renderer.h"
-
+#include "json_builder.h"
 namespace trans_cat {
 	
 namespace detail {
@@ -33,7 +33,7 @@ protected:
 	}
 
 	void ReadFromJSON(const json::Node* root, std::string request_name = "") {
-		if(!root->IsMap()) {
+		if(!root->IsDict()) {
 			throw ExceptionWrongQueryType("json root node has unsupported format");
 		}
 		
@@ -42,7 +42,7 @@ protected:
 			return;
 		}
 		
-		const auto& root_map = root->AsMap();
+		const auto& root_map = root->AsDict();
 		if(!root_map.count(request_name)) {
 			throw ExceptionWrongQueryType("request node (" + std::string(request_name) + ") not find");
 		}
@@ -93,6 +93,7 @@ private:
 	void ShowBus(std::string_view bus_name) const;
 	void ShowStopBuses(std::string_view stop_name) const;
 	void ShowMap() const;
+	mutable json::Builder json_build_;
 };
 
 class RequestManagerJSON : public RequestManager, public LoaderJSON {

@@ -39,8 +39,8 @@ struct Bus {
 
 namespace detail {
 struct RouteStat {
-	size_t stops_count;
-	size_t unique_stops;
+	int stops_count;
+	int unique_stops;
 	int distance;
 	double curvature;
 	bool is_ring;
@@ -49,11 +49,11 @@ struct RouteStat {
 class DistanceBetweenStopHasher {
 public:
 	template<class TFirst, class TSecond>
-	size_t operator()(const std::pair<TFirst, TSecond>& p) const noexcept {
-		size_t h = std::hash<TFirst>{}(p.first);
-		h <<= sizeof(size_t);
+	int operator()(const std::pair<TFirst, TSecond>& p) const noexcept {
+		int h = std::hash<TFirst>{}(p.first);
+		h <<= sizeof(int);
 		h ^= std::hash<TSecond>{}(p.second);
-		return std::hash<size_t>{}(h);
+		return std::hash<int>{}(h);
 	}
 };	
 
@@ -71,7 +71,7 @@ enum class StatQueryType {
 };
 
 struct StatQuery {
-	int64_t id;
+	int id;
 	StatQueryType type;
 	std::string name;
 	
