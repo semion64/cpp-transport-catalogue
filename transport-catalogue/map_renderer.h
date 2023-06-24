@@ -79,4 +79,4 @@ private:
 	void DrawLabel(svg::Document& doc, std::string_view name, svg::Point pos, svg::Text& templ, svg::Text& templ_bckg, svg::Color clr_fill);
 };
 
-}
+} // end ::trans_cat

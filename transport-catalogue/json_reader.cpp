@@ -38,7 +38,7 @@ void StatReaderJSON::Read(const json::Node* root) {
 	}
 }
 
-void RenderSettingsJSON::Read(const json::Node* root) { // , std::string request_name
+void RenderSettingsJSON::Read(const json::Node* root) {
 	try {
 		ReadFromJSON(root, "render_settings"s);
 	}
@@ -94,9 +94,6 @@ void InputReaderJSON::ReadQuery(const json::Node& request) {
 	else if(m.at("type"s).AsString() == "Bus"s) {
 		add_bus_queries_.insert(&m);
 	}
-	//else {
-		//throw ExceptionWrongQueryType(std::string(type));
-	//} 
 }
 
 void InputReaderJSON::AddStops(MapDiBetweenStops& stop_di) {
@@ -139,12 +136,11 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 
 void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
 	json_build_ = json::Builder();
-	json_build_.StartArray();//os_ << "["sv;
-    //bool is_first = true;
+	json_build_.StartArray();
 	for(const auto& q: queries) {
        
 		json_build_.StartDict()
-				.Key("request_id").Value(q.id);//os_ << "{" << "\"request_id\":"sv << q.id << ","sv;
+				.Key("request_id").Value(q.id);
 		switch (q.type) {
 			case detail::StatQueryType::BUS:
 				ShowBus(q.name);
@@ -160,14 +156,12 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 			break;
 		}
 		
-		json_build_.EndDict();//os_ << "}";
+		json_build_.EndDict();
 	}
 	
-	json_build_.EndArray();//os_ << "]";	
+	json_build_.EndArray();
 	
-	json::Print(
-        json::Document{json_build_.Build()}, os_);
-    //os_ << std::endl;
+	json::Print(json::Document{json_build_.Build()}, os_);
 }
 
 void UserInterfaceJSON::ShowMap() const {
@@ -177,9 +171,7 @@ void UserInterfaceJSON::ShowMap() const {
 	
     std::stringstream ss;
 	map_renderer_->RenderMap(ss);
-	//std::string map = ss.str();
-	//json::detail::escaping_chars(map);
-    json_build_.Key("map").Value(ss.str()); //os_ << "\"map\": \""sv << map << "\""sv;
+    json_build_.Key("map").Value(ss.str());
     	
 }
 
@@ -192,15 +184,9 @@ void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
 			.Key("route_length").Value(static_cast<double>(route.distance))
 			.Key("stop_count").Value(route.stops_count)
 			.Key("unique_stop_count").Value(route.unique_stops);
-			/*
-		os_ << "\"curvature\":"sv << route.curvature << ","sv
-			<< "\"route_length\":"sv << static_cast<double>(route.distance) << ","sv
-			<< "\"stop_count\":"sv << route.stops_count << ","sv
-			<< "\"unique_stop_count\":"sv << route.unique_stops;*/
 	}
 	catch(ExceptionBusNotFound&) {
 		json_build_.Key("error_message").Value("not found");
-		//os_ << "\"error_message\":"sv << "\"not found\""sv;
 	}	
 }
 
@@ -208,25 +194,18 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 	os_ << std::setprecision(ROUTE_STAT_PRECISION);
 	try {
 		const auto& stop_buses = trc_.GetStopBuses(trc_.GetStop(stop_name));
-		json_build_.Key("buses").StartArray();//os_ << "\"buses\":["sv;
-		//bool is_first = false;
+		json_build_.Key("buses").StartArray();
 		for(const auto& bus : stop_buses) {
-			/*if(!is_first) {
-				is_first = true;
-			}
-			else {
-				os_ << ","sv;
-			}*/
-			json_build_.Value(std::string(bus->name));//os_ << "\""sv << bus->name << "\""sv;
+			json_build_.Value(std::string(bus->name));
 		}
-		json_build_.EndArray();//os_ << "]"sv;
+		
+		json_build_.EndArray();
 	}
 	catch(ExceptionBusNotFound&) {
-		json_build_.Key("buses").StartArray().EndArray();//os_ << "\"buses\":" << "[]"sv;
+		json_build_.Key("buses").StartArray().EndArray();
 	}
 	catch(ExceptionStopNotFound&) {
 		json_build_.Key("error_message").Value("not found");
-		//os_ << "\"error_message\":"sv << "\"not found\""sv;
 	}
 }
 
