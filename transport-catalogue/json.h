@@ -23,7 +23,7 @@ public:
 	friend class Builder;
     using variant::variant;
     using Value = variant;
-
+    
     bool IsInt() const {
         return std::holds_alternative<int>(*this);
     }

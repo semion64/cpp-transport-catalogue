@@ -4,7 +4,7 @@
 namespace json{
 	
 void Builder::CheckComplete() {
-	if(nodes_stack_.size() == 0 && !empty_builder) {
+	if(nodes_stack_.size() == 0 && root_) {
 		throw std::logic_error("try call construct method after builder complete");
 	}
 }
@@ -26,31 +26,10 @@ detail::KeyItemContext Builder::Key(std::string key) {
 Builder& Builder::Value(Node::Value value) {
 	CheckComplete();
 	Node node;
-	if(std::holds_alternative<std::string>(value)) {
-		node = Node(std::move(std::get<std::string>(value)));
-	}
-	else if(std::holds_alternative<bool>(value)) {
-		node = Node(std::get<bool>(value));
-	}
-	else if(std::holds_alternative<int>(value)) {
-		node = Node(std::get<int>(value));
-	}
-	else if(std::holds_alternative<double>(value)) {
-		node = Node(std::get<double>(value));
-	}
-	else if(std::holds_alternative<std::nullptr_t>(value)) {
-		node = Node{nullptr};
-	}
-	else if(std::holds_alternative<Dict>(value)) {
-		node = Node(std::move(std::get<Dict>(value)));
-	}
-	if(std::holds_alternative<Array>(value)) {
-		node = Node(std::move(std::get<Array>(value)));
-	}
-	
-	if(empty_builder) {
-		empty_builder = false;
-		root_ = node;
+	std::visit([&node](const auto& v) { node = Node(v);}, value);
+
+	if(!root_) {
+		*root_ = std::move(node);
 	} 
 	else if(nodes_stack_.size() == 0) {
 		throw std::logic_error("try add value after build completed");
@@ -72,87 +51,25 @@ Builder& Builder::Value(Node::Value value) {
 }
 
 detail::DictItemContext Builder::StartDict() {
-	CheckComplete();
-	Dict dict;
-	if(empty_builder) {
-		empty_builder = false;
-		root_ = Node(dict);
-		nodes_stack_.push_back(&root_);
-	} 
-	else {
-		if(nodes_stack_.back()->IsArray()) {
-			nodes_stack_.back()->AsArray().push_back(Node(dict));
-			nodes_stack_.push_back(&nodes_stack_.back()->AsArray().back());
-		}
-		else if(nodes_stack_.back()->IsDict()) {
-			if(wait_value_.size() == 0) { 
-				throw std::logic_error("there are must be a key before value");
-			}
-			
-			nodes_stack_.back()->AsDict()[wait_value_.back().key] = Node(dict);
-			nodes_stack_.push_back(&nodes_stack_.back()->AsDict()[wait_value_.back().key]);
-			wait_value_.pop_back();
-		}
-	}
-	
+	StartItem<Dict>();
 	return detail::DictItemContext(*this);
 }
 
 Builder& Builder::EndDict() {
-    if(nodes_stack_.size() == 0) {
-		std::logic_error("try call construct method after builder complete");
-	}
-	CheckComplete();
-	if(!nodes_stack_.back()->IsDict()) {
-		throw std::logic_error("not StartDict() for calling EndDict()");
-	}
-	nodes_stack_.pop_back();
-	return *this;
+	return EndItem([this](){ return nodes_stack_.back()->IsDict(); });	
 }
 
 detail::ArrayItemContext Builder::StartArray() {
-	CheckComplete();
-	Array arr;
-	if(empty_builder) {
-		empty_builder = false;
-		root_ = Node(arr);
-		nodes_stack_.push_back(&root_);
-	} else {
-		if(nodes_stack_.back()->IsArray()) {
-			nodes_stack_.back()->AsArray().push_back(Node(arr));
-			nodes_stack_.push_back(&nodes_stack_.back()->AsArray().back());
-		}
-		else if(nodes_stack_.back()->IsDict()) {
-			if(wait_value_.size() == 0) { 
-				throw std::logic_error("there are must be a key before value");
-			}
-			
-			nodes_stack_.back()->AsDict()[wait_value_.back().key] = Node(arr);
-			nodes_stack_.push_back(&nodes_stack_.back()->AsDict()[wait_value_.back().key]);
-			wait_value_.pop_back();
-		}
-	}
-	
+	StartItem<Array>();
 	return detail::ArrayItemContext(*this);
 }
 
 Builder& Builder::EndArray() {
-    if(nodes_stack_.size() == 0) {
-		std::logic_error("try call construct method after builder complete");
-	}
-    
-	CheckComplete();
-	if(!nodes_stack_.back()->IsArray()) {
-		throw std::logic_error("not StartArray() for calling EndArray()");
-	}
-	
-	nodes_stack_.pop_back();
-	
-	return *this;
+    return EndItem([this](){ return nodes_stack_.back()->IsArray(); });	
 }
 
 json::Node Builder::Build() {
-	if(empty_builder) {
+	if(!root_) {
 		throw std::logic_error("builder is empty");
 	}
 	
@@ -160,7 +77,7 @@ json::Node Builder::Build() {
 		throw std::logic_error("not all structers ended");
 	}
 	
-	return root_;
+	return *root_;
 }
 
 namespace detail {
@@ -171,18 +88,7 @@ DictItemContext KeyItemContext::Value(Node::Value value) {
 	return DictItemContext(builder_);
 }
 
-DictItemContext KeyItemContext::StartDict() {
-	builder_.StartDict();
-	return DictItemContext(builder_);
-}
-
-ArrayItemContext KeyItemContext::StartArray() {
-	builder_.StartArray();
-	return ArrayItemContext(builder_);
-}
-
-
-DictItemContext::DictItemContext(Builder& b) : ItemContext(b) {}
+DictItemContext::DictItemContext(Builder& b) : builder_(b) {}
 KeyItemContext DictItemContext::Key(std::string key) {
 	builder_.Key(std::move(key));
 	return KeyItemContext(builder_);
@@ -192,19 +98,18 @@ Builder& DictItemContext::EndDict() {
 	return builder_.EndDict();
 }
 
-
 ArrayItemContext::ArrayItemContext(Builder& b) : ItemContext(b){}
 ArrayItemContext ArrayItemContext::Value(Node::Value value) {
 	builder_.Value(std::move(value));
 	return ArrayItemContext(builder_);
 }
 
-DictItemContext ArrayItemContext::StartDict() {
+DictItemContext ItemContext::StartDict() {
 	builder_.StartDict();
 	return DictItemContext(builder_);
 }
 
-ArrayItemContext ArrayItemContext::StartArray() {
+ArrayItemContext ItemContext::StartArray() {
 	builder_.StartArray();
 	return ArrayItemContext(builder_);
 }
