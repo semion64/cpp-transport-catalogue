@@ -3,23 +3,17 @@
 
 namespace json{
 	
-void Builder::CheckComplete() {
-	if(nodes_stack_.size() == 0 && root_) {
-		throw std::logic_error("try call construct method after builder complete");
-	}
-}
-    
 detail::KeyItemContext Builder::Key(std::string key) {
 	CheckComplete();
-	if(wait_value_.size() > 0) {
+	if(Back()->IsString()) {
 		throw std::logic_error("key after key");
 	}
 	
-	if(nodes_stack_.size() == 0 || !nodes_stack_.back()->IsDict()) {
+	if(Empty() || !Back()->IsDict()) {
 		throw std::logic_error("key (" + key + ") locate out of any dictionary");
 	}
 	
-	wait_value_.push_back(WaitValue{nodes_stack_.back(), key});
+	Push(new Node(key));
 	return detail::KeyItemContext(*this);
 }
 
@@ -31,20 +25,22 @@ Builder& Builder::Value(Node::Value value) {
 	if(!root_) {
 		*root_ = std::move(node);
 	} 
-	else if(nodes_stack_.size() == 0) {
+	else if(Empty()) {
 		throw std::logic_error("try add value after build completed");
     }
     else {
-        if(nodes_stack_.back()->IsArray()){
-            nodes_stack_.back()->AsArray().push_back(std::move(node));
+        if(Back()->IsArray()){
+            Back()->AsArray().push_back(std::move(node));
         }
-        else if(nodes_stack_.back()->IsDict()) {
-            if(wait_value_.size() == 0) {
-                throw std::logic_error("dictionary key must be a string");
-            }
-            nodes_stack_.back()->AsDict()[wait_value_.back().key] = std::move(node);
-            wait_value_.pop_back();
+        else if(Back()->IsString()) {
+            auto key = Back()->AsString();
+            delete Back();
+            Pop();
+            Back()->AsDict()[key] = std::move(node);
         }
+        else {
+            throw std::logic_error("dictionary key must be a string");
+		}
     }
 	
 	return *this;
@@ -56,7 +52,7 @@ detail::DictItemContext Builder::StartDict() {
 }
 
 Builder& Builder::EndDict() {
-	return EndItem([this](){ return nodes_stack_.back()->IsDict(); });	
+	return EndItem([this](){ return Back()->IsDict(); });	
 }
 
 detail::ArrayItemContext Builder::StartArray() {
@@ -65,7 +61,7 @@ detail::ArrayItemContext Builder::StartArray() {
 }
 
 Builder& Builder::EndArray() {
-    return EndItem([this](){ return nodes_stack_.back()->IsArray(); });	
+    return EndItem([this](){ return Back()->IsArray(); });	
 }
 
 json::Node Builder::Build() {
@@ -73,11 +69,33 @@ json::Node Builder::Build() {
 		throw std::logic_error("builder is empty");
 	}
 	
-	if(nodes_stack_.size() > 0 || wait_value_.size() > 0) {
+	if(!Empty()) {
 		throw std::logic_error("not all structers ended");
 	}
 	
 	return *root_;
+}
+
+void Builder::CheckComplete() {
+	if(Empty() && root_) {
+		throw std::logic_error("try call construct method after builder complete");
+	}
+}
+
+Node* Builder::Back() {
+	return nodes_stack_.back();
+}
+
+void Builder::Push(Node* node) {
+	nodes_stack_.push_back(node);
+}
+
+void Builder::Pop() {
+	nodes_stack_.pop_back();
+}
+
+bool Builder::Empty() {
+	return nodes_stack_.size() == 0;
 }
 
 namespace detail {

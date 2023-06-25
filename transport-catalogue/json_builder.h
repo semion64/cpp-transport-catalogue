@@ -14,10 +14,6 @@ class KeyItemContext;
 }
 
 class Builder {
-	struct WaitValue {
-		Node* dict_node;
-		std::string key;
-	};
 public:
 	Builder() { };
 	
@@ -32,10 +28,12 @@ public:
 	json::Node Build();
 private:	
 	std::optional<json::Node> root_;
-	std::vector<WaitValue> wait_value_;
 	std::vector<Node*> nodes_stack_;
 	void CheckComplete();
-	
+	Node* Back();
+	void Push(Node* node);
+	void Pop();
+	bool Empty();
 	template <typename Container>
 	void StartItem();
 
@@ -49,35 +47,38 @@ void Builder::StartItem() {
 	Container cont;
 	if(!root_) {
 		root_ = Node(cont);
-		nodes_stack_.push_back(&(*root_));
+		Push(&(*root_));
 	} 
 	else {
-		if(nodes_stack_.back()->IsArray()) {
-			nodes_stack_.back()->AsArray().push_back(Node(cont));
-			nodes_stack_.push_back(&nodes_stack_.back()->AsArray().back());
+		if(Back()->IsArray()) {
+			Back()->AsArray().push_back(Node(cont));
+			Push(&Back()->AsArray().back());
 		}
-		else if(nodes_stack_.back()->IsDict()) {
-			if(wait_value_.size() == 0) { 
-				throw std::logic_error("there are must be a key before value");
-			}
+		else if(Back()->IsString()) {
+			auto key = Back()->AsString();
+			delete Back();
+			Pop();
 			
-			nodes_stack_.back()->AsDict()[wait_value_.back().key] = Node(cont);
-			nodes_stack_.push_back(&nodes_stack_.back()->AsDict()[wait_value_.back().key]);
-			wait_value_.pop_back();
+			Back()->AsDict()[key] = Node(cont);
+			Push(&Back()->AsDict()[key]);
+		}
+		else {
+			throw std::logic_error("there are must be a key before value");
 		}
 	}
 }
 
 template <typename CheckStack>
 Builder& Builder::EndItem(CheckStack check_stack) {
-    if(nodes_stack_.size() == 0) {
+    if(Empty()) {
 		std::logic_error("try call construct method after builder complete");
 	}
 	CheckComplete();
 	if(!check_stack()) {
 		throw std::logic_error("not StartItem() for calling EndItem()");
 	}
-	nodes_stack_.pop_back();
+	
+	Pop();
 	return *this;
 }
 
