@@ -89,7 +89,7 @@ public:
 		//std::cout << "bus_velocity: " << rs_.bus_velocity << std::endl;
 		//std::cout << "bus_wait_time: " << rs_.bus_wait_time << std::endl;
 		auto stops = trc_.GetStops();
-		for(int i = 0; i < stops.size() - 1; ++i) {
+		for(int i = 0; i < stops.size(); ++i) {
 			gr.AddEdge(graph::Edge<RouteItem> {
 				stops[i].id, 
 				GetVertexWaitId(stops[i].id), 
@@ -103,15 +103,11 @@ public:
 		}			
 		for(const auto& bus : trc_.GetBuses()) {
 			if(bus.is_ring) {
-				
 				for(int i = 0; i < bus.stops.size() - 1; ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
 					int di = 0;
 					for(int j = i + 1; j < bus.stops.size(); ++j) {
 						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
-						/*if(FindEdge(from_id, bus.stops[j]->id)) {
-							continue;
-						}*/
 						gr.AddEdge(graph::Edge<RouteItem> {
 							from_id, 
 							bus.stops[j]->id, 
@@ -128,15 +124,9 @@ public:
 			else {
 				for(int i = 0; i < bus.stops.size() / 2 - 1; ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
-					
 					int di = 0;
 					for(int j = i + 1; j < bus.stops.size() / 2; ++j) {
 						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
-						/*
-						if(FindEdge(from_id, bus.stops[j]->id)) {
-							continue;
-						}*/
-						
 						gr.AddEdge(graph::Edge<RouteItem> {
 							from_id, 
 							bus.stops[j]->id, 
@@ -152,15 +142,9 @@ public:
 				
 				for(int i = bus.stops.size() / 2; i < bus.stops.size() - 1; ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
-					
 					int di = 0;
 					for(int j = i + 1; j < bus.stops.size(); ++j) {
 						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
-						
-						/*if(FindEdge(from_id, bus.stops[j]->id)) {
-							continue;
-						}*/
-						
 						gr.AddEdge(graph::Edge<RouteItem> {
 							from_id, 
 							bus.stops[j]->id,
@@ -219,8 +203,9 @@ protected:
 	int ROUTE_STAT_PRECISION = 6;
 	std::ostream& os_;
 	TransportCatalogue& trc_;
-	MapRenderer* map_renderer_;
+	
 	RouterBuilder* route_builder_;
+	MapRenderer* map_renderer_;
 };
 
 class RequestReader {
