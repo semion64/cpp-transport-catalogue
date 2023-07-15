@@ -13,6 +13,9 @@ StatQueryType StatQuery::GetType(std::string_view type_str) {
 	else if(type_str == "Map"s) {
 		return detail::StatQueryType::MAP;
 	}
+	else if(type_str == "Route"s) {
+		return detail::StatQueryType::ROUTE;
+	}
 	
 	return detail::StatQueryType::NONE;
 	//throw ExceptionWrongStatReaderQuery("incorrect query type: " + std::string(type_str));

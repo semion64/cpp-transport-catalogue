@@ -35,6 +35,11 @@ public:
 	ExceptionMapRendererNullPtr(std::string what = "") : invalid_argument(what) { }
 };
 
+struct RouterSettings {
+	int bus_wait_time;
+	double bus_velocity;
+};
+
 class UserInterface;
 class RequestReader;
 class RequestHandler;
@@ -100,6 +105,16 @@ protected:
 	RenderSettings rs_;
 };
 
+class RequestHandlerRouterSettings : public RequestHandler {
+public:
+	RequestHandlerRouterSettings(TransportCatalogue& trc) : RequestHandler(trc) {	}
+	RouterSettings GetRouterSettings() {
+		return rs_;
+	}
+protected:
+	RouterSettings rs_;
+};
+
 class RequestManager : public RequestReader {
 public: 
 	RequestManager(TransportCatalogue& trc, UserInterface* ui) : RequestReader(trc), ui_(ui) { }
@@ -110,11 +125,13 @@ public:
 		if(handler_base_) delete handler_base_;
 		if(handler_stat_) delete handler_stat_;
 		if(handler_render_) delete handler_render_;
+		if(handler_router_) delete handler_router_;
 	}
 protected:
 	UserInterface* ui_;
 	RequestHandlerBase* handler_base_;
     RequestHandlerStat* handler_stat_;
     RequestHandlerRenderSettings* handler_render_;
+    RequestHandlerRouterSettings* handler_router_;
 };
 } // end ::trans_cat

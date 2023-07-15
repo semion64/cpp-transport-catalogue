@@ -85,6 +85,14 @@ public:
 	void Do() override {}
 };
 
+class RouterSettingsJSON : public RequestHandlerRouterSettings, public LoaderJSON {
+public:
+	RouterSettingsJSON(TransportCatalogue& trc) : RequestHandlerRouterSettings(trc) {	}
+	void Read(std::istream& is) override { ReadFromStream(is); }
+	void Read(const json::Node* root) override;
+	void Do() override {}
+};
+
 class UserInterfaceJSON : public UserInterface {
 public:	
 	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, MapRenderer* map_renderer = nullptr) : UserInterface(os, trc, map_renderer) {}

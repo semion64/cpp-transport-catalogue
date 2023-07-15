@@ -30,12 +30,35 @@ void StatReaderJSON::Read(const json::Node* root) {
 	for(const auto& request : root_->AsArray()) {
 		const auto& m = request.AsDict();
 		std::string type = m.at("type"s).AsString();
+		std::unordered_map<std::string, std::string> args;
+		if(type == "Bus"s || type == "Stop"s){
+			args["name"s] = m.at("name"s).AsString();
+		}
+		else if(type == "Route"s) {
+			args["from"s] = m.at("from"s).AsString();
+			args["to"s] = m.at("to"s).AsString();
+		} 
+		
 		queries_.push_back({
 			m.at("id"s).AsInt(), 
 			detail::StatQuery::GetType(type), 
-			std::string((type == "Bus"s || type == "Stop"s) ? m.at("name"s).AsString() : ""s)
+			args
 		});
 	}
+}
+
+void RouterSettingsJSON::Read(const json::Node* root) {
+	try {
+		ReadFromJSON(root, "router_settings"s);
+	}
+	catch(ExceptionWrongQueryType&) {
+		std::cerr << "request node (router_settings) not find"sv << std::endl;
+		return;
+	}
+	
+	const auto& m = root_->AsDict();
+	rs_.bus_wait_time = m.at("bus_wait_time"s).AsInt();
+	rs_.bus_velocity = m.at("bus_velocity"s).AsDouble();
 }
 
 void RenderSettingsJSON::Read(const json::Node* root) {
@@ -76,14 +99,17 @@ void RequestManagerJSON::Read(const json::Node* root) {
 	auto handler_base = new InputReaderJSON(trc_); 
 	auto handler_stat = new StatReaderJSON(trc_, ui_); 
 	auto handler_render = new RenderSettingsJSON(trc_);
+	auto handler_router = new RouterSettingsJSON(trc_);
 	
 	handler_base->Read(root_);
 	handler_stat->Read(root_);
 	handler_render->Read(root_);
+	handler_router->Read(root_);
 	
 	handler_base_ = handler_base;
 	handler_stat_ = handler_stat;
 	handler_render_ = handler_render;
+	handler_router_ = handler_router;
 }
 
 void InputReaderJSON::ReadQuery(const json::Node& request) {
@@ -143,13 +169,16 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 				.Key("request_id").Value(q.id);
 		switch (q.type) {
 			case detail::StatQueryType::BUS:
-				ShowBus(q.name);
+				ShowBus(q.args.at("name"s));
 			break;
 			case detail::StatQueryType::STOP:
-				ShowStopBuses(q.name);
+				ShowStopBuses(q.args.at("name"s));
 			break;
 			case detail::StatQueryType::MAP:
 				ShowMap();
+			break;
+			case detail::StatQueryType::ROUTE:
+				//ShowMap();
 			break;
 			default:
 				//throw ExceptionWrongQueryType("");

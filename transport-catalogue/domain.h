@@ -67,14 +67,14 @@ enum class StatQueryType {
 	NONE,
 	BUS,
 	STOP,
-	MAP
+	MAP,
+	ROUTE
 };
 
 struct StatQuery {
 	int id;
 	StatQueryType type;
-	std::string name;
-	
+	std::unordered_map<std::string, std::string> args;
 	static StatQueryType GetType(std::string_view type_str);
 };
 
