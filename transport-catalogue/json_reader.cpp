@@ -57,7 +57,7 @@ void RouterSettingsJSON::Read(const json::Node* root) {
 	}
 	
 	const auto& m = root_->AsDict();
-	rs_.bus_wait_time = m.at("bus_wait_time"s).AsInt();
+	rs_.bus_wait_time = m.at("bus_wait_time"s).AsDouble();
 	rs_.bus_velocity = m.at("bus_velocity"s).AsDouble();
 }
 

@@ -23,10 +23,10 @@ enum class RouteItemType {
 	BUS
 };
 struct RouteItem {
-	RouteItemType type;
-	double time;
+	RouteItemType type = RouteItemType::NONE;
+	double time = 0;
 	std::string_view name;
-	int span;
+	int span = 0;
 	bool operator<(const RouteItem& other) const {
 		return time < other.time;
 	}
@@ -69,7 +69,7 @@ public:
 };
 
 struct RouterSettings {
-	int bus_wait_time;
+	double bus_wait_time;
 	double bus_velocity;
 };
 
@@ -84,10 +84,11 @@ public:
 		rs_ = rs;
 	}
 	
+
 	void BuildGraph() {
 		gr = graph::DirectedWeightedGraph<RouteItem>(trc_.GetStops().size() * 2);
-		std::cout << "bus_velocity: " << rs_.bus_velocity << std::endl;
-		std::cout << "bus_wait_time: " << rs_.bus_wait_time << std::endl;
+		//std::cout << "bus_velocity: " << rs_.bus_velocity << std::endl;
+		//std::cout << "bus_wait_time: " << rs_.bus_wait_time << std::endl;
 		for(const auto& bus : trc_.GetBuses()) {
 			if(bus.is_ring) {
 				for(int i = 0; i < bus.stops.size() - 1; ++i) {
