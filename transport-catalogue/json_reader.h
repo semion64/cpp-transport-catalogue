@@ -104,7 +104,7 @@ private:
 	void ShowBus(std::string_view bus_name) const;
 	void ShowStopBuses(std::string_view stop_name) const;
 	void ShowMap() const;
-	void ShowRoute(std::string_view from, std::string_view to) const;
+	void ShowRoute(graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const;
 	mutable json::Builder json_build_;
 };
 

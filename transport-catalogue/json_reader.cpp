@@ -166,7 +166,9 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 	if(!route_builder_) {
 		throw ExceptionMapRendererNullPtr("route_builder not set (nullptr)"s);
 	}
-	route_builder_->BuildGraph();
+	
+	graph::Router<RouteItem> router(route_builder_->BuildGraph());
+	
 	for(const auto& q: queries) {
 		json_build_.StartDict()
 				.Key("request_id").Value(q.id);
@@ -203,7 +205,7 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 						std::vector<IncidenceList> incidence_lists_;
 					};
 				 */
-				ShowRoute(q.args.at("from"s), q.args.at("to"s));
+				ShowRoute(router, q.args.at("from"s), q.args.at("to"s));
 			break;
 			default:
 				//throw ExceptionWrongQueryType("");
@@ -229,12 +231,12 @@ void UserInterfaceJSON::ShowMap() const {
     	
 }
 
-void UserInterfaceJSON::ShowRoute(std::string_view from, std::string_view to) const {
+void UserInterfaceJSON::ShowRoute(graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const {
 	if(!route_builder_) {
 		throw ExceptionMapRendererNullPtr("route_builder not set (nullptr)"s);
 	}
 	
-	std::optional<graph::Router<RouteItem>::RouteInfo> route = route_builder_->BuildRoute(trc_.GetStop(from).id, trc_.GetStop(to).id);
+	std::optional<graph::Router<RouteItem>::RouteInfo> route = router.BuildRoute(trc_.GetStop(from).id, trc_.GetStop(to).id);
 	if(!route) {
 		json_build_.Key("error_message").Value("not found");
 		return;

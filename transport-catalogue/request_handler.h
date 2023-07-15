@@ -75,7 +75,7 @@ struct RouterSettings {
 
 class RouterBuilder {
 public:
-	RouterBuilder(TransportCatalogue& trc) : trc_(trc) { }
+	RouterBuilder(TransportCatalogue& trc) : trc_(trc){ }
 	RouterBuilder(TransportCatalogue& trc, const RouterSettings& router_settings) : trc_(trc), rs_(router_settings) { }
 	//virtual void RouterBuilder(std::ostream& os_) = 0;
 	//virtual ~RouterBuilder() = default;
@@ -84,35 +84,40 @@ public:
 		rs_ = rs;
 	}
 	
-
-	void BuildGraph() {
+	const graph::DirectedWeightedGraph<RouteItem>& BuildGraph() {
 		gr = graph::DirectedWeightedGraph<RouteItem>(trc_.GetStops().size() * 2);
 		//std::cout << "bus_velocity: " << rs_.bus_velocity << std::endl;
 		//std::cout << "bus_wait_time: " << rs_.bus_wait_time << std::endl;
+		auto stops = trc_.GetStops();
+		for(int i = 0; i < stops.size() - 1; ++i) {
+			gr.AddEdge(graph::Edge<RouteItem> {
+				stops[i].id, 
+				GetVertexWaitId(stops[i].id), 
+				RouteItem { 
+					RouteItemType::WAIT, 
+					rs_.bus_wait_time, 
+					stops[i].name, 
+					0
+				} 
+			});
+		}			
 		for(const auto& bus : trc_.GetBuses()) {
 			if(bus.is_ring) {
+				
 				for(int i = 0; i < bus.stops.size() - 1; ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
-					gr.AddEdge(graph::Edge<RouteItem> {
-						bus.stops[i]->id, 
-						from_id, 
-						RouteItem { 
-							RouteItemType::WAIT, 
-							rs_.bus_wait_time, 
-							bus.stops[i]->name, 
-							0
-						} 
-					});
-					
 					int di = 0;
 					for(int j = i + 1; j < bus.stops.size(); ++j) {
 						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
+						/*if(FindEdge(from_id, bus.stops[j]->id)) {
+							continue;
+						}*/
 						gr.AddEdge(graph::Edge<RouteItem> {
 							from_id, 
 							bus.stops[j]->id, 
 							RouteItem {
 								RouteItemType::BUS,
-								di / rs_.bus_velocity,
+								di / (rs_.bus_velocity / 0.06),
 								bus.name,
 								j - i
 							}
@@ -123,26 +128,21 @@ public:
 			else {
 				for(int i = 0; i < bus.stops.size() / 2 - 1; ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
-					gr.AddEdge(graph::Edge<RouteItem> {
-						bus.stops[i]->id, 
-						from_id, 
-						RouteItem {
-							RouteItemType::WAIT,
-							rs_.bus_wait_time,
-							bus.stops[i]->name,
-							0 
-						}
-					});
 					
 					int di = 0;
 					for(int j = i + 1; j < bus.stops.size() / 2; ++j) {
 						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
+						/*
+						if(FindEdge(from_id, bus.stops[j]->id)) {
+							continue;
+						}*/
+						
 						gr.AddEdge(graph::Edge<RouteItem> {
 							from_id, 
 							bus.stops[j]->id, 
 							RouteItem {
 								RouteItemType::BUS,
-								di / rs_.bus_velocity,
+								di / (rs_.bus_velocity / 0.06),
 								bus.name,
 								j - i
 							}
@@ -152,26 +152,21 @@ public:
 				
 				for(int i = bus.stops.size() / 2; i < bus.stops.size() - 1; ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
-					gr.AddEdge(graph::Edge<RouteItem> {
-						bus.stops[i]->id, 
-						from_id, 
-						RouteItem {
-							RouteItemType::WAIT,
-							rs_.bus_wait_time,
-							bus.stops[i]->name,
-							0 
-						} 
-					});
 					
 					int di = 0;
 					for(int j = i + 1; j < bus.stops.size(); ++j) {
 						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
+						
+						/*if(FindEdge(from_id, bus.stops[j]->id)) {
+							continue;
+						}*/
+						
 						gr.AddEdge(graph::Edge<RouteItem> {
 							from_id, 
 							bus.stops[j]->id,
 							RouteItem {
 								RouteItemType::BUS,
-								di / rs_.bus_velocity,
+								di / (rs_.bus_velocity / 0.06),
 								bus.name, 
 								j - i
 							}
@@ -180,14 +175,13 @@ public:
 				}
 			}
 		}
+		return gr;
 	}
 	graph::Edge<RouteItem> GetEdge(size_t id) {
 		return gr.GetEdge(id);
 	}
-	std::optional<graph::Router<RouteItem>::RouteInfo> BuildRoute(size_t from, size_t to){
-		graph::Router<RouteItem> router(gr);
-		return router.BuildRoute(from, to);
-	}
+	
+	
 protected:
 	TransportCatalogue& trc_;	
 	RouterSettings rs_;
@@ -195,6 +189,17 @@ protected:
 private: 
 	size_t GetVertexWaitId(size_t stop_id) {
 		return stop_id + trc_.GetStops().size();
+	}
+	
+	bool FindEdge(size_t from, size_t to) {
+		for(auto& edge: gr.GetIncidentEdges(from))
+		{
+			if(gr.GetEdge(edge).to == to) {
+				return true;
+			}
+		}
+		
+		return false;
 	}
 };
 
