@@ -252,19 +252,21 @@ void RunJSON_BASE_SVG(std::istream& is = std::cin, std::ostream& os = std::cout)
 void RunJSON_BASE_STAT_SVG(std::istream& is = std::cin, std::ostream& os = std::cout) {
 	trans_cat::TransportCatalogue trc;
 	trans_cat::MapRenderer* map_renderer = new trans_cat::MapRendererSVG(trc);
-	trans_cat::UserInterface* ui = new trans_cat::UserInterfaceJSON(os, trc, map_renderer); // new UserInterfaceStd(...)
+	trans_cat::RouterBuilder* route_builder = new trans_cat::RouterBuilder(trc);
+	trans_cat::UserInterface* ui = new trans_cat::UserInterfaceJSON(os, trc, route_builder, map_renderer); // new UserInterfaceStd(...)
 	trans_cat::RequestManager* json_request = new trans_cat::RequestManagerJSON(trc, ui);  // new RequestManagerStd(...)
 	json_request->Read(is); // read json text from input stream
 	map_renderer->SetRenderSettings(json_request->GetSettingsMapRenderer()); // not forget set render settings, otherwise was use default zero values
+	route_builder->SetRouterSettings(json_request->GetSettingsRouter());
 	json_request->DoBase(); // fill transport catalogue
 	json_request->DoStat(); // do stat queries 
 }
 
 int main() {
-	//std::ifstream f("tests/input_stat_map.json");
+	std::ifstream f("tests/router.json");
 	//RunStd_BASE_STAT(f);
 	//RunJSON_BASE_STATf);
 	//RunJSON_BASE_SVG(f);
-	RunJSON_BASE_STAT_SVG();
+	RunJSON_BASE_STAT_SVG(f);
 	//Tests();
 }

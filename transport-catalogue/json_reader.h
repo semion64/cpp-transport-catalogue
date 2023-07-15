@@ -22,6 +22,8 @@ class InputReaderJSON;
 class StatReaderJSON;
 class UserInterfaceJSON;
 
+
+
 class LoaderJSON {
 public:
 	LoaderJSON() {}
@@ -95,12 +97,14 @@ public:
 
 class UserInterfaceJSON : public UserInterface {
 public:	
-	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, MapRenderer* map_renderer = nullptr) : UserInterface(os, trc, map_renderer) {}
+	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, RouterBuilder* route_builder, MapRenderer* map_renderer = nullptr) : UserInterface(os, trc, route_builder, map_renderer) {}
+		
 	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const override;
 private:	
 	void ShowBus(std::string_view bus_name) const;
 	void ShowStopBuses(std::string_view stop_name) const;
 	void ShowMap() const;
+	void ShowRoute(std::string_view from, std::string_view to) const;
 	mutable json::Builder json_build_;
 };
 

@@ -49,10 +49,10 @@ void StatReaderJSON::Read(const json::Node* root) {
 
 void RouterSettingsJSON::Read(const json::Node* root) {
 	try {
-		ReadFromJSON(root, "router_settings"s);
+		ReadFromJSON(root, "routing_settings"s);
 	}
 	catch(ExceptionWrongQueryType&) {
-		std::cerr << "request node (router_settings) not find"sv << std::endl;
+		std::cerr << "request node (routing_settings) not find"sv << std::endl;
 		return;
 	}
 	
@@ -163,8 +163,11 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
 	json_build_ = json::Builder();
 	json_build_.StartArray();
+	if(!route_builder_) {
+		throw ExceptionMapRendererNullPtr("route_builder not set (nullptr)"s);
+	}
+	route_builder_->BuildGraph();
 	for(const auto& q: queries) {
-       
 		json_build_.StartDict()
 				.Key("request_id").Value(q.id);
 		switch (q.type) {
@@ -178,7 +181,29 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 				ShowMap();
 			break;
 			case detail::StatQueryType::ROUTE:
-				//ShowMap();
+				/*
+					template <typename Weight>
+					class DirectedWeightedGraph {
+					private:
+						using IncidenceList = std::vector<EdgeId>; // Охват??
+						using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
+
+					public:
+						DirectedWeightedGraph() = default;
+						explicit DirectedWeightedGraph(size_t vertex_count);
+						EdgeId AddEdge(const Edge<Weight>& edge);
+
+						size_t GetVertexCount() const;
+						size_t GetEdgeCount() const;
+						const Edge<Weight>& GetEdge(EdgeId edge_id) const;
+						IncidentEdgesRange GetIncidentEdges(VertexId vertex) const;
+
+					private:
+						std::vector<Edge<Weight>> edges_;
+						std::vector<IncidenceList> incidence_lists_;
+					};
+				 */
+				ShowRoute(q.args.at("from"s), q.args.at("to"s));
 			break;
 			default:
 				//throw ExceptionWrongQueryType("");
@@ -202,6 +227,41 @@ void UserInterfaceJSON::ShowMap() const {
 	map_renderer_->RenderMap(ss);
     json_build_.Key("map").Value(ss.str());
     	
+}
+
+void UserInterfaceJSON::ShowRoute(std::string_view from, std::string_view to) const {
+	if(!route_builder_) {
+		throw ExceptionMapRendererNullPtr("route_builder not set (nullptr)"s);
+	}
+	
+	std::optional<graph::Router<RouteItem>::RouteInfo> route = route_builder_->BuildRoute(trc_.GetStop(from).id, trc_.GetStop(to).id);
+	if(!route) {
+		json_build_.Key("error_message").Value("not found");
+		return;
+	}
+	
+	json_build_.Key("total_time").Value(route->weight.time);
+	json_build_.Key("items").StartArray();
+	for(auto edge_id: route->edges) {
+		const graph::Edge<RouteItem>& edge = route_builder_->GetEdge(edge_id);
+		json_build_.StartDict();
+		if(edge.weight.type == RouteItemType::WAIT) {	
+			json_build_
+				.Key("type").Value("Wait")
+				.Key("stop_name").Value(std::string(edge.weight.name))
+				.Key("time").Value(edge.weight.time);
+		}
+		else if(edge.weight.type == RouteItemType::BUS) {	
+			json_build_
+				.Key("type").Value("Bus")
+				.Key("Bus").Value(std::string(edge.weight.name))
+				.Key("span_count").Value(edge.weight.span)
+				.Key("time").Value(edge.weight.time);
+		}
+		json_build_.EndDict();
+	}
+	
+	json_build_.EndArray();
 }
 
 void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {

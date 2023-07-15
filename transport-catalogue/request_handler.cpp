@@ -39,4 +39,8 @@ RenderSettings RequestManager::GetSettingsMapRenderer() {
 	return handler_render_->GetRenderSettings();
 }
 
+RouterSettings RequestManager::GetSettingsRouter() {
+	return handler_router_->GetRouterSettings();
+}
+
 } // end ::trans_cat

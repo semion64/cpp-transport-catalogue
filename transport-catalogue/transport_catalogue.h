@@ -30,6 +30,7 @@ public:
 	const detail::StopBuses& GetStopBuses(const Stop&) const;
 	const detail::RouteStat GetRouteStat(const Bus& bus) const;
 	void SetDistance(const Stop* s1, const Stop*  s2, int di); 
+	int GetDistanceBetweenStops(const Stop* s1, const Stop*  s2) const; 
 private:
 	// bus & stop store
 	std::deque<Bus> bus_;
@@ -48,11 +49,11 @@ private:
 	
 	std::string_view AddName(const std::string& name, std::unordered_set<std::string>& set);
 	
-	int GetDistanceBetweenStops(const Stop* s1, const Stop*  s2) const; 
+	
 	int GetDistance(const Bus& bus) const;
 	double GetGeoLength(const Bus& bus) const;
 	double GetCurvature(const Bus& bus) const;
 	size_t GetUniqueStopsCount(const Bus& bus) const;
-	
+	size_t last_stop_id = 0;
 };
 } // end ::trans_cat

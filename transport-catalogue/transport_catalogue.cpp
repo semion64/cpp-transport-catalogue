@@ -3,7 +3,7 @@
 namespace trans_cat {
 
 Stop& TransportCatalogue::AddStop(const std::string& name, geo::Coordinates coord) {
-	stop_.push_back({AddName(name, stop_names_), coord});
+	stop_.push_back({AddName(name, stop_names_), coord, last_stop_id++});
 	stop_index_[stop_.back().name] = &stop_.back();
 	return stop_.back();
 }
