@@ -261,11 +261,11 @@ void RunJSON_BASE_STAT_SVG(std::istream& is = std::cin, std::ostream& os = std::
 }
 
 int main() {
-	std::ifstream f("test_router/ex_1_in.json");
-	std::ofstream f2("res.json");
+	//std::ifstream f("test_router/ex_1_in.json");
+	//std::ofstream f2("res.json");
 	//RunStd_BASE_STAT(f);
 	//RunJSON_BASE_STATf);
 	//RunJSON_BASE_SVG(f);
-	RunJSON_BASE_STAT_SVG(f, f2);
+	RunJSON_BASE_STAT_SVG();
 	//Tests();
 }
