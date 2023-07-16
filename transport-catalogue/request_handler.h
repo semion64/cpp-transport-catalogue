@@ -100,10 +100,27 @@ public:
 					0
 				} 
 			});
-		}			
+		}	
+		
+		for(int i = 0; i < stops.size(); ++i) {
+			try{
+			int di = trc_.GetDistanceBetweenStops(&stops[i], &stops[i]);
+			gr.AddEdge(graph::Edge<RouteItem> {
+				GetVertexWaitId(stops[i].id),
+				stops[i].id,
+				RouteItem { 
+					RouteItemType::BUS, 
+					di /  (rs_.bus_velocity / 0.06), 
+					stops[i].name, 
+					0
+				} 
+			});}
+			catch(...){}
+		}	
+				
 		for(const auto& bus : trc_.GetBuses()) {
 			if(bus.is_ring) {
-				for(int i = 0; i < bus.stops.size() - 1; ++i) {
+				for(int i = 0; i < bus.stops.size(); ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
 					int di = 0;
 					for(int j = i + 1; j < bus.stops.size(); ++j) {
@@ -122,10 +139,10 @@ public:
 				}
 			} 
 			else {
-				for(int i = 0; i < bus.stops.size() / 2 - 1; ++i) {
+				for(int i = 0; i < bus.stops.size() / 2; ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
 					int di = 0;
-					for(int j = i + 1; j < bus.stops.size() / 2; ++j) {
+					for(int j = i + 1; j <= bus.stops.size() / 2; ++j) {
 						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
 						gr.AddEdge(graph::Edge<RouteItem> {
 							from_id, 
@@ -140,7 +157,7 @@ public:
 					}
 				}
 				
-				for(int i = bus.stops.size() / 2; i < bus.stops.size() - 1; ++i) {
+				for(int i = bus.stops.size() / 2; i < bus.stops.size(); ++i) {
 					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
 					int di = 0;
 					for(int j = i + 1; j < bus.stops.size(); ++j) {
@@ -159,6 +176,7 @@ public:
 				}
 			}
 		}
+		
 		return gr;
 	}
 	graph::Edge<RouteItem> GetEdge(size_t id) {
