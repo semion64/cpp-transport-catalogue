@@ -13,40 +13,26 @@
 #include "domain.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
-#include "router.h"
+//#include "router.h"
+#include "transport_router.h"
 
 namespace trans_cat {
-
-enum class RouteItemType {
-	NONE,
-	WAIT,
-	BUS
-};
-struct RouteItem {
-	RouteItemType type = RouteItemType::NONE;
-	double time = 0;
-	std::string_view name;
-	int span = 0;
-	bool operator<(const RouteItem& other) const {
-		return time < other.time;
-	}
 	
-	bool operator==(const RouteItem& other) const {
-		return time == other.time;
-	}
-
-	bool operator!=(const RouteItem& other) const {
-		return !(time == other.time);
-	}
-
-	inline bool operator>(const RouteItem& other) const {
-		return !(time < other.time) && time != other.time;
-	}
+class UserInterface {
+public:	
+	UserInterface(std::ostream& os, TransportCatalogue& trc, TransportRouter& tr_router, MapRenderer& map_renderer) 
+		: os_(os), trc_(trc), tr_router_(tr_router), map_renderer_ (map_renderer) { }
+	virtual void ShowQueriesResult(const std::list<detail::StatQuery>& queries) const = 0;
+protected:
+	int ROUTE_STAT_PRECISION = 6;
+	std::ostream& os_;
+	TransportCatalogue& trc_;
+	TransportRouter& tr_router_;
+	MapRenderer& map_renderer_;
 };
 
-inline RouteItem operator+(const RouteItem& l, const RouteItem& r) {
-	return RouteItem {RouteItemType::NONE, l.time + r.time, "", 0};
-}
+
+namespace request {
 
 class ExceptionWrongQueryType : public std::logic_error {
 public:	
@@ -68,183 +54,30 @@ public:
 	ExceptionMapRendererNullPtr(std::string what = "") : invalid_argument(what) { }
 };
 
-struct RouterSettings {
-	double bus_wait_time;
-	double bus_velocity;
-};
+class Reader;
+class Handler;
+class HandlerBase;
+class HandlerStat;
 
-class RouterBuilder {
-public:
-	RouterBuilder(TransportCatalogue& trc) : trc_(trc){ }
-	RouterBuilder(TransportCatalogue& trc, const RouterSettings& router_settings) : trc_(trc), rs_(router_settings) { }
-	//virtual void RouterBuilder(std::ostream& os_) = 0;
-	//virtual ~RouterBuilder() = default;
-	
-	virtual void SetRouterSettings(const RouterSettings& rs) {
-		rs_ = rs;
-	}
-	
-	const graph::DirectedWeightedGraph<RouteItem>& BuildGraph() {
-		gr = graph::DirectedWeightedGraph<RouteItem>(trc_.GetStops().size() * 2);
-		//std::cout << "bus_velocity: " << rs_.bus_velocity << std::endl;
-		//std::cout << "bus_wait_time: " << rs_.bus_wait_time << std::endl;
-		auto stops = trc_.GetStops();
-		for(int i = 0; i < stops.size(); ++i) {
-			gr.AddEdge(graph::Edge<RouteItem> {
-				stops[i].id, 
-				GetVertexWaitId(stops[i].id), 
-				RouteItem { 
-					RouteItemType::WAIT, 
-					rs_.bus_wait_time, 
-					stops[i].name, 
-					0
-				} 
-			});
-		}	
-		
-		for(int i = 0; i < stops.size(); ++i) {
-			try{
-			int di = trc_.GetDistanceBetweenStops(&stops[i], &stops[i]);
-			gr.AddEdge(graph::Edge<RouteItem> {
-				GetVertexWaitId(stops[i].id),
-				stops[i].id,
-				RouteItem { 
-					RouteItemType::BUS, 
-					di /  (rs_.bus_velocity / 0.06), 
-					stops[i].name, 
-					0
-				} 
-			});}
-			catch(...){}
-		}	
-				
-		for(const auto& bus : trc_.GetBuses()) {
-			if(bus.is_ring) {
-				for(int i = 0; i < bus.stops.size(); ++i) {
-					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
-					int di = 0;
-					for(int j = i + 1; j < bus.stops.size(); ++j) {
-						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
-						gr.AddEdge(graph::Edge<RouteItem> {
-							from_id, 
-							bus.stops[j]->id, 
-							RouteItem {
-								RouteItemType::BUS,
-								di / (rs_.bus_velocity / 0.06),
-								bus.name,
-								j - i
-							}
-						});
-					}
-				}
-			} 
-			else {
-				for(int i = 0; i < bus.stops.size() / 2; ++i) {
-					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
-					int di = 0;
-					for(int j = i + 1; j <= bus.stops.size() / 2; ++j) {
-						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
-						gr.AddEdge(graph::Edge<RouteItem> {
-							from_id, 
-							bus.stops[j]->id, 
-							RouteItem {
-								RouteItemType::BUS,
-								di / (rs_.bus_velocity / 0.06),
-								bus.name,
-								j - i
-							}
-						});
-					}
-				}
-				
-				for(int i = bus.stops.size() / 2; i < bus.stops.size(); ++i) {
-					size_t from_id = GetVertexWaitId(bus.stops[i]->id);
-					int di = 0;
-					for(int j = i + 1; j < bus.stops.size(); ++j) {
-						di += trc_.GetDistanceBetweenStops(bus.stops[j-1], bus.stops[j]);
-						gr.AddEdge(graph::Edge<RouteItem> {
-							from_id, 
-							bus.stops[j]->id,
-							RouteItem {
-								RouteItemType::BUS,
-								di / (rs_.bus_velocity / 0.06),
-								bus.name, 
-								j - i
-							}
-						});
-					}
-				}
-			}
-		}
-		
-		return gr;
-	}
-	graph::Edge<RouteItem> GetEdge(size_t id) {
-		return gr.GetEdge(id);
-	}
-	
-	
-protected:
-	TransportCatalogue& trc_;	
-	RouterSettings rs_;
-	graph::DirectedWeightedGraph<RouteItem> gr;
-private: 
-	size_t GetVertexWaitId(size_t stop_id) {
-		return stop_id + trc_.GetStops().size();
-	}
-	
-	bool FindEdge(size_t from, size_t to) {
-		for(auto& edge: gr.GetIncidentEdges(from))
-		{
-			if(gr.GetEdge(edge).to == to) {
-				return true;
-			}
-		}
-		
-		return false;
-	}
-};
-
-
-class UserInterface;
-class RequestReader;
-class RequestHandler;
-class RequestHandlerBase;
-class RequestHandlerStat;
-
-class UserInterface {
+class Reader {
 public:	
-	UserInterface(std::ostream& os, TransportCatalogue& trc, RouterBuilder* route_builder, MapRenderer* map_renderer = nullptr) : os_(os), trc_(trc),
-	route_builder_(route_builder), map_renderer_(map_renderer)  {}
-	virtual void ShowQueriesResult(const std::list<detail::StatQuery>& queries) const = 0;
-protected:
-	int ROUTE_STAT_PRECISION = 6;
-	std::ostream& os_;
-	TransportCatalogue& trc_;
-	
-	RouterBuilder* route_builder_;
-	MapRenderer* map_renderer_;
-};
-
-class RequestReader {
-public:	
-	RequestReader(TransportCatalogue& trc) : trc_(trc) { }
+	Reader(TransportCatalogue& trc) : trc_(trc) { }
 	virtual void Read(std::istream& is) = 0;
-	virtual ~RequestReader() = default;
+	virtual ~Reader() = default;
 protected:
 	TransportCatalogue& trc_;
 };
 
-class RequestHandler : public RequestReader {
+class Handler : public Reader {
 public:	
-	RequestHandler(TransportCatalogue& trc) : RequestReader(trc) { }
-	virtual void Do() = 0;
+	Handler(TransportCatalogue& trc) : Reader(trc) { }
+	virtual void DoAndPrint(UserInterface* ui = nullptr) = 0;
 };
 
-class RequestHandlerBase : public RequestHandler {
+class HandlerBase : public Handler {
 public:	
-	RequestHandlerBase(TransportCatalogue& trc) : RequestHandler(trc) {	}
-	void Do() override;
+	HandlerBase(TransportCatalogue& trc) : Handler(trc) {	}
+	virtual void DoAndPrint(UserInterface* ui) override;
 protected:
 	using MapDiBetweenStops = std::unordered_map<std::string_view, std::unordered_map<std::string, int>>;
 	virtual void AddStops(MapDiBetweenStops& stop_di) = 0; // function must fill stop_di_ map
@@ -254,54 +87,45 @@ private:
 	void AddDistanceBetweenStops();
 };
 
-class RequestHandlerStat : public RequestHandler {
+class HandlerStat : public Handler {
 public:
 	using StatQueryList = std::list<detail::StatQuery>;
-	RequestHandlerStat(TransportCatalogue& trc, UserInterface* ui) : RequestHandler(trc), ui_(ui) {	}
-	void Do() override;
+	HandlerStat(TransportCatalogue& trc) : Handler(trc) {	}
+	virtual void DoAndPrint(UserInterface* ui) override;
 protected:
-	UserInterface* ui_;
 	StatQueryList queries_;
 };
 
-class RequestHandlerRenderSettings : public RequestHandler {
+template <typename TSettings>
+class HandlerSettings : public Reader {
 public:
-	RequestHandlerRenderSettings(TransportCatalogue& trc) : RequestHandler(trc) {	}
-	RenderSettings GetRenderSettings() {
+	HandlerSettings(TransportCatalogue& trc) : Reader(trc) { }
+	void Set(TSettings&& rs) {
+		rs_ = rs;
+	}
+	TSettings Get() {
 		return rs_;
 	}
-protected:
-	RenderSettings rs_;
+private:
+	TSettings rs_;
 };
 
-class RequestHandlerRouterSettings : public RequestHandler {
-public:
-	RequestHandlerRouterSettings(TransportCatalogue& trc) : RequestHandler(trc) {	}
-	RouterSettings GetRouterSettings() {
-		return rs_;
-	}
-protected:
-	RouterSettings rs_;
-};
-
-class RequestManager : public RequestReader {
+class Manager : public Reader {
 public: 
-	RequestManager(TransportCatalogue& trc, UserInterface* ui) : RequestReader(trc), ui_(ui) { }
+	Manager(TransportCatalogue& trc) : Reader(trc) { }
 	void DoBase();
-	void DoStat();
-	RenderSettings GetSettingsMapRenderer();
-	RouterSettings GetSettingsRouter();
-	~RequestManager() override {
+	void DoStat(UserInterface& ui);
+	const RenderSettings& GetSettingsMapRenderer();
+	const RouterSettings& GetSettingsRouter();
+	~Manager() override {
 		if(handler_base_) delete handler_base_;
 		if(handler_stat_) delete handler_stat_;
-		if(handler_render_) delete handler_render_;
-		if(handler_router_) delete handler_router_;
 	}
 protected:
-	UserInterface* ui_;
-	RequestHandlerBase* handler_base_;
-    RequestHandlerStat* handler_stat_;
-    RequestHandlerRenderSettings* handler_render_;
-    RequestHandlerRouterSettings* handler_router_;
+	HandlerBase* handler_base_;
+    HandlerStat* handler_stat_;
+    RenderSettings render_settings_;
+    RouterSettings router_settings_;
 };
+} // end ::request
 } // end ::trans_cat

@@ -27,18 +27,12 @@ struct RenderSettings {
 
 class MapRenderer {
 public:
-	MapRenderer(TransportCatalogue& trc) : trc_(trc) { }
 	MapRenderer(TransportCatalogue& trc, const RenderSettings& render_settings) : trc_(trc), rs_(render_settings) { }
 	virtual void RenderMap(std::ostream& os_) = 0;
 	virtual ~MapRenderer() = default;
-	
-	virtual void SetRenderSettings(const RenderSettings& rs) {
-		rs_ = rs;
-	}
-	
 protected:
 	TransportCatalogue& trc_;	
-	RenderSettings rs_;
+	const RenderSettings& rs_;
 };
 
 using BusesInfo = std::map<std::string_view, const Bus*>;
@@ -46,16 +40,11 @@ using StopsInfo = std::map<std::string_view, const Stop*>;
 
 class MapRendererSVG : public MapRenderer {
 public:
-	MapRendererSVG(TransportCatalogue& trc) : MapRenderer(trc) {
-		SetDefaultTemplates();
-	}
-	
 	MapRendererSVG(TransportCatalogue& trc, const RenderSettings& render_settings) : MapRenderer(trc, render_settings) {
 		SetDefaultTemplates();
 	}
 	
 	void RenderMap(std::ostream& os_) override;
-	void SetRenderSettings(const RenderSettings& rs) override;
 private:
 	BusesInfo buses_info_;
 	StopsInfo stops_info_;

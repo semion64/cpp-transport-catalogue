@@ -4,11 +4,11 @@ namespace trans_cat {
 
 using namespace std::literals;	
 
-void InputReaderJSON::Read(const json::Node* root) { 
+void BaseJSON::Read(const json::Node* root) { 
 	try {	
 		ReadFromJSON(root, "base_requests"s); 
 	}
-	catch(ExceptionWrongQueryType&) {
+	catch(request::ExceptionWrongQueryType&) {
 		std::cerr << "request node (base_requests) not find"sv << std::endl;
 		return;
 	} 
@@ -18,11 +18,11 @@ void InputReaderJSON::Read(const json::Node* root) {
 	}
 }
 
-void StatReaderJSON::Read(const json::Node* root) { 
+void StatJSON::Read(const json::Node* root) { 
 	try {
 		ReadFromJSON(root, "stat_requests"s);
 	}
-	catch(ExceptionWrongQueryType&) {
+	catch(request::ExceptionWrongQueryType&) {
 		std::cerr << "request node (stat_requests) not find"sv << std::endl;
 		return;
 	} 
@@ -51,68 +51,52 @@ void RouterSettingsJSON::Read(const json::Node* root) {
 	try {
 		ReadFromJSON(root, "routing_settings"s);
 	}
-	catch(ExceptionWrongQueryType&) {
+	catch(request::ExceptionWrongQueryType&) {
 		std::cerr << "request node (routing_settings) not find"sv << std::endl;
 		return;
 	}
 	
 	const auto& m = root_->AsDict();
-	rs_.bus_wait_time = m.at("bus_wait_time"s).AsDouble();
-	rs_.bus_velocity = m.at("bus_velocity"s).AsDouble();
+	Set({m.at("bus_wait_time"s).AsDouble(),  m.at("bus_velocity"s).AsDouble()});
 }
 
 void RenderSettingsJSON::Read(const json::Node* root) {
 	try {
 		ReadFromJSON(root, "render_settings"s);
 	}
-	catch(ExceptionWrongQueryType&) {
+	catch(request::ExceptionWrongQueryType&) {
 		std::cerr << "request node (render_settings) not find"sv << std::endl;
 		return;
 	}
 	
 	const auto& m = root_->AsDict();
 	auto& blo = m.at("bus_label_offset"s).AsArray();
-	rs_.bus_label_offset 	= svg::Point {blo[0].AsDouble(), blo[1].AsDouble()};
+	RenderSettings rs;
+	rs.bus_label_offset 	= svg::Point {blo[0].AsDouble(), blo[1].AsDouble()};
 	
 	auto& slo = m.at("stop_label_offset"s).AsArray();
-	rs_.stop_label_offset 	= svg::Point {slo[0].AsDouble(), slo[1].AsDouble()};
+	rs.stop_label_offset 	= svg::Point {slo[0].AsDouble(), slo[1].AsDouble()};
 	
 	std::vector<svg::Color> color_palette;
 	for(auto& node_color : m.at("color_palette"s).AsArray()) {
 		color_palette.push_back(detail::ParseColor(node_color));
 	}
 	
-	rs_.color_palette 		=  color_palette;
-	rs_.width				= m.at("width"s).AsDouble();
-	rs_.height 				= m.at("height"s).AsDouble();
-	rs_.padding 			= m.at("padding"s).AsDouble();
-	rs_.line_width 			= m.at("line_width"s).AsDouble();
-	rs_.stop_radius 		= m.at("stop_radius"s).AsDouble();
-	rs_.bus_label_font_size = m.at("bus_label_font_size"s).AsInt();
-	rs_.stop_label_font_size = m.at("stop_label_font_size"s).AsInt();
-	rs_.underlayer_color 	=  detail::ParseColor(m.at("underlayer_color"s));
-	rs_.underlayer_width 	=  m.at("underlayer_width"s).AsDouble();
+	rs.color_palette 		=  color_palette;
+	rs.width				= m.at("width"s).AsDouble();
+	rs.height 				= m.at("height"s).AsDouble();
+	rs.padding 			= m.at("padding"s).AsDouble();
+	rs.line_width 			= m.at("line_width"s).AsDouble();
+	rs.stop_radius 		= m.at("stop_radius"s).AsDouble();
+	rs.bus_label_font_size = m.at("bus_label_font_size"s).AsInt();
+	rs.stop_label_font_size = m.at("stop_label_font_size"s).AsInt();
+	rs.underlayer_color 	=  detail::ParseColor(m.at("underlayer_color"s));
+	rs.underlayer_width 	=  m.at("underlayer_width"s).AsDouble();
+	
+	Set(std::move(rs));
 }
 
-void RequestManagerJSON::Read(const json::Node* root) {
-	ReadFromJSON(root);
-	auto handler_base = new InputReaderJSON(trc_); 
-	auto handler_stat = new StatReaderJSON(trc_, ui_); 
-	auto handler_render = new RenderSettingsJSON(trc_);
-	auto handler_router = new RouterSettingsJSON(trc_);
-	
-	handler_base->Read(root_);
-	handler_stat->Read(root_);
-	handler_render->Read(root_);
-	handler_router->Read(root_);
-	
-	handler_base_ = handler_base;
-	handler_stat_ = handler_stat;
-	handler_render_ = handler_render;
-	handler_router_ = handler_router;
-}
-
-void InputReaderJSON::ReadQuery(const json::Node& request) {
+void BaseJSON::ReadQuery(const json::Node& request) {
 	const auto& m = request.AsDict();
 	if(m.at("type"s).AsString() == "Stop"s) {
 		add_stop_queries_.insert(&m);
@@ -122,7 +106,7 @@ void InputReaderJSON::ReadQuery(const json::Node& request) {
 	}
 }
 
-void InputReaderJSON::AddStops(MapDiBetweenStops& stop_di) {
+void BaseJSON::AddStops(MapDiBetweenStops& stop_di) {
 	for(const auto* q : add_stop_queries_) {
 		auto& stop = trc_.AddStop(q->at("name"s).AsString(), {q->at("latitude"s).AsDouble(), q->at("longitude"s).AsDouble()});
 		for(const auto& [name, di] : q->at("road_distances"s).AsDict()) {
@@ -133,7 +117,7 @@ void InputReaderJSON::AddStops(MapDiBetweenStops& stop_di) {
 	add_stop_queries_.clear();
 }
 
-void InputReaderJSON::AddBuses() { 
+void BaseJSON::AddBuses() { 
 	for(const auto& q : add_bus_queries_) {
 		bool is_ring = q->at("is_roundtrip"s).AsBool();
 		std::vector<const Stop*> bus_stops = ParseStopList(q->at("stops"s).AsArray(), is_ring);
@@ -143,7 +127,7 @@ void InputReaderJSON::AddBuses() {
 	add_bus_queries_.clear();
 }
 
-std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_list, bool is_ring) {
+std::vector<const Stop*> BaseJSON::ParseStopList(const json::Array& stop_list, bool is_ring) {
 	std::vector<std::string_view> stop_names;
     std::vector<const Stop*> stops;
 	stops.reserve(stop_list.size());
@@ -160,15 +144,11 @@ std::vector<const Stop*> InputReaderJSON::ParseStopList(const json::Array& stop_
 	return stops;
 }
 
-void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const {
+void UserInterfaceJSON::ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const {
+	graph::Router<RouteItem> router(tr_router_.BuildGraph());
+	
 	json_build_ = json::Builder();
 	json_build_.StartArray();
-	if(!route_builder_) {
-		throw ExceptionMapRendererNullPtr("route_builder not set (nullptr)"s);
-	}
-	
-	graph::Router<RouteItem> router(route_builder_->BuildGraph());
-	
 	for(const auto& q: queries) {
 		json_build_.StartDict()
 				.Key("request_id").Value(q.id);
@@ -183,29 +163,7 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 				ShowMap();
 			break;
 			case detail::StatQueryType::ROUTE:
-				/*
-					template <typename Weight>
-					class DirectedWeightedGraph {
-					private:
-						using IncidenceList = std::vector<EdgeId>; // Охват??
-						using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
-
-					public:
-						DirectedWeightedGraph() = default;
-						explicit DirectedWeightedGraph(size_t vertex_count);
-						EdgeId AddEdge(const Edge<Weight>& edge);
-
-						size_t GetVertexCount() const;
-						size_t GetEdgeCount() const;
-						const Edge<Weight>& GetEdge(EdgeId edge_id) const;
-						IncidentEdgesRange GetIncidentEdges(VertexId vertex) const;
-
-					private:
-						std::vector<Edge<Weight>> edges_;
-						std::vector<IncidenceList> incidence_lists_;
-					};
-				 */
-				ShowRoute(router, q.args.at("from"s), q.args.at("to"s));
+				ShowRoute(tr_router_, router, q.args.at("from"s), q.args.at("to"s));
 			break;
 			default:
 				//throw ExceptionWrongQueryType("");
@@ -221,21 +179,13 @@ void UserInterfaceJSON::ShowQueriesResult(const RequestHandlerStat::StatQueryLis
 }
 
 void UserInterfaceJSON::ShowMap() const {
-	if(!map_renderer_) {
-		throw ExceptionMapRendererNullPtr("map renderer not set (nullptr)"s);
-	}
-	
     std::stringstream ss;
-	map_renderer_->RenderMap(ss);
+	map_renderer_.RenderMap(ss);
     json_build_.Key("map").Value(ss.str());
     	
 }
 
-void UserInterfaceJSON::ShowRoute(graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const {
-	if(!route_builder_) {
-		throw ExceptionMapRendererNullPtr("route_builder not set (nullptr)"s);
-	}
-	
+void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const {
 	std::optional<graph::Router<RouteItem>::RouteInfo> route = router.BuildRoute(trc_.GetStop(from).id, trc_.GetStop(to).id);
 	if(!route) {
 		json_build_.Key("error_message").Value("not found");
@@ -245,7 +195,7 @@ void UserInterfaceJSON::ShowRoute(graph::Router<RouteItem>& router, std::string_
 	json_build_.Key("total_time").Value(route->weight.time);
 	json_build_.Key("items").StartArray();
 	for(auto edge_id: route->edges) {
-		const graph::Edge<RouteItem>& edge = route_builder_->GetEdge(edge_id);
+		const graph::Edge<RouteItem>& edge = tr_router.GetEdge(edge_id);
 		json_build_.StartDict();
 		if(edge.weight.type == RouteItemType::WAIT) {	
 			json_build_
@@ -298,6 +248,25 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 	catch(ExceptionStopNotFound&) {
 		json_build_.Key("error_message").Value("not found");
 	}
+}
+
+void ManagerJSON::Read(const json::Node* root) {
+	ReadFromJSON(root);
+	
+	RenderSettingsJSON render_settings(trc_);
+	RouterSettingsJSON router_settings(trc_);
+	render_settings.Read(root_);
+	router_settings.Read(root_);
+	
+	render_settings_ = render_settings.Get();
+	router_settings_ = router_settings.Get();
+	
+	BaseJSON* handler_base = new BaseJSON(trc_); 
+	StatJSON* handler_stat = new StatJSON(trc_); 
+	handler_base->Read(root_);
+	handler_stat->Read(root_);
+	handler_base_ = handler_base;
+	handler_stat_ = handler_stat;
 }
 
 namespace detail {

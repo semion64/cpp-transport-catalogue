@@ -18,11 +18,9 @@ namespace detail {
 svg::Color ParseColor(const json::Node& node_color);
 }// end ::detail
 	
-class InputReaderJSON;
-class StatReaderJSON;
+class BaseJSON;
+class StatJSON;
 class UserInterfaceJSON;
-
-
 
 class LoaderJSON {
 public:
@@ -36,7 +34,7 @@ protected:
 
 	void ReadFromJSON(const json::Node* root, std::string request_name = "") {
 		if(!root->IsDict()) {
-			throw ExceptionWrongQueryType("json root node has unsupported format");
+			throw request::ExceptionWrongQueryType("json root node has unsupported format");
 		}
 		
 		if(request_name.empty()) { 
@@ -46,7 +44,7 @@ protected:
 		
 		const auto& root_map = root->AsDict();
 		if(!root_map.count(request_name)) {
-			throw ExceptionWrongQueryType("request node (" + std::string(request_name) + ") not find");
+			throw request::ExceptionWrongQueryType("request node (" + std::string(request_name) + ") not find");
 		}
 		
 		root_ = &root_map.at(request_name);		
@@ -57,9 +55,9 @@ private:
 	json::Document doc_ {nullptr};
 };
 
-class InputReaderJSON : public RequestHandlerBase, public LoaderJSON {	
+class BaseJSON : public request::HandlerBase, public LoaderJSON {	
 public:	
-	InputReaderJSON(TransportCatalogue& trc) : RequestHandlerBase (trc) {	}
+	BaseJSON(TransportCatalogue& trc) : request::HandlerBase (trc) {	}
 	
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;
@@ -72,45 +70,43 @@ private:
 	std::vector<const Stop*> ParseStopList(const json::Array& stop_list, bool is_ring);
 };
 
-class StatReaderJSON : public RequestHandlerStat, public LoaderJSON {	
+class StatJSON : public request::HandlerStat, public LoaderJSON {	
 public:	
-	StatReaderJSON(TransportCatalogue& trc, UserInterface* ui) : RequestHandlerStat(trc, ui) { } 
+	StatJSON(TransportCatalogue& trc) : request::HandlerStat(trc) { } 
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;
 };
 
-class RenderSettingsJSON : public RequestHandlerRenderSettings, public LoaderJSON {
+class RenderSettingsJSON : public request::HandlerSettings<RenderSettings>, public LoaderJSON {
 public:
-	RenderSettingsJSON(TransportCatalogue& trc) : RequestHandlerRenderSettings(trc) {	}
+	RenderSettingsJSON(TransportCatalogue& trc) : request::HandlerSettings<RenderSettings>(trc) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;
-	void Do() override {}
 };
 
-class RouterSettingsJSON : public RequestHandlerRouterSettings, public LoaderJSON {
+class RouterSettingsJSON : public request::HandlerSettings<RouterSettings>, public LoaderJSON {
 public:
-	RouterSettingsJSON(TransportCatalogue& trc) : RequestHandlerRouterSettings(trc) {	}
+	RouterSettingsJSON(TransportCatalogue& trc) : request::HandlerSettings<RouterSettings>(trc) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;
-	void Do() override {}
 };
 
 class UserInterfaceJSON : public UserInterface {
 public:	
-	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, RouterBuilder* route_builder, MapRenderer* map_renderer = nullptr) : UserInterface(os, trc, route_builder, map_renderer) {}
-		
-	void ShowQueriesResult(const RequestHandlerStat::StatQueryList& queries) const override;
+	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, TransportRouter& tr_router, MapRenderer& map_renderer) 
+		: UserInterface(os, trc, tr_router, map_renderer_) { }	
+	void ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const override;
 private:	
 	void ShowBus(std::string_view bus_name) const;
 	void ShowStopBuses(std::string_view stop_name) const;
 	void ShowMap() const;
-	void ShowRoute(graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const;
+	void ShowRoute(const TransportRouter& tr_router, graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const;
 	mutable json::Builder json_build_;
 };
 
-class RequestManagerJSON : public RequestManager, public LoaderJSON {
+class ManagerJSON : public request::Manager, public LoaderJSON {
 public: 
-	RequestManagerJSON(TransportCatalogue& trc, UserInterface* ui) : RequestManager(trc, ui) {	}
+	ManagerJSON(TransportCatalogue& trc) : request::Manager(trc) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;	
 };
