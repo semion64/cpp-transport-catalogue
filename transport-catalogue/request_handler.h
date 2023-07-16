@@ -9,11 +9,11 @@
 #include <string_view>
 #include <unordered_set>
 #include <vector>
+#include <memory>
 
 #include "domain.h"
 #include "transport_catalogue.h"
 #include "map_renderer.h"
-//#include "router.h"
 #include "transport_router.h"
 
 namespace trans_cat {
@@ -113,19 +113,20 @@ private:
 class Manager : public Reader {
 public: 
 	Manager(TransportCatalogue& trc) : Reader(trc) { }
+	void SetBase(HandlerBase* base);
+	void SetStat(HandlerStat* stat);
 	void DoBase();
 	void DoStat(UserInterface& ui);
 	const RenderSettings& GetSettingsMapRenderer();
 	const RouterSettings& GetSettingsRouter();
-	~Manager() override {
-		if(handler_base_) delete handler_base_;
-		if(handler_stat_) delete handler_stat_;
-	}
+	~Manager() override { }
 protected:
-	HandlerBase* handler_base_;
-    HandlerStat* handler_stat_;
+
     RenderSettings render_settings_;
     RouterSettings router_settings_;
+private:
+	std::unique_ptr<HandlerBase> handler_base_;
+    std::unique_ptr<HandlerStat> handler_stat_;
 };
 } // end ::request
 } // end ::trans_cat

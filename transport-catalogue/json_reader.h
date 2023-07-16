@@ -22,6 +22,19 @@ class BaseJSON;
 class StatJSON;
 class UserInterfaceJSON;
 
+class UserInterfaceJSON : public UserInterface {
+public:	
+	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, TransportRouter& tr_router, MapRenderer& map_renderer) 
+		: UserInterface(os, trc, tr_router, map_renderer) { }	
+	void ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const override;
+private:	
+	void ShowBus(std::string_view bus_name) const;
+	void ShowStopBuses(std::string_view stop_name) const;
+	void ShowMap() const;
+	void ShowRoute(const TransportRouter& tr_router, graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const;
+	mutable json::Builder json_build_;
+};
+
 class LoaderJSON {
 public:
 	LoaderJSON() {}
@@ -89,19 +102,6 @@ public:
 	RouterSettingsJSON(TransportCatalogue& trc) : request::HandlerSettings<RouterSettings>(trc) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;
-};
-
-class UserInterfaceJSON : public UserInterface {
-public:	
-	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, TransportRouter& tr_router, MapRenderer& map_renderer) 
-		: UserInterface(os, trc, tr_router, map_renderer) { }	
-	void ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const override;
-private:	
-	void ShowBus(std::string_view bus_name) const;
-	void ShowStopBuses(std::string_view stop_name) const;
-	void ShowMap() const;
-	void ShowRoute(const TransportRouter& tr_router, graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const;
-	mutable json::Builder json_build_;
 };
 
 class ManagerJSON : public request::Manager, public LoaderJSON {

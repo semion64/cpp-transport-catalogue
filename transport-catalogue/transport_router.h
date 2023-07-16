@@ -55,6 +55,8 @@ protected:
 	graph::DirectedWeightedGraph<RouteItem> gr;
 private: 
 	size_t GetVertexWaitId(size_t stop_id) const;
+	double CalcTime(int di);
+	void AddEdgesForBus(const Bus& bus, size_t start_stop, size_t end_stop, bool take_last_stop);
 };
 
 } // end ::trans_cat

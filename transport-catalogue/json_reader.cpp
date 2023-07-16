@@ -261,12 +261,12 @@ void ManagerJSON::Read(const json::Node* root) {
 	render_settings_ = render_settings.Get();
 	router_settings_ = router_settings.Get();
 	
-	BaseJSON* handler_base = new BaseJSON(trc_); 
-	StatJSON* handler_stat = new StatJSON(trc_); 
-	handler_base->Read(root_);
-	handler_stat->Read(root_);
-	handler_base_ = handler_base;
-	handler_stat_ = handler_stat;
+	auto base = std::make_unique<BaseJSON>(trc_); 
+	auto stat = std::make_unique<StatJSON>(trc_); 
+	base->Read(root_);
+	stat->Read(root_);
+	SetBase(base.release());
+	SetStat(stat.release());
 }
 
 namespace detail {

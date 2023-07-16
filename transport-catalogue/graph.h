@@ -20,7 +20,7 @@ struct Edge {
 template <typename Weight>
 class DirectedWeightedGraph {
 private:
-    using IncidenceList = std::vector<EdgeId>; // Охват??
+    using IncidenceList = std::vector<EdgeId>;
     using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
 
 public:
