@@ -94,7 +94,7 @@ public:
 class UserInterfaceJSON : public UserInterface {
 public:	
 	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, TransportRouter& tr_router, MapRenderer& map_renderer) 
-		: UserInterface(os, trc, tr_router, map_renderer_) { }	
+		: UserInterface(os, trc, tr_router, map_renderer) { }	
 	void ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const override;
 private:	
 	void ShowBus(std::string_view bus_name) const;
