@@ -53,9 +53,12 @@ protected:
 	TransportCatalogue& trc_;	
 	RouterSettings rs_;
 	graph::DirectedWeightedGraph<RouteItem> gr;
-private: 
+private:
+	constexpr static double VELOCITY_TO_M_MIN = 1 / 0.06; 
 	size_t GetVertexWaitId(size_t stop_id) const;
-	double CalcTime(int di);
+	double CalcTime(int distance);
+	void FillByStops(const std::deque<Stop>& stops);
+	void FillByBuses(const std::deque<Bus>& buses);
 	void AddEdgesForBus(const Bus& bus, size_t start_stop, size_t end_stop, bool take_last_stop);
 };
 

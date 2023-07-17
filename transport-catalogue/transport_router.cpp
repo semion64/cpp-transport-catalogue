@@ -9,8 +9,8 @@ graph::Edge<RouteItem> TransportRouter::GetEdge(size_t id) const {
 	return gr.GetEdge(id);
 }	
 
-double TransportRouter::CalcTime(int di) {
-	return di / (rs_.bus_velocity / 0.06);
+double TransportRouter::CalcTime(int distance) {
+	return distance / (rs_.bus_velocity * VELOCITY_TO_M_MIN);
 }
 
 void TransportRouter::AddEdgesForBus(const Bus& bus, size_t start_stop, size_t end_stop, bool take_last_stop) {
@@ -32,9 +32,8 @@ void TransportRouter::AddEdgesForBus(const Bus& bus, size_t start_stop, size_t e
 		}
 	}
 }
-const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::BuildGraph() {
-	gr = graph::DirectedWeightedGraph<RouteItem>(trc_.GetStops().size() * 2);
-	auto stops = trc_.GetStops();
+
+void TransportRouter::FillByStops(const std::deque<Stop>& stops) {
 	for(int i = 0; i < stops.size(); ++i) {
 		gr.AddEdge(graph::Edge<RouteItem> {
 			stops[i].id, 
@@ -47,8 +46,10 @@ const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::BuildGraph() {
 			} 
 		});
 	}	
-			
-	for(const auto& bus : trc_.GetBuses()) {
+}
+
+void TransportRouter::FillByBuses(const std::deque<Bus>& buses) {
+	for(const auto& bus : buses) {
 		if(bus.is_ring) {
 			AddEdgesForBus(bus, 0, bus.stops.size(), 0);
 		} 
@@ -57,6 +58,16 @@ const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::BuildGraph() {
 			AddEdgesForBus(bus, bus.stops.size() / 2, bus.stops.size(), 0);
 		}
 	}
+}
+
+const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::BuildGraph() {
+	auto stops = trc_.GetStops();
+	auto buses = trc_.GetBuses();
+	
+	gr = graph::DirectedWeightedGraph<RouteItem>(stops.size() * 2);
+	
+	FillByStops(stops);
+	FillByBuses(buses);
 	
 	return gr;
 }
