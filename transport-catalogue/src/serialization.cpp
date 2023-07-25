@@ -1,6 +1,49 @@
 #include "serialization.h"
+namespace trans_cat {
+namespace serialize{
+trc_serialize::Point PointToProto(svg::Point point) {
+	trc_serialize::Point proto_point;
+	proto_point.set_x(point.x);
+	proto_point.set_y(point.y);
+	return proto_point;
+}
 
-void SerializeTransportCatalogue(const trans_cat::TransportCatalogue& trc, std::ostream& output) {
+trc_serialize::Color ColorToProto(svg::Color clr) {
+	trc_serialize::Color proto_clr;
+	std::visit(ColorSetter(proto_clr), clr);
+	return proto_clr;
+}
+
+svg::Point ProtoToPoint(trc_serialize::Point proto_point) {
+	return { 
+		proto_point.x(), 
+		proto_point.y() 
+	};
+}
+
+svg::Color ProtoToColor(trc_serialize::Color proto_clr) {
+	switch(static_cast<ColorFormat>(proto_clr.format())) {
+		case ColorFormat::NAMED:
+			return proto_clr.name();
+		case ColorFormat::RGB:
+			return svg::Rgb{ 
+				static_cast<uint8_t>(proto_clr.r()), 
+				static_cast<uint8_t>(proto_clr.g()), 
+				static_cast<uint8_t>(proto_clr.b())
+			};
+		case ColorFormat::RGBA:
+			return svg::Rgba{ 
+				static_cast<uint8_t>(proto_clr.r()), 
+				static_cast<uint8_t>(proto_clr.g()), 
+				static_cast<uint8_t>(proto_clr.b()), 
+				proto_clr.opacity() 
+			};
+		default:
+			return svg::Color {};
+	}
+}
+
+bool SerializeTransportCatalogue(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs) {
 	trc_serialize::TransportCatalogue proto_trans_cat;
 	
 	// add sotps & buses names
@@ -52,10 +95,34 @@ void SerializeTransportCatalogue(const trans_cat::TransportCatalogue& trc, std::
 		*proto_trans_cat.add_stop_distance() = proto_stop_dist;		
 	}
 	
+	if(rs) {
+		trc_serialize::RenderSettings proto_rs;
+		proto_rs.set_width(rs->width);
+		proto_rs.set_height(rs->height);
+		proto_rs.set_stop_radius(rs->stop_radius);
+		proto_rs.set_line_width(rs->line_width);
+		proto_rs.set_bus_label_font_size(rs->bus_label_font_size);
+		*proto_rs.mutable_bus_label_offset() 
+			= (PointToProto(rs->bus_label_offset));
+		proto_rs.set_stop_label_font_size(rs->stop_label_font_size);
+		*proto_rs.mutable_stop_label_offset() 
+			= (PointToProto(rs->stop_label_offset));
+		*proto_rs.mutable_underlayer_color()
+			= (ColorToProto(rs->underlayer_color));
+		proto_rs.set_underlayer_width(rs->underlayer_width);
+	
+		for(const auto& color :rs->color_palette) {
+			*proto_rs.add_color_palette() = ColorToProto(color); 
+		}
+		*proto_trans_cat.mutable_render_settings() = proto_rs;
+	}
+	
 	proto_trans_cat.SerializeToOstream(&output);
 	
+	return true;
+	
 }		
-bool DeserializeTransportCatalogue(trans_cat::TransportCatalogue* trc, std::istream& input) {
+bool DeserializeTransportCatalogue(std::istream& input, TransportCatalogue* trc, RenderSettings* rs) {
 	trc_serialize::TransportCatalogue proto_trans_cat;
 	
     if (!proto_trans_cat.ParseFromIstream(&input)) {
@@ -66,7 +133,7 @@ bool DeserializeTransportCatalogue(trans_cat::TransportCatalogue* trc, std::istr
     auto proto_stop_index = proto_trans_cat.name_index().stop_name();
     
     // add stop
-    std::map<int, trans_cat::Stop*> tmp_id_stop;
+    std::map<int, Stop*> tmp_id_stop;
 	for(const auto& proto_stop : proto_trans_cat.stop()) {
 		tmp_id_stop[proto_stop.id()]= 
 			&trc->AddStop(
@@ -81,7 +148,7 @@ bool DeserializeTransportCatalogue(trans_cat::TransportCatalogue* trc, std::istr
 	// add bus
 	for(const auto& proto_bus : proto_trans_cat.bus()) {
 		// fill bus_stops vector
-		std::vector<const trans_cat::Stop*> bus_stops;
+		std::vector<const Stop*> bus_stops;
 		for(auto stop_id : proto_bus.stop_id()) {
 			bus_stops.push_back(tmp_id_stop[stop_id]);
 		}
@@ -100,6 +167,25 @@ bool DeserializeTransportCatalogue(trans_cat::TransportCatalogue* trc, std::istr
 			tmp_id_stop.at(proto_dist.stop_to()),
 			proto_dist.distance());
 	}
+	if(proto_trans_cat.has_render_settings()) {
+		auto proto_rs = proto_trans_cat.render_settings();
+		rs->width = proto_rs.width();
+		rs->height = proto_rs.height();
+		rs->stop_radius = proto_rs.stop_radius();
+		rs->line_width = proto_rs.line_width();
+		rs->bus_label_font_size = proto_rs.bus_label_font_size();
+		rs->bus_label_offset = ProtoToPoint(proto_rs.bus_label_offset());	
+		rs->stop_label_font_size = proto_rs.stop_label_font_size();
+		rs->stop_label_offset = ProtoToPoint(proto_rs.stop_label_offset());	
+		rs->underlayer_color = ProtoToColor(proto_rs.underlayer_color());
+		rs->underlayer_width = proto_rs.underlayer_width();
+		
+		for(const auto& color : proto_rs.color_palette()) {
+			rs->color_palette.push_back(ProtoToColor(color)); 
+		}
+	}
 	
 	return true;
+}
+}
 }

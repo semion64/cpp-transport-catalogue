@@ -44,7 +44,7 @@ void ManagerStat::SetStat(HandlerStat* stat) {
 	handler_stat_.reset(stat);
 }
 
-const RenderSettings& ManagerBase::GetSettingsMapRenderer() const {
+const RenderSettings& ManagerBase::GetSettingsRender() const {
 	return render_settings_;
 }
 
@@ -54,11 +54,11 @@ const RouterSettings& ManagerBase::GetSettingsRouter() const {
 	return router_settings_;
 }
 
-const SerializationSettings& ManagerBase::GetSettingsSerialization() const {
+const serialize::Settings& ManagerBase::GetSettingsSerialization() const {
 	return serialization_settings_;
 }
 
-const SerializationSettings& ManagerStat::GetSettingsSerialization() const {
+const serialize::Settings& ManagerStat::GetSettingsSerialization() const {
 	return serialization_settings_;
 }
 

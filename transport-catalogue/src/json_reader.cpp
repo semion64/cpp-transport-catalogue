@@ -60,7 +60,7 @@ void RouterSettingsJSON::Read(const json::Node* root) {
 	Set({m.at("bus_wait_time"s).AsDouble(),  m.at("bus_velocity"s).AsDouble()});
 }
 
-void SerializationSettingsJSON::Read(const json::Node* root) {
+void SerializeSettingsJSON::Read(const json::Node* root) {
 	try {
 		ReadFromJSON(root, "serialization_settings"s);
 	}
@@ -268,7 +268,7 @@ void ManagerBaseJSON::Read(const json::Node* root) {
 	
 	RenderSettingsJSON render_settings(trc_);
 	RouterSettingsJSON router_settings(trc_);
-	SerializationSettingsJSON serialization_settings(trc_);
+	SerializeSettingsJSON serialization_settings(trc_);
 	
 	render_settings.Read(root_);
 	router_settings.Read(root_);
@@ -285,7 +285,7 @@ void ManagerBaseJSON::Read(const json::Node* root) {
 void ManagerStatJSON::Read(const json::Node* root) {
 	ReadFromJSON(root);
 	
-	SerializationSettingsJSON serialization_settings(trc_);
+	SerializeSettingsJSON serialization_settings(trc_);
 	serialization_settings.Read(root_);
 	serialization_settings_ = serialization_settings.Get();
 	
@@ -301,7 +301,7 @@ void ManagerJSON::Read(const json::Node* root) {
 	RenderSettingsJSON render_settings(trc_);
 	RouterSettingsJSON router_settings(trc_);
 	
-	SerializationSettingsJSON serialization_settings(trc_);
+	SerializeSettingsJSON serialization_settings(trc_);
 	render_settings.Read(root_);
 	router_settings.Read(root_);
 	serialization_settings.Read(root_);

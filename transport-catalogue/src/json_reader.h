@@ -98,9 +98,9 @@ public:
 	void Read(const json::Node* root) override;
 };
 
-class SerializationSettingsJSON : public request::HandlerSettings<SerializationSettings>, public LoaderJSON {
+class SerializeSettingsJSON : public request::HandlerSettings<serialize::Settings>, public LoaderJSON {
 public:
-	SerializationSettingsJSON(TransportCatalogue& trc) : request::HandlerSettings<SerializationSettings>(trc) {	}
+	SerializeSettingsJSON(TransportCatalogue& trc) : request::HandlerSettings<serialize::Settings>(trc) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;
 };

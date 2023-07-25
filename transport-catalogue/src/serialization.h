@@ -1,9 +1,55 @@
 #include "transport_catalogue.h"
 //#include <transport_catalogue.pb.h>
+#include "map_renderer.h"
 #include <transport_catalogue.pb.h>
-struct SerializationSettings {
+#include <variant>
+
+namespace trans_cat {
+namespace serialize{
+	
+struct Settings {
 	std::string file;
 };
 
-void SerializeTransportCatalogue(const trans_cat::TransportCatalogue& trc, std::ostream& output);
-bool DeserializeTransportCatalogue(trans_cat::TransportCatalogue* trc, std::istream& input);
+enum class ColorFormat {
+	NONE,
+	RGB,
+	RGBA,
+	NAMED
+}; 
+
+struct ColorSetter {
+public:
+	ColorSetter(trc_serialize::Color& proto_color) : proto_color_(proto_color) {}
+    void operator()([[maybe_unused]]const std::monostate& none) const {
+		using namespace std::literals; 
+		proto_color_.set_format(static_cast<int32_t> (ColorFormat::NONE));
+	} 
+	void operator()(const std::string& value) const {
+		using namespace std::literals; 
+		proto_color_.set_format(static_cast<int32_t> (ColorFormat::NAMED));
+		proto_color_.set_name(value);
+	}
+    void operator()(const svg::Rgb& value) const { 
+		using namespace std::literals; 
+		proto_color_.set_format(static_cast<int32_t> (ColorFormat::RGB));
+		proto_color_.set_r(value.red);
+		proto_color_.set_g(value.green);
+		proto_color_.set_b(value.blue);
+	}
+    void operator()(const svg::Rgba& value) const { 
+		using namespace std::literals;
+		proto_color_.set_format(static_cast<int32_t> (ColorFormat::RGBA)); 
+		proto_color_.set_r(value.red);
+		proto_color_.set_g(value.green);
+		proto_color_.set_b(value.blue);
+		proto_color_.set_opacity(value.opacity);
+	}
+private:
+	trc_serialize::Color& proto_color_;
+};
+
+bool SerializeTransportCatalogue(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs);
+bool DeserializeTransportCatalogue(std::istream& input, TransportCatalogue* trc, RenderSettings* rs);
+}
+}

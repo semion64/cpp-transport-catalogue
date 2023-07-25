@@ -119,15 +119,15 @@ public:
 	void SetStat(HandlerStat* stat);
 	void DoBase();
 	void DoStat(UserInterface& ui);
-	const RenderSettings& GetSettingsMapRenderer() const;
+	const RenderSettings& GetSettingsRender() const;
 	const RouterSettings& GetSettingsRouter() const;
-	const SerializationSettings& GetSettingsSerialization() const;
+	const serialize::Settings& GetSettingsSerialization() const;
 	~Manager() override { }
 protected:
 
     RenderSettings render_settings_;
     RouterSettings router_settings_;
-    SerializationSettings serialization_settings_;
+    serialize::Settings serialization_settings_;
 private:
 	std::unique_ptr<HandlerBase> handler_base_;
     std::unique_ptr<HandlerStat> handler_stat_;
@@ -139,10 +139,10 @@ public:
 	ManagerStat(TransportCatalogue& trc) : Reader(trc) { }
 	void SetStat(HandlerStat* stat);
 	void DoStat(UserInterface& ui);
-	const SerializationSettings& GetSettingsSerialization() const;
+	const serialize::Settings& GetSettingsSerialization() const;
 	~ManagerStat() override { }
 protected:
-    SerializationSettings serialization_settings_;
+    serialize::Settings serialization_settings_;
 private:
     std::unique_ptr<HandlerStat> handler_stat_;
 };
@@ -152,14 +152,14 @@ public:
 	ManagerBase(TransportCatalogue& trc) : Reader(trc) { }
 	void SetBase(HandlerBase* base);
 	void DoBase();
-	const RenderSettings& GetSettingsMapRenderer() const;
+	const RenderSettings& GetSettingsRender() const;
 	const RouterSettings& GetSettingsRouter() const;
-	const SerializationSettings& GetSettingsSerialization() const;
+	const serialize::Settings& GetSettingsSerialization() const;
 	~ManagerBase() override { }
 protected:
     RenderSettings render_settings_;
     RouterSettings router_settings_;
-    SerializationSettings serialization_settings_;
+    serialize::Settings serialization_settings_;
 private:
 	std::unique_ptr<HandlerBase> handler_base_;
 };
