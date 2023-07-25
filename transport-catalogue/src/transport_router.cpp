@@ -60,7 +60,11 @@ void TransportRouter::FillByBuses(const std::deque<Bus>& buses) {
 	}
 }
 
-const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::BuildGraph() {
+const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::GetGraph() const {
+	return gr;
+}
+
+void TransportRouter::BuildGraph() {
 	auto stops = trc_.GetStops();
 	auto buses = trc_.GetBuses();
 	
@@ -68,8 +72,6 @@ const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::BuildGraph() {
 	
 	FillByStops(stops);
 	FillByBuses(buses);
-	
-	return gr;
 }
 
 } // end ::trans_cat

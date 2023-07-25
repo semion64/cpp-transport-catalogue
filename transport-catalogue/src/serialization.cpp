@@ -76,6 +76,11 @@ bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs) {
 }
 
 namespace detail{
+	
+bool SaveRouter(trc_serialize::TransportCatalogue* proto_trans_cat) {
+	
+}
+
 bool SaveRender(trc_serialize::TransportCatalogue* proto_trans_cat, const RenderSettings& rs) {
 	trc_serialize::RenderSettings proto_rs;
 	proto_rs.set_width(rs.width);

@@ -25,7 +25,7 @@ class UserInterfaceJSON;
 
 class UserInterfaceJSON : public UserInterface {
 public:	
-	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, TransportRouter* tr_router,MapRenderer* map_renderer) 
+	UserInterfaceJSON(std::ostream& os, TransportCatalogue& trc, const TransportRouter* tr_router, MapRenderer* map_renderer) 
 		: UserInterface(os, trc, tr_router, map_renderer) { }	
 	void ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const override;
 private:	

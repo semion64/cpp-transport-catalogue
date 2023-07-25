@@ -158,7 +158,7 @@ std::vector<const Stop*> BaseJSON::ParseStopList(const json::Array& stop_list, b
 }
 
 void UserInterfaceJSON::ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const {
-	graph::Router<RouteItem> router(tr_router_->BuildGraph());
+	graph::Router<RouteItem> router(tr_router_->GetGraph());
 	
 	json_build_ = json::Builder();
 	json_build_.StartArray();
@@ -200,6 +200,7 @@ void UserInterfaceJSON::ShowMap() const {
 
 void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const {
 	std::optional<graph::Router<RouteItem>::RouteInfo> route = router.BuildRoute(trc_.GetStop(from).id, trc_.GetStop(to).id);
+	
 	if(!route) {
 		json_build_.Key("error_message").Value("not found");
 		return;

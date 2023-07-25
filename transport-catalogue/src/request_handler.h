@@ -22,14 +22,14 @@ namespace trans_cat {
 	
 class UserInterface {
 public:	
-	UserInterface(std::ostream& os, TransportCatalogue& trc, TransportRouter* tr_router, MapRenderer* map_renderer) 
+	UserInterface(std::ostream& os, TransportCatalogue& trc, const TransportRouter* tr_router, MapRenderer* map_renderer) 
 		: os_(os), trc_(trc), tr_router_(tr_router), map_renderer_ (map_renderer) { }
 	virtual void ShowQueriesResult(const std::list<detail::StatQuery>& queries) const = 0;
 protected:
 	int ROUTE_STAT_PRECISION = 6;
 	std::ostream& os_;
 	TransportCatalogue& trc_;
-	TransportRouter* tr_router_;
+	const TransportRouter* tr_router_;
 	MapRenderer* map_renderer_;
 };
 

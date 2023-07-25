@@ -53,6 +53,7 @@ bool Save(std::ostream& output, const TransportCatalogue& trc, std::optional<Ren
 bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs);
 
 namespace detail{
+bool SaveRouter(trc_serialize::TransportCatalogue* proto_trans_cat);
 bool SaveRender(trc_serialize::TransportCatalogue* proto_trans_cat, const RenderSettings& rs);
 bool SaveTransport(trc_serialize::TransportCatalogue* proto_trans_cat, const TransportCatalogue& trc);
 

@@ -30,6 +30,7 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 	trans_cat::TransportCatalogue trc2;
 	trans_cat::ManagerStatJSON json_request2(trc2); 
 	trans_cat::RenderSettings render_settings;
+	trans_cat::RouterSettings router_settings;
 	json_request2.Read(is); 
 	
 	std::ifstream input(json_request2.GetSettingsSerialization().file, std::ios::binary);
@@ -37,8 +38,9 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 	input.close();
 
 	trans_cat::MapRendererSVG map_renderer(trc2, render_settings);
+	trans_cat::TransportRouter router(trc2, router_settings);
 	
-	trans_cat::UserInterfaceJSON ui(os, trc2, nullptr, &map_renderer);
+	trans_cat::UserInterfaceJSON ui(os, trc2, &router, &map_renderer);
 	json_request2.DoStat(ui);  
 }
 int main(int argc, char* argv[]) {
