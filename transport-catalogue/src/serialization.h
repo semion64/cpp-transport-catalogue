@@ -10,7 +10,6 @@
 #include <map_renderer.pb.h>
 #include <transport_router.pb.h>
 
-namespace trans_cat {
 namespace serialize{
 	
 struct Settings {
@@ -55,27 +54,93 @@ private:
 	trc_serialize::Color& proto_color_;
 };
 
-bool Save(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs, const TransportRouter& router);
-bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs, TransportRouter* router);
+class Manager;
+class Serializable;
 
-namespace detail{
+class Serializable {
+public:
+	Serializable() { } 
+	virtual bool Save() const = 0;
+	virtual bool Load() = 0;
+	void SetProtoTransCat(trc_serialize::TransportCatalogue* proto_trans_cat) {
+		proto_trans_cat_ = proto_trans_cat;
+	}
+protected:
+	mutable trc_serialize::TransportCatalogue* proto_trans_cat_ = nullptr;	
+};
 
-bool SaveRender(trc_serialize::TransportCatalogue* proto_trans_cat, const RenderSettings& rs);
-bool LoadRender(const trc_serialize::TransportCatalogue& proto_trans_cat, RenderSettings* rs);
+class Manager {
+public:
+	Manager() {
+	
+	}
+	void AddTask(Serializable* task) {
+		task->SetProtoTransCat(&proto_trans_cat_); // все сериализаторы должны работать с одним proto_trans_cat_
+		tasks_.push_back(task);
+	}
+	
+	bool Save(std::ostream& output) {
+		for(auto& task : tasks_) {
+			if(!task->Save()) {
+				return false;
+			} 
+		}
+		
+		proto_trans_cat_.SerializeToOstream(&output); // собственно сериализации в файл данных из всех task
+		
+		return true;
+	}
+	
+	bool Load(std::istream& input) {
+		trc_serialize::TransportCatalogue proto_trans_cat;
+	
+		if (!proto_trans_cat_.ParseFromIstream(&input)) {
+			return false;
+		}
+    
+		for(auto& task : tasks_) {
+			if(!task->Load()) {
+				return false;
+			} 
+		}
+		
+		return true;
+	}
+	
+private:
+	trc_serialize::TransportCatalogue proto_trans_cat_;
+	std::vector<Serializable*> tasks_;
+};
 
-bool SaveTransport(trc_serialize::TransportCatalogue* proto_trans_cat, const TransportCatalogue& trc);
-bool LoadTransport(const trc_serialize::TransportCatalogue& proto_trans_cat, TransportCatalogue* trc);
+class TransportCatalogue : public Serializable {
+public:
+	TransportCatalogue(trans_cat::TransportCatalogue* trc) 
+		: trc_(trc) { }
+	bool Save() const override;
+	bool Load() override;
+private:
+	trans_cat::TransportCatalogue* trc_;
+};
 
+class RenderSettings : public Serializable {
+public:
+	RenderSettings(trans_cat::RenderSettings* settings)
+		: settings_(settings) { }
+	bool Save() const override;
+	bool Load() override;
+private:
+	trans_cat::RenderSettings* settings_;
+};
 
-
-
-
-
-bool SaveRouter(trc_serialize::TransportCatalogue* proto_trans_cat, const TransportRouter& router);
-bool LoadRouter(const trc_serialize::TransportCatalogue& proto_trans_cat, TransportRouter* router);
-
+class Router : public Serializable {
+public:
+	Router(trans_cat::TransportRouter* trans_router)
+		: trans_router_(trans_router) { }
+	bool Save() const override;
+	bool Load() override;
+private:
+	trans_cat::TransportRouter* trans_router_;
+};
 
 }
 
-}
-}
