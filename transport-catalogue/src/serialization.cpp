@@ -69,8 +69,10 @@ bool SerializeTransportCatalogue(std::ostream& output, const TransportCatalogue&
 		trc_serialize::Stop proto_stop;
 		proto_stop.set_name_index(tmp_stop_index[stop.name]);
 		proto_stop.set_id(stop.id);
-		(*proto_stop.mutable_coord()).set_lat(stop.coord.lat);
-		(*proto_stop.mutable_coord()).set_lng(stop.coord.lng);
+		trc_serialize::Coord proto_coord;
+		proto_coord.set_lat(stop.coord.lat);
+		proto_coord.set_lng(stop.coord.lng);
+		(*proto_stop.mutable_coord()) = proto_coord;
 		*proto_trans_cat.add_stop() = proto_stop;
 	}
 	// add buses
@@ -88,7 +90,6 @@ bool SerializeTransportCatalogue(std::ostream& output, const TransportCatalogue&
 	// add distance between stop
 	for(const auto& dist : trc.GetDistanceBetweenStops()) {
 		trc_serialize::StopDistance proto_stop_dist;
-		//const trans_cat::Stop* stop_from = dist.stop_from;
 		proto_stop_dist.set_stop_from(dist.stop_from->id);
 		proto_stop_dist.set_stop_to(dist.stop_to->id);
 		proto_stop_dist.set_distance(dist.distance);
@@ -101,6 +102,8 @@ bool SerializeTransportCatalogue(std::ostream& output, const TransportCatalogue&
 		proto_rs.set_height(rs->height);
 		proto_rs.set_stop_radius(rs->stop_radius);
 		proto_rs.set_line_width(rs->line_width);
+		
+		proto_rs.set_padding(rs->padding);
 		proto_rs.set_bus_label_font_size(rs->bus_label_font_size);
 		*proto_rs.mutable_bus_label_offset() 
 			= (PointToProto(rs->bus_label_offset));
@@ -152,7 +155,7 @@ bool DeserializeTransportCatalogue(std::istream& input, TransportCatalogue* trc,
 		for(auto stop_id : proto_bus.stop_id()) {
 			bus_stops.push_back(tmp_id_stop[stop_id]);
 		}
-		std::cout << std::endl;
+		
 		trc->AddBus(
 			proto_bus_index.at(proto_bus.name_index()), 
 			bus_stops,
@@ -173,6 +176,8 @@ bool DeserializeTransportCatalogue(std::istream& input, TransportCatalogue* trc,
 		rs->height = proto_rs.height();
 		rs->stop_radius = proto_rs.stop_radius();
 		rs->line_width = proto_rs.line_width();
+		
+		rs->padding = proto_rs.padding();
 		rs->bus_label_font_size = proto_rs.bus_label_font_size();
 		rs->bus_label_offset = ProtoToPoint(proto_rs.bus_label_offset());	
 		rs->stop_label_font_size = proto_rs.stop_label_font_size();

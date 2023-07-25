@@ -37,6 +37,7 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 	input.close();
 
 	trans_cat::MapRendererSVG map_renderer(trc2, render_settings);
+	
 	trans_cat::UserInterfaceJSON ui(os, trc2, nullptr, &map_renderer);
 	json_request2.DoStat(ui);  
 }

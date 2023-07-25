@@ -111,30 +111,8 @@ public:
 private:
 	TSettings rs_;
 };
-/*
- class Manager : public Reader {
-public: 
-	Manager(TransportCatalogue& trc) : Reader(trc) { }
-	void SetBase(HandlerBase* base);
-	void SetStat(HandlerStat* stat);
-	void DoBase();
-	void DoStat(UserInterface& ui);
-	const RenderSettings& GetSettingsRender() const;
-	const RouterSettings& GetSettingsRouter() const;
-	const serialize::Settings& GetSettingsSerialization() const;
-	~Manager() override { }
-protected:
 
-    RenderSettings render_settings_;
-    RouterSettings router_settings_;
-    serialize::Settings serialization_settings_;
-private:
-	std::unique_ptr<HandlerBase> handler_base_;
-    std::unique_ptr<HandlerStat> handler_stat_;
-};
-*  
- */
- class ManagerStat : public Reader {
+class ManagerStat : public Reader {
 public: 
 	ManagerStat(TransportCatalogue& trc) : Reader(trc) { }
 	void SetStat(HandlerStat* stat);
