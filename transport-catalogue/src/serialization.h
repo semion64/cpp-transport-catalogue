@@ -49,7 +49,16 @@ private:
 	trc_serialize::Color& proto_color_;
 };
 
-bool SerializeTransportCatalogue(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs);
-bool DeserializeTransportCatalogue(std::istream& input, TransportCatalogue* trc, RenderSettings* rs);
+bool Save(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs);
+bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs);
+
+namespace detail{
+bool SaveRender(trc_serialize::TransportCatalogue* proto_trans_cat, const RenderSettings& rs);
+bool SaveTransport(trc_serialize::TransportCatalogue* proto_trans_cat, const TransportCatalogue& trc);
+
+bool LoadRender(const trc_serialize::TransportCatalogue& proto_trans_cat, RenderSettings* rs);
+bool LoadTransport(const trc_serialize::TransportCatalogue& proto_trans_cat, TransportCatalogue* trc);
+}
+
 }
 }

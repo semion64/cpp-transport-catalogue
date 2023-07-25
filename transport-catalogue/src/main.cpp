@@ -22,7 +22,7 @@ void MakeBase(std::istream& is) {
 	json_request.Read(is); 
 	json_request.DoBase();  
 	std::ofstream ofs(json_request.GetSettingsSerialization().file, std::ios::binary);
-	trans_cat::serialize::SerializeTransportCatalogue(ofs, trc, json_request.GetSettingsRender());
+	trans_cat::serialize::Save(ofs, trc, json_request.GetSettingsRender());
 	ofs.close();
 }
 
@@ -33,7 +33,7 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 	json_request2.Read(is); 
 	
 	std::ifstream input(json_request2.GetSettingsSerialization().file, std::ios::binary);
-	trans_cat::serialize::DeserializeTransportCatalogue(input, &trc2, &render_settings);
+	trans_cat::serialize::Load(input, &trc2, &render_settings);
 	input.close();
 
 	trans_cat::MapRendererSVG map_renderer(trc2, render_settings);

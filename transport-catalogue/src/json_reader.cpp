@@ -158,9 +158,9 @@ std::vector<const Stop*> BaseJSON::ParseStopList(const json::Array& stop_list, b
 }
 
 void UserInterfaceJSON::ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const {
-	//graph::Router<RouteItem> router(tr_router_->BuildGraph());
+	graph::Router<RouteItem> router(tr_router_->BuildGraph());
 	
-	//json_build_ = json::Builder();
+	json_build_ = json::Builder();
 	json_build_.StartArray();
 	for(const auto& q: queries) {
 		json_build_.StartDict()
@@ -176,7 +176,7 @@ void UserInterfaceJSON::ShowQueriesResult(const request::HandlerStat::StatQueryL
 				ShowMap();
 			break;
 			case detail::StatQueryType::ROUTE:
-				//ShowRoute(*tr_router_, router, q.args.at("from"s), q.args.at("to"s));
+				ShowRoute(*tr_router_, router, q.args.at("from"s), q.args.at("to"s));
 			break;
 			default:
 				//throw ExceptionWrongQueryType("");
