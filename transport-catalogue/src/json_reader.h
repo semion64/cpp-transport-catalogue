@@ -32,7 +32,7 @@ private:
 	void ShowBus(std::string_view bus_name) const;
 	void ShowStopBuses(std::string_view stop_name) const;
 	void ShowMap() const;
-	void ShowRoute(const TransportRouter& tr_router, graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const;
+	void ShowRoute(const TransportRouter& tr_router, std::string_view from, std::string_view to) const;
 	mutable json::Builder json_build_;
 };
 

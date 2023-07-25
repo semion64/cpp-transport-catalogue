@@ -1,6 +1,9 @@
 syntax = "proto3";
 package trc_serialize;
 
+import "map_renderer.proto";
+import "transport_router.proto";
+
 message Coord {
     double lat = 1; 
     double lng = 2; 
@@ -34,7 +37,7 @@ message StopDistance {
 	uint32 distance = 3;
 }
 
-import "map_renderer.proto";
+
 
 message TransportCatalogue {
 	repeated Bus bus = 1;
@@ -42,4 +45,5 @@ message TransportCatalogue {
 	NameIndex name_index = 3;
 	repeated StopDistance stop_distance = 4;
 	RenderSettings render_settings = 5;
+	TransportRouter router = 6;
 }

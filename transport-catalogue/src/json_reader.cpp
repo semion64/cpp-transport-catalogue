@@ -158,8 +158,6 @@ std::vector<const Stop*> BaseJSON::ParseStopList(const json::Array& stop_list, b
 }
 
 void UserInterfaceJSON::ShowQueriesResult(const request::HandlerStat::StatQueryList& queries) const {
-	graph::Router<RouteItem> router(tr_router_->GetGraph());
-	
 	json_build_ = json::Builder();
 	json_build_.StartArray();
 	for(const auto& q: queries) {
@@ -176,7 +174,7 @@ void UserInterfaceJSON::ShowQueriesResult(const request::HandlerStat::StatQueryL
 				ShowMap();
 			break;
 			case detail::StatQueryType::ROUTE:
-				ShowRoute(*tr_router_, router, q.args.at("from"s), q.args.at("to"s));
+				ShowRoute(*tr_router_, q.args.at("from"s), q.args.at("to"s));
 			break;
 			default:
 				//throw ExceptionWrongQueryType("");
@@ -198,8 +196,8 @@ void UserInterfaceJSON::ShowMap() const {
     	
 }
 
-void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, graph::Router<RouteItem>& router, std::string_view from, std::string_view to) const {
-	std::optional<graph::Router<RouteItem>::RouteInfo> route = router.BuildRoute(trc_.GetStop(from).id, trc_.GetStop(to).id);
+void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, std::string_view from, std::string_view to) const {
+	auto route = tr_router.BuildRoute(trc_.GetStop(from).id, trc_.GetStop(to).id);
 	
 	if(!route) {
 		json_build_.Key("error_message").Value("not found");

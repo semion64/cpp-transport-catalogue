@@ -27,11 +27,20 @@ public:
     DirectedWeightedGraph() = default;
     explicit DirectedWeightedGraph(size_t vertex_count);
     EdgeId AddEdge(const Edge<Weight>& edge);
-
+	// friend Serialize
     size_t GetVertexCount() const;
     size_t GetEdgeCount() const;
     const Edge<Weight>& GetEdge(EdgeId edge_id) const;
     IncidentEdgesRange GetIncidentEdges(VertexId vertex) const;
+    
+    
+    const std::vector<IncidenceList>& GetIncidentLists() const {
+		return incidence_lists_;
+	}
+	
+	const std::vector<Edge<Weight>>& GetEdges() const {
+		return edges_;
+	}
 
 private:
     std::vector<Edge<Weight>> edges_;

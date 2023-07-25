@@ -22,7 +22,10 @@ void MakeBase(std::istream& is) {
 	json_request.Read(is); 
 	json_request.DoBase();  
 	std::ofstream ofs(json_request.GetSettingsSerialization().file, std::ios::binary);
-	trans_cat::serialize::Save(ofs, trc, json_request.GetSettingsRender());
+	
+	trans_cat::TransportRouter router(trc, json_request.GetSettingsRouter());
+	trans_cat::serialize::Save(ofs, trc, json_request.GetSettingsRender(), router);
+	
 	ofs.close();
 }
 
@@ -32,16 +35,18 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 	trans_cat::RenderSettings render_settings;
 	trans_cat::RouterSettings router_settings;
 	json_request2.Read(is); 
-	
-	std::ifstream input(json_request2.GetSettingsSerialization().file, std::ios::binary);
-	trans_cat::serialize::Load(input, &trc2, &render_settings);
-	input.close();
-
-	trans_cat::MapRendererSVG map_renderer(trc2, render_settings);
 	trans_cat::TransportRouter router(trc2, router_settings);
 	
-	trans_cat::UserInterfaceJSON ui(os, trc2, &router, &map_renderer);
-	json_request2.DoStat(ui);  
+	std::ifstream input(json_request2.GetSettingsSerialization().file, std::ios::binary);
+	trans_cat::serialize::Load(input, &trc2, &render_settings, &router);
+	input.close();
+	
+	std::cout << "Router_settings: " << router.GetSettings().bus_wait_time << ", " << router.GetSettings().bus_velocity << std::endl;
+	trans_cat::MapRendererSVG map_renderer(trc2, render_settings);
+	
+	
+	/*trans_cat::UserInterfaceJSON ui(os, trc2, &router, &map_renderer);
+	json_request2.DoStat(ui);  */
 }
 int main(int argc, char* argv[]) {
 	int DEBUG_VER = true;

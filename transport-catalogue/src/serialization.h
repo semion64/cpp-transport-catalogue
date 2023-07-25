@@ -1,8 +1,14 @@
-#include "transport_catalogue.h"
-//#include <transport_catalogue.pb.h>
-#include "map_renderer.h"
-#include <transport_catalogue.pb.h>
+#pragma once
 #include <variant>
+
+
+#include "transport_catalogue.h"
+#include "transport_router.h"
+#include "map_renderer.h"
+
+#include <transport_catalogue.pb.h>
+#include <map_renderer.pb.h>
+#include <transport_router.pb.h>
 
 namespace trans_cat {
 namespace serialize{
@@ -49,16 +55,26 @@ private:
 	trc_serialize::Color& proto_color_;
 };
 
-bool Save(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs);
-bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs);
+bool Save(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs, const TransportRouter& router);
+bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs, TransportRouter* router);
 
 namespace detail{
-bool SaveRouter(trc_serialize::TransportCatalogue* proto_trans_cat);
-bool SaveRender(trc_serialize::TransportCatalogue* proto_trans_cat, const RenderSettings& rs);
-bool SaveTransport(trc_serialize::TransportCatalogue* proto_trans_cat, const TransportCatalogue& trc);
 
+bool SaveRender(trc_serialize::TransportCatalogue* proto_trans_cat, const RenderSettings& rs);
 bool LoadRender(const trc_serialize::TransportCatalogue& proto_trans_cat, RenderSettings* rs);
+
+bool SaveTransport(trc_serialize::TransportCatalogue* proto_trans_cat, const TransportCatalogue& trc);
 bool LoadTransport(const trc_serialize::TransportCatalogue& proto_trans_cat, TransportCatalogue* trc);
+
+
+
+
+
+
+bool SaveRouter(trc_serialize::TransportCatalogue* proto_trans_cat, const TransportRouter& router);
+bool LoadRouter(const trc_serialize::TransportCatalogue& proto_trans_cat, TransportRouter* router);
+
+
 }
 
 }

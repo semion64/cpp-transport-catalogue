@@ -45,7 +45,7 @@ svg::Color ProtoToColor(trc_serialize::Color proto_clr) {
 }
 
 
-bool Save(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs) {
+bool Save(std::ostream& output, const TransportCatalogue& trc, std::optional<RenderSettings> rs, const TransportRouter& router) {
 	trc_serialize::TransportCatalogue proto_trans_cat;
 	
 	detail::SaveTransport(&proto_trans_cat, trc);
@@ -54,12 +54,14 @@ bool Save(std::ostream& output, const TransportCatalogue& trc, std::optional<Ren
 		detail::SaveRender(&proto_trans_cat, *rs);
 	}
 	
+	detail::SaveRouter(&proto_trans_cat, router);
+	
 	proto_trans_cat.SerializeToOstream(&output);
 	
 	return true;
 }	
 
-bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs) {
+bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs, TransportRouter* router) {
 	trc_serialize::TransportCatalogue proto_trans_cat;
 	
     if (!proto_trans_cat.ParseFromIstream(&input)) {
@@ -72,13 +74,75 @@ bool Load(std::istream& input, TransportCatalogue* trc, RenderSettings* rs) {
 		 detail::LoadRender(proto_trans_cat, rs);
 	}
 	
+	detail::LoadRouter(proto_trans_cat, router);
 	return true;
 }
 
 namespace detail{
 	
-bool SaveRouter(trc_serialize::TransportCatalogue* proto_trans_cat) {
+double bus_wait_time = 1;
+double bus_velocity = 2;
 	
+bool SaveRouter(trc_serialize::TransportCatalogue* proto_trans_cat, const TransportRouter& trans_router) {
+	trc_serialize::TransportRouter proto_trans_router;
+	// router settings
+	trc_serialize::RouterSettings proto_settings;
+	auto settings = trans_router.GetSettings();
+	proto_settings.set_bus_wait_time(settings.bus_wait_time);
+	proto_settings.set_bus_velocity(settings.bus_velocity);
+	*proto_trans_router.mutable_settings() = proto_settings;
+	
+	const auto& gr = trans_router.GetGraph(); 
+	/*
+	 * 
+	 * enum class RouteItemType {
+	NONE,
+	WAIT,
+	BUS
+};
+
+struct Weight {
+	RouteItemType type = RouteItemType::NONE;
+	double time = 0;
+	std::string_view name;
+	int span = 0;
+	* 
+	 * GRAPH
+struct Edge {
+    VertexId from;
+    VertexId to;
+    Weight weight;
+};
+
+    using IncidenceList = std::vector<EdgeId>;
+    using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
+    * 
+    * 
+	 *  std::vector<Edge<Weight>> edges_;
+    std::vector<IncidenceList> incidence_lists_;
+    * 
+    * ROUTER
+    * 
+	  struct RouteInternalData {
+        Weight weight;
+        std::optional<EdgeId> prev_edge;
+    };
+	 using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
+	 RoutesInternalData routes_internal_data_;
+	 * */
+	*proto_trans_cat->mutable_router() = proto_trans_router;
+	
+	return true;
+}
+
+bool LoadRouter(const trc_serialize::TransportCatalogue& proto_trans_cat, TransportRouter* router) {
+	trc_serialize::TransportRouter proto_trans_router = proto_trans_cat.router();
+	
+	// router settings
+	trc_serialize::RouterSettings proto_settings = proto_trans_router.settings();
+	router->SetSettings(RouterSettings{proto_settings.bus_wait_time(), proto_settings.bus_velocity()});
+		
+	return true;
 }
 
 bool SaveRender(trc_serialize::TransportCatalogue* proto_trans_cat, const RenderSettings& rs) {

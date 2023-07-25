@@ -46,15 +46,22 @@ class TransportRouter {
 public:
 	TransportRouter(TransportCatalogue& trc, const RouterSettings& router_settings) : trc_(trc), rs_(router_settings) { }
 	
-	
 	graph::Edge<RouteItem> GetEdge(size_t id) const;
 	const graph::DirectedWeightedGraph<RouteItem>& GetGraph() const;
+	const RouterSettings& GetSettings() const;
+	const graph::Router<RouteItem>* GetRouter() const;
+	void SetSettings(const RouterSettings& rs);
+	void SetSettings(RouterSettings&& rs);
 	void BuildGraph();
+	std::optional<graph::Router<RouteItem>::RouteInfo>  BuildRoute(size_t stop_from_id, size_t stop_to_id) const;
+	~TransportRouter() {
+		if(router_) delete router_;
+	}
 protected:
 	TransportCatalogue& trc_;	
 	RouterSettings rs_;
 	graph::DirectedWeightedGraph<RouteItem> gr;
-	
+	graph::Router<RouteItem>* router_ = nullptr;
 private:
 	constexpr static double VELOCITY_TO_M_MIN = 1 / 0.06; 
 	size_t GetVertexWaitId(size_t stop_id) const;

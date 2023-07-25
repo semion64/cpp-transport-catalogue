@@ -64,14 +64,38 @@ const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::GetGraph() const
 	return gr;
 }
 
+const RouterSettings& TransportRouter::GetSettings() const {
+	return rs_;
+}
+
+const graph::Router<RouteItem>* TransportRouter::GetRouter() const {
+	return router_;
+}
+
+void TransportRouter::SetSettings(const RouterSettings& rs) {
+	rs_ = rs;
+}
+
+void TransportRouter::SetSettings(RouterSettings&& rs) {
+	rs_ = std::move(rs);
+}
+	
 void TransportRouter::BuildGraph() {
 	auto stops = trc_.GetStops();
 	auto buses = trc_.GetBuses();
 	
 	gr = graph::DirectedWeightedGraph<RouteItem>(stops.size() * 2);
-	
+	router_ = new graph::Router(gr);
 	FillByStops(stops);
 	FillByBuses(buses);
+}
+
+std::optional<graph::Router<RouteItem>::RouteInfo>  TransportRouter::BuildRoute(size_t stop_from_id, size_t stop_to_id) const {
+	if(!router_) {
+		throw std::logic_error("firstly build graph");
+	}
+	
+	return router_->BuildRoute(stop_from_id, stop_to_id);
 }
 
 } // end ::trans_cat

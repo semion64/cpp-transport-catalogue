@@ -1,0 +1,53 @@
+syntax = "proto3";
+package trc_serialize;
+
+message RouterSettings {
+	double bus_wait_time = 1;
+    double bus_velocity = 2;
+}
+
+message Weight {
+	uint32 item_type = 1; // enum class RouteItemType
+	double time = 2;
+	uint32  item_id = 3; // std::string_view name;
+	uint32 span = 4;
+}
+
+message Edge {
+    uint32 from = 1;
+    uint32 to = 2;
+    Weight weight = 3;
+}
+
+
+// GRAPH
+message IncidenceList {
+	repeated uint32 list = 1; // EdgeID
+}
+
+message Graph {
+	repeated Edge edges = 1;
+	repeated IncidenceList incidence_lists = 2;
+}
+
+
+// ROUTER
+
+message RouteInternalData {
+	Weight weight = 1;
+	optional uint32 prev_edge = 2; // EdgeID
+};
+
+message RoutesInternalData {
+	repeated RouteInternalData list = 1;
+}
+
+message Router {
+	repeated RoutesInternalData routes_internal_data = 1;
+}
+
+message TransportRouter {
+	RouterSettings settings = 1;
+	Graph graph = 2;
+	Router router = 3;
+}

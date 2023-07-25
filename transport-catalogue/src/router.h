@@ -21,21 +21,30 @@ private:
 
 public:
     explicit Router(const Graph& graph);
-
+private:
+    struct RouteInternalData {
+        Weight weight;
+        std::optional<EdgeId> prev_edge;
+    };
+using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
+public:
     struct RouteInfo {
         Weight weight;
         std::vector<EdgeId> edges;
     };
 
     std::optional<RouteInfo> BuildRoute(VertexId from, VertexId to) const;
-
+	const RoutesInternalData& GetInternalData() const {
+		return routes_internal_data_;
+	}
+	
+	void RoutesSetInterinalData(RoutesInternalData data) {
+		routes_internal_data_ = data;
+	}
+	
 private:
-    struct RouteInternalData {
-        Weight weight;
-        std::optional<EdgeId> prev_edge;
-    };
-    using RoutesInternalData = std::vector<std::vector<std::optional<RouteInternalData>>>;
-
+    
+    
     void InitializeRoutesInternalData(const Graph& graph) {
         const size_t vertex_count = graph.GetVertexCount();
         for (VertexId vertex = 0; vertex < vertex_count; ++vertex) {
