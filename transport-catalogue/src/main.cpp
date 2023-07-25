@@ -57,11 +57,11 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 	trans_cat::MapRendererSVG map_renderer(trc, render_settings);
 	
 	
-	/*trans_cat::UserInterfaceJSON ui(os, trc2, &router, &map_renderer);
-	json_request2.DoStat(ui);  */
+	trans_cat::UserInterfaceJSON ui(os, trc, &router, &map_renderer);
+	json_request.DoStat(ui);  
 }
 int main(int argc, char* argv[]) {
-	int DEBUG_VER = false;
+	int DEBUG_VER = true;
 	if(DEBUG_VER) {
 		std::ifstream is("make_1_in.json");
 		MakeBase(is);

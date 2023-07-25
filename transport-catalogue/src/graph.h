@@ -17,12 +17,13 @@ struct Edge {
     Weight weight;
 };
 
+
+
 template <typename Weight>
 class DirectedWeightedGraph {
 private:
-    using IncidenceList = std::vector<EdgeId>;
-    using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
-
+   using IncidenceList = std::vector<EdgeId>;
+using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
 public:
     DirectedWeightedGraph() = default;
     explicit DirectedWeightedGraph(size_t vertex_count);

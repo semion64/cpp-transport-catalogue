@@ -12,6 +12,7 @@
 #include <vector>
 #include "domain.h"
 #include "geo.h"
+#include <map>
 
 namespace trans_cat {
 
@@ -19,8 +20,8 @@ class TransportCatalogue{
 public:
 	TransportCatalogue() {}
 	
-	Stop& AddStop(const std::string& name, const geo::Coordinates coord);	
-	Bus& AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring); 
+	Stop& AddStop(const std::string& name, const geo::Coordinates coord, size_t id = 0);	
+	Bus& AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring, size_t id = 0); 
 	
 	const Bus& GetBus(std::string_view bus_name) const;
 	const Stop& GetStop(std::string_view stop_name) const;
@@ -45,6 +46,9 @@ private:
 	std::unordered_map <std::string_view, const Bus*> bus_index_;
 	std::unordered_map <std::string_view, const Stop*> stop_index_;
 	
+	std::map <size_t, const Bus*> bus_id_index_;
+	std::map <size_t, const Stop*> stop_id_index_;
+	
 	std::unordered_map<const Stop*, detail::StopBuses> stop_buses_;
 	detail::DistanceBetweenStop stop_di_; // unique fast use hasher
 	std::vector<detail::DistanceBetweenStopItem> distance_between_stops_vector_;
@@ -60,5 +64,6 @@ private:
 	double GetCurvature(const Bus& bus) const;
 	size_t GetUniqueStopsCount(const Bus& bus) const;
 	size_t last_stop_id = 0;
+	size_t last_bus_id = 0;
 };
 } // end ::trans_cat

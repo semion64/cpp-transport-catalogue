@@ -2,7 +2,7 @@
 
 #include "transport_catalogue.h"
 #include "router.h"
-
+using namespace std::string_literals;
 namespace trans_cat {
 	
 enum class RouteItemType {
@@ -14,7 +14,7 @@ enum class RouteItemType {
 struct RouteItem {
 	RouteItemType type = RouteItemType::NONE;
 	double time = 0;
-	std::string_view name;
+	const void* stop_or_bus_obj;
 	int span = 0;
 	bool operator<(const RouteItem& other) const {
 		return time < other.time;
@@ -31,10 +31,32 @@ struct RouteItem {
 	inline bool operator>(const RouteItem& other) const {
 		return !(time < other.time) && time != other.time;
 	}
+	std::string_view GetName() const {
+		if(type == RouteItemType::BUS) {
+			return reinterpret_cast<const Bus*>(stop_or_bus_obj)->name; 
+		}
+		
+		if(type == RouteItemType::WAIT) {
+			return reinterpret_cast<const Stop*>(stop_or_bus_obj)->name; 
+		}
+		
+		return "";
+	}
+	
+	size_t GetId() const {
+		if(type == RouteItemType::BUS) {
+			return reinterpret_cast<const Bus*>(stop_or_bus_obj)->id; 
+		}
+		if(type == RouteItemType::WAIT) {
+			return reinterpret_cast<const Stop*>(stop_or_bus_obj)->id; 
+		}
+		
+		return 0;
+	}
 };
 
 inline RouteItem operator+(const RouteItem& l, const RouteItem& r) {
-	return RouteItem {RouteItemType::NONE, l.time + r.time, "", 0};
+	return RouteItem {RouteItemType::NONE, l.time + r.time, nullptr, 0};
 }
 
 struct RouterSettings {

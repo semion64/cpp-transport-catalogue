@@ -2,19 +2,31 @@
 
 namespace trans_cat {
 
-Stop& TransportCatalogue::AddStop(const std::string& name, geo::Coordinates coord) {
-	stop_.push_back({AddName(name, stop_names_), coord, ++last_stop_id});
+Stop& TransportCatalogue::AddStop(const std::string& name, geo::Coordinates coord, size_t id) {
+	if(id == 0) {
+		id = ++last_stop_id;
+	}
+	
+	last_stop_id = id;
+	stop_.push_back({AddName(name, stop_names_), coord, id});
 	stop_index_[stop_.back().name] = &stop_.back();
+	stop_id_index_[stop_.back().id] = &stop_.back();
 	return stop_.back();
 }
 
-Bus& TransportCatalogue::AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring) {
+Bus& TransportCatalogue::AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring, size_t id) {
+	if(id == 0) {
+		id = ++last_bus_id;
+	}
+	
+	last_bus_id = id;
 	// add bus
-	bus_.push_back({AddName(name, bus_names_), std::move(stops), is_ring});
+	bus_.push_back({AddName(name, bus_names_), std::move(stops), is_ring, id});
 	Bus* insert_bus = &bus_.back();
 	
 	// add bus to index map
 	bus_index_[insert_bus->name] = insert_bus;
+	bus_id_index_[insert_bus->id] = insert_bus;
 	
 	// add inserted bus to stop_buses_ map
 	std::for_each(insert_bus->stops.begin(), insert_bus->stops.end(), [this, &insert_bus](const auto stop) {

@@ -21,9 +21,10 @@ message Stop {
 }
 
 message Bus {
-	uint32 name_index = 1;
-	repeated uint32 stop_id = 2;
-	bool is_ring = 3;
+	uint32 id = 1;
+	uint32 name_index = 2;
+	repeated uint32 stop_id = 3;
+	bool is_ring = 4;
 }
 
 message StopBuses {

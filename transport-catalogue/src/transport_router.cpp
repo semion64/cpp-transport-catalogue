@@ -25,7 +25,7 @@ void TransportRouter::AddEdgesForBus(const Bus& bus, size_t start_stop, size_t e
 				RouteItem {
 					RouteItemType::BUS,
 					CalcTime(di),
-					bus.name,
+					&bus,
 					j - i
 				}
 			});
@@ -41,7 +41,7 @@ void TransportRouter::FillByStops(const std::deque<Stop>& stops) {
 			RouteItem { 
 				RouteItemType::WAIT, 
 				rs_.bus_wait_time, 
-				stops[i].name, 
+				&stops, 
 				0
 			} 
 		});

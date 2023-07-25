@@ -36,6 +36,7 @@ struct Bus {
 	std::string_view name;
 	std::vector<const Stop*> stops;
 	bool is_ring;
+	size_t id;
 };
 
 namespace detail {

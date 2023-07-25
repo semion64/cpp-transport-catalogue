@@ -22,7 +22,7 @@ message Edge {
 
 // GRAPH
 message IncidenceList {
-	repeated uint32 list = 1; // EdgeID
+	repeated uint32 edge_id = 1; // EdgeID
 }
 
 message Graph {
@@ -38,12 +38,12 @@ message RouteInternalData {
 	optional uint32 prev_edge = 2; // EdgeID
 };
 
-message RoutesInternalData {
+message RouteInternalDataList {
 	repeated RouteInternalData list = 1;
 }
 
 message Router {
-	repeated RoutesInternalData routes_internal_data = 1;
+	repeated RouteInternalDataList routes_internal_data = 1;
 }
 
 message TransportRouter {
