@@ -21,7 +21,7 @@ private:
 
 public:
     explicit Router(const Graph& graph);
-private:
+
     struct RouteInternalData {
         Weight weight;
         std::optional<EdgeId> prev_edge;
@@ -38,8 +38,8 @@ public:
 		return routes_internal_data_;
 	}
 	
-	void RoutesSetInterinalData(RoutesInternalData data) {
-		routes_internal_data_ = data;
+	void LoadInterinalData(RoutesInternalData&& data) {
+		routes_internal_data_ = std::move(data);
 	}
 	
 private:

@@ -23,13 +23,18 @@ void MakeBase(std::istream& is) {
 	json_request.DoBase();  
 	std::ofstream output(json_request.GetSettingsSerialization().file, std::ios::binary);
 	
-	trans_cat::TransportRouter router(trc, json_request.GetSettingsRouter());
+	trans_cat::TransportRouter trans_router(trc, json_request.GetSettingsRouter());
 	trans_cat::RenderSettings render_settings = json_request.GetSettingsRender();
+	
+	for(auto& bus : trc.GetBuses()) {
+		std::cout << bus.name << std::endl;
+	}
+	trans_router.BuildGraph();
 	
 	serialize::Manager serial_mng;
 	serial_mng.AddTask(new serialize::TransportCatalogue(&trc));
 	serial_mng.AddTask(new serialize::RenderSettings(&render_settings));
-	//serial_mng.AddTask(new serialize::Router(&router));
+	serial_mng.AddTask(new serialize::Router(&trans_router, trc));
 	if(!serial_mng.Save(output)) {
 		std::cerr << "Serialization error" << std::endl;
 	}
@@ -48,7 +53,7 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 	serialize::Manager serial_mng;
 	serial_mng.AddTask(new serialize::TransportCatalogue(&trc));
 	serial_mng.AddTask(new serialize::RenderSettings(&render_settings));
-	//serial_mng.AddTask(new serialize::Router(&router));
+	serial_mng.AddTask(new serialize::Router(&router, trc));
 	if(!serial_mng.Load(input)) {
 		std::cerr << "Deserialization error" << std::endl;
 	}

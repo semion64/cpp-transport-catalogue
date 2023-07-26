@@ -20,11 +20,15 @@ class TransportCatalogue{
 public:
 	TransportCatalogue() {}
 	
-	Stop& AddStop(const std::string& name, const geo::Coordinates coord, size_t id = 0);	
-	Bus& AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring, size_t id = 0); 
+	Stop& AddStop(const std::string& name, const geo::Coordinates coord, std::optional<size_t> id = std::nullopt);	
+	Bus& AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring, std::optional<size_t> id = std::nullopt); 
 	
 	const Bus& GetBus(std::string_view bus_name) const;
 	const Stop& GetStop(std::string_view stop_name) const;
+	
+	const Bus& GetBus(size_t bus_id) const;
+	const Stop& GetStop(size_t stop_id) const;
+	
 	const std::deque<Bus>& GetBuses() const;
 	std::vector<Bus>GetBusesSorted() const;
 	const std::deque<Stop>& GetStops() const;

@@ -42,7 +42,11 @@ public:
 	const std::vector<Edge<Weight>>& GetEdges() const {
 		return edges_;
 	}
-
+	
+	void LoadData(std::vector<Edge<Weight>>&& edges, std::vector<IncidenceList>&& incidence_lists) {
+		edges_ = std::move(edges);
+		incidence_lists  = std::move(incidence_lists_);
+	}
 private:
     std::vector<Edge<Weight>> edges_;
     std::vector<IncidenceList> incidence_lists_;
@@ -57,6 +61,7 @@ template <typename Weight>
 EdgeId DirectedWeightedGraph<Weight>::AddEdge(const Edge<Weight>& edge) {
     edges_.push_back(edge);
     const EdgeId id = edges_.size() - 1;
+    std::cout << edge.from << std::endl;
     incidence_lists_.at(edge.from).push_back(id);
     return id;
 }

@@ -2,26 +2,27 @@
 
 namespace trans_cat {
 
-Stop& TransportCatalogue::AddStop(const std::string& name, geo::Coordinates coord, size_t id) {
-	if(id == 0) {
-		id = ++last_stop_id;
+Stop& TransportCatalogue::AddStop(const std::string& name, geo::Coordinates coord, std::optional<size_t> id) {
+	if(!id) {
+		id = last_stop_id;
 	}
 	
-	last_stop_id = id;
-	stop_.push_back({AddName(name, stop_names_), coord, id});
+	last_stop_id = *id;
+	stop_.push_back({AddName(name, stop_names_), coord, *id});
 	stop_index_[stop_.back().name] = &stop_.back();
 	stop_id_index_[stop_.back().id] = &stop_.back();
+	++last_stop_id;
 	return stop_.back();
 }
 
-Bus& TransportCatalogue::AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring, size_t id) {
-	if(id == 0) {
-		id = ++last_bus_id;
+Bus& TransportCatalogue::AddBus(const std::string& name, std::vector<const Stop*>& stops, bool is_ring, std::optional<size_t> id) {
+	if(!id) {
+		id = last_bus_id;
 	}
 	
-	last_bus_id = id;
+	last_bus_id = *id;
 	// add bus
-	bus_.push_back({AddName(name, bus_names_), std::move(stops), is_ring, id});
+	bus_.push_back({AddName(name, bus_names_), std::move(stops), is_ring, *id});
 	Bus* insert_bus = &bus_.back();
 	
 	// add bus to index map
@@ -32,7 +33,7 @@ Bus& TransportCatalogue::AddBus(const std::string& name, std::vector<const Stop*
 	std::for_each(insert_bus->stops.begin(), insert_bus->stops.end(), [this, &insert_bus](const auto stop) {
 		stop_buses_[stop_index_[stop->name]].insert(insert_bus);
 	});
-	
+	++last_bus_id;
 	return *insert_bus;
 }
 
@@ -84,6 +85,13 @@ const std::deque<Bus>& TransportCatalogue::GetBuses() const {
 
 const std::deque<Stop>& TransportCatalogue::GetStops() const {
 	return stop_;
+}
+const Bus& TransportCatalogue::GetBus(size_t bus_id) const{
+	return *bus_id_index_.at(bus_id);
+}
+
+const Stop& TransportCatalogue::GetStop(size_t stop_id) const {
+	return *stop_id_index_.at(stop_id);
 }
 
 const detail::StopBuses& TransportCatalogue::GetStopBuses(const Stop& stop) const {

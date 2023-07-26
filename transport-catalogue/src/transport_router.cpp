@@ -84,10 +84,13 @@ void TransportRouter::BuildGraph() {
 	auto stops = trc_.GetStops();
 	auto buses = trc_.GetBuses();
 	
+	std::cout << "STOP_SIZE: " << stops.size() << std::endl;
 	gr = graph::DirectedWeightedGraph<RouteItem>(stops.size() * 2);
-	router_ = new graph::Router(gr);
+	
 	FillByStops(stops);
 	FillByBuses(buses);
+	
+	router_ = new graph::Router(gr);
 }
 
 std::optional<graph::Router<RouteItem>::RouteInfo>  TransportRouter::BuildRoute(size_t stop_from_id, size_t stop_to_id) const {

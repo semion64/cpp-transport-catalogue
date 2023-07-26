@@ -66,14 +66,14 @@ bool Router::Save() const {
 	proto_settings.set_bus_velocity(settings.bus_velocity);
 	*proto_trans_router.mutable_settings() = proto_settings;
 	
-	//Graph
-	std::vector<graph::Edge<trans_cat::RouteItem>> edges;
-    std::vector<IncidenceList> incidence_lists;
-	const std::vector<graph::Edge<trans_cat::RouteItem>>& edges = trans_router_->GetGraph().GetEdges(); 
-	auto incident_lists = trans_router_->GetGraph().GetIncidentLists();
 	
-
-	for(const auto& edge : edges) {
+	//Graph
+    std::vector<IncidenceList> incidence_lists;
+    auto gr = trans_router_->GetGraph();
+	const std::vector<graph::Edge<trans_cat::RouteItem>>& __edges = gr.GetEdges(); 
+	auto incident_lists = gr.GetIncidentLists();
+	
+	for(const auto& edge : __edges) {
 		trc_serialize::Edge proto_edge;
 		
 		trc_serialize::Weight proto_weight = WeightToProto(edge.weight);
@@ -93,55 +93,92 @@ bool Router::Save() const {
 		}
 		*proto_graph.add_incidence_lists() = proto_incidence;
 	}
-	/*
-	 * 
-	 * enum class RouteItemType {
-	NONE,
-	WAIT,
-	BUS
-};
-// RouteItem
-struct Weight {
-	RouteItemType type = RouteItemType::NONE;
-	double time = 0;
-	std::string_view name;
-	int span = 0;
-	* 
-	 * GRAPH
-struct Edge {
-    VertexId from;
-    VertexId to;
-    Weight weight;
-};
 
-    using IncidenceList = std::vector<EdgeId>;
-    using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
-    * 
-    * 
-	 *  std::vector<Edge<Weight>> edges_;
-    std::vector<IncidenceList> incidence_lists_;
-    */
-    
 	*proto_trans_router.mutable_graph() = proto_graph;
     // Router
     trc_serialize::Router proto_router;
-	const auto internal_data_list = trans_router_->GetRouter().GetInternalData(); 
+    if(trans_router_->GetRouter() == nullptr) {
+		throw std::logic_error("serialization: firstly build router");
+	}
+	const auto internal_data_list = trans_router_->GetRouter()->GetInternalData(); 
 		
 	for(const auto& internal_datas : internal_data_list) {
 		trc_serialize::RouteInternalDataList proto_internal_data_list;
 		for(const auto& data : internal_datas) {
 			trc_serialize::RouteInternalData proto_internal_data;
-			*proto_internal_data.weight() = GetWeight(data.weight);
-			if(data.prev_edge) {
-				*proto_internal_data.prev_edge() = data.prev_edge;
+			if(data) {
+				*proto_internal_data.mutable_weight() = WeightToProto(data->weight);
+				if(data->prev_edge) {
+					uint32_t tmp = *data->prev_edge;
+					proto_internal_data.set_prev_edge(tmp);
+				}
 			}
+			
 			*proto_internal_data_list.add_list() = proto_internal_data;
 		}
 		*proto_router.add_routes_internal_data() = proto_internal_data_list;
 	}
+	 
+	*proto_trans_router.mutable_router() = proto_router;
+	
+	*proto_trans_cat_->mutable_router() = proto_trans_router;
 	
 	
-    /*
+	return true;
+}
+
+trans_cat::RouteItem ProtoToWeight(trc_serialize::Weight proto_weight, const trans_cat::TransportCatalogue& trc) {
+	trans_cat::RouteItem  weight;
+	const void* stop_or_bus_obj = nullptr;
+	if(proto_weight.item_type() == 1) {
+		stop_or_bus_obj = &trc.GetStop(proto_weight.item_id());
+	} else if(proto_weight.item_type() == 2) {
+		stop_or_bus_obj = &trc.GetBus(proto_weight.item_id());
+	}
+	return trans_cat::RouteItem {
+		static_cast<trans_cat::RouteItemType>(proto_weight.item_type()), //type
+		proto_weight.time(),
+		stop_or_bus_obj,
+		proto_weight.span()
+		};
+}
+
+bool Router::Load() {
+	trc_serialize::TransportRouter proto_trans_router = proto_trans_cat_->router();
+	
+	// router settings
+	trc_serialize::RouterSettings proto_settings = proto_trans_router.settings();
+	trans_router_->SetSettings(trans_cat::RouterSettings{proto_settings.bus_wait_time(), proto_settings.bus_velocity()});
+	
+	// Graph
+	std::vector<graph::Edge<trans_cat::RouteItem>> edges;
+    std::vector<std::vector<graph::EdgeId>> incidence_lists;
+    trc_serialize::Graph proto_graph = proto_trans_router.graph();
+
+    for(const auto& edge : proto_graph.edges()) {
+		edges.push_back(
+			graph::Edge<trans_cat::RouteItem>{
+				edge.from(), 
+				edge.to(), 
+				ProtoToWeight(edge.weight(), trc_)
+			}
+		);
+	}
+	
+	for(const trc_serialize::IncidenceList& proto_incedent_list : proto_graph.incidence_lists()) {
+		std::vector<graph::EdgeId> list;
+		for(uint32_t edge_id : proto_incedent_list.edge_id()) {
+			list.push_back(edge_id);
+		}
+		
+		incidence_lists.push_back(std::move(list));
+	}
+    
+    graph::DirectedWeightedGraph<trans_cat::RouteItem> gr;
+    gr.LoadData(std::move(edges), std::move(incidence_lists));
+    
+    // Router
+     /*
     * ROUTER
     * 
 	  struct RouteInternalData {
@@ -152,21 +189,36 @@ struct Edge {
 	 RoutesInternalData routes_internal_data_;
 	 * */
 	 
-	*proto_trans_router.mutable_router() = proto_router;
-	
-	*proto_trans_cat_->mutable_router() = proto_trans_router;
-	
-	
-	return true;
-}
-
-bool Router::Load() {
-	trc_serialize::TransportRouter proto_trans_router = proto_trans_cat_->router();
-	
-	// router settings
-	trc_serialize::RouterSettings proto_settings = proto_trans_router.settings();
-	trans_router_->SetSettings(trans_cat::RouterSettings{proto_settings.bus_wait_time(), proto_settings.bus_velocity()});
+    trc_serialize::Router proto_router = proto_trans_router.router();
+	std::vector<std::vector<std::optional<graph::Router<trans_cat::RouteItem>::RouteInternalData>>> routes_internal_data;
+	for(const auto& proto_list : proto_router.routes_internal_data()) {
+		std::vector<std::optional<graph::Router<trans_cat::RouteItem>::RouteInternalData>> list;
+		for(const auto& proto_int_data : proto_list.list()) {
+			//if(proto_int_data != std::nullopt) {
+				std::optional<uint32_t> prev_edge; 
+				if(proto_int_data.has_prev_edge()){
+					prev_edge = proto_int_data.prev_edge();
+				}
+				
+				list.push_back(
+					graph::Router<trans_cat::RouteItem>::RouteInternalData {
+						ProtoToWeight(proto_int_data.weight(), trc_),
+						prev_edge
+					}
+				);
+			//}
+			//else {
+			//	list.push_back(std::nullopt);
+			//}
+		}
 		
+		routes_internal_data.push_back(std::move(list));
+	}
+    trans_router_->LoadGraph(std::move(gr));
+	graph::Router<trans_cat::RouteItem>* router = new graph::Router<trans_cat::RouteItem>(trans_router_->GetGraph());
+	router->LoadInterinalData(std::move(routes_internal_data));
+	trans_router_->LoadRouter(router);
+   
 	return true;
 }
 

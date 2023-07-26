@@ -134,12 +134,13 @@ private:
 
 class Router : public Serializable {
 public:
-	Router(trans_cat::TransportRouter* trans_router)
-		: trans_router_(trans_router) { }
+	Router(trans_cat::TransportRouter* trans_router, const trans_cat::TransportCatalogue& trc)
+		: trans_router_(trans_router), trc_(trc) { }
 	bool Save() const override;
 	bool Load() override;
 private:
 	trans_cat::TransportRouter* trans_router_;
+	const trans_cat::TransportCatalogue& trc_;
 };
 
 }

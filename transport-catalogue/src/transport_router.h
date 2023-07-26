@@ -6,9 +6,9 @@ using namespace std::string_literals;
 namespace trans_cat {
 	
 enum class RouteItemType {
-	NONE,
-	WAIT,
-	BUS
+	NONE = 0,
+	WAIT = 1,
+	BUS = 2
 };
 
 struct RouteItem {
@@ -75,6 +75,12 @@ public:
 	void SetSettings(const RouterSettings& rs);
 	void SetSettings(RouterSettings&& rs);
 	void BuildGraph();
+	void LoadGraph(graph::DirectedWeightedGraph<RouteItem>&& g) {
+		gr = std::move(g);
+	}
+	void LoadRouter(graph::Router<RouteItem>* router) {
+		router_ = router;
+	}
 	std::optional<graph::Router<RouteItem>::RouteInfo>  BuildRoute(size_t stop_from_id, size_t stop_to_id) const;
 	~TransportRouter() {
 		if(router_) delete router_;
