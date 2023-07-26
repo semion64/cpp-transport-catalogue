@@ -60,9 +60,7 @@ void TransportRouter::FillByBuses(const std::deque<Bus>& buses) {
 	}
 }
 
-const graph::DirectedWeightedGraph<RouteItem>& TransportRouter::GetGraph() const {
-	return gr;
-}
+
 
 const RouterSettings& TransportRouter::GetSettings() const {
 	return rs_;

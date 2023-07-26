@@ -55,7 +55,6 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 		std::cerr << "Deserialization error" << std::endl;
 	}
 	
-	//std::cout << "Router_settings: " << router.GetSettings().bus_wait_time << ", " << router.GetSettings().bus_velocity << std::endl;
 	trans_cat::MapRendererSVG map_renderer(trc, render_settings);
 	
 	

@@ -44,7 +44,6 @@ public:
 	
 private:
     
-    
     void InitializeRoutesInternalData(const Graph& graph) {
         const size_t vertex_count = graph.GetVertexCount();
         for (VertexId vertex = 0; vertex < vertex_count; ++vertex) {
@@ -95,7 +94,8 @@ Router<Weight>::Router(const Graph& graph)
     , routes_internal_data_(graph.GetVertexCount(),
                             std::vector<std::optional<RouteInternalData>>(graph.GetVertexCount()))
 {
-    InitializeRoutesInternalData(graph);
+	
+	InitializeRoutesInternalData(graph);
 
     const size_t vertex_count = graph.GetVertexCount();
     for (VertexId vertex_through = 0; vertex_through < vertex_count; ++vertex_through) {
@@ -106,6 +106,7 @@ Router<Weight>::Router(const Graph& graph)
 template <typename Weight>
 std::optional<typename Router<Weight>::RouteInfo> Router<Weight>::BuildRoute(VertexId from,
                                                                              VertexId to) const {
+																				 
     const auto& route_internal_data = routes_internal_data_.at(from).at(to);
     if (!route_internal_data) {
         return std::nullopt;

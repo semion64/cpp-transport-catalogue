@@ -73,17 +73,23 @@ public:
 	TransportRouter(TransportCatalogue& trc, const RouterSettings& router_settings) : trc_(trc), rs_(router_settings) { }
 	
 	graph::Edge<RouteItem> GetEdge(size_t id) const;
-	const graph::DirectedWeightedGraph<RouteItem>& GetGraph() const;
 	const RouterSettings& GetSettings() const;
 	const graph::Router<RouteItem>* GetRouter() const;
 	void SetSettings(const RouterSettings& rs);
 	void SetSettings(RouterSettings&& rs);
 	void BuildGraph();
+	
+	const graph::DirectedWeightedGraph<RouteItem>& GetGraph() const {
+		return gr;
+	}	
 	void LoadGraph(graph::DirectedWeightedGraph<RouteItem>&& g) {
 		gr = std::move(g);
 	}
 	void LoadRouter(graph::Router<RouteItem>* router) {
 		router_ = router;
+	}
+	void MakeRoute() {
+		router_ = new graph::Router<RouteItem>(gr);
 	}
 	std::optional<graph::Router<RouteItem>::RouteInfo>  BuildRoute(size_t stop_from_id, size_t stop_to_id) const;
 	~TransportRouter() {

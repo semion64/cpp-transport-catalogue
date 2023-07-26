@@ -204,7 +204,7 @@ void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, std::string_
 		json_build_.Key("error_message").Value("not found");
 		return;
 	}
-	
+	/*
 	json_build_.Key("total_time").Value(route->weight.time);
 	json_build_.Key("items").StartArray();
 	for(auto edge_id: route->edges) {
@@ -226,7 +226,7 @@ void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, std::string_
 		json_build_.EndDict();
 	}
 	
-	json_build_.EndArray();
+	json_build_.EndArray();*/
 }
 
 void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
