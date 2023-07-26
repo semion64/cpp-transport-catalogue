@@ -12,6 +12,8 @@
 
 namespace serialize{
 	
+using IncidenceList = std::vector<graph::EdgeId>;
+	
 struct Settings {
 	std::string file;
 };
@@ -130,6 +132,11 @@ public:
 	bool Load() override;
 private:
 	trans_cat::RenderSettings* settings_;
+	
+	trc_serialize::Point PointToProto(svg::Point point) const;
+	trc_serialize::Color ColorToProto(svg::Color clr) const;
+	svg::Point ProtoToPoint(trc_serialize::Point proto_point) const;
+	svg::Color ProtoToColor(trc_serialize::Color proto_clr) const;
 };
 
 class Router : public Serializable {
@@ -141,6 +148,16 @@ public:
 private:
 	trans_cat::TransportRouter* trans_router_;
 	const trans_cat::TransportCatalogue& trc_;
+	void SaveSettings(trc_serialize::TransportRouter* proto_trans_router) const;
+	void SaveGraph(trc_serialize::TransportRouter* proto_trans_router) const;
+	void SaveRoute(trc_serialize::TransportRouter* proto_trans_router) const;
+	
+	void LoadSettings(const trc_serialize::TransportRouter& proto_trans_router);
+	void LoadGraph(const trc_serialize::TransportRouter& proto_trans_router);
+	void LoadRoute(const trc_serialize::TransportRouter& proto_trans_router);
+	
+	trc_serialize::Weight WeightToProto(const trans_cat::RouteItem& weight) const;
+	trans_cat::RouteItem ProtoToWeight(const trc_serialize::Weight& proto_weight) const;
 };
 
 }
