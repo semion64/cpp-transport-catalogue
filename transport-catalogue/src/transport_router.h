@@ -82,15 +82,12 @@ public:
 	const graph::DirectedWeightedGraph<RouteItem>& GetGraph() const {
 		return gr;
 	}	
+	
 	void LoadGraph(graph::DirectedWeightedGraph<RouteItem>&& g) {
 		gr = std::move(g);
-	}
-	void LoadRouter(graph::Router<RouteItem>* router) {
-		router_ = router;
-	}
-	void MakeRoute() {
 		router_ = new graph::Router<RouteItem>(gr);
 	}
+	
 	std::optional<graph::Router<RouteItem>::RouteInfo>  BuildRoute(size_t stop_from_id, size_t stop_to_id) const;
 	~TransportRouter() {
 		if(router_) delete router_;

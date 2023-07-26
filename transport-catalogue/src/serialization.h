@@ -116,8 +116,7 @@ private:
 
 class TransportCatalogue : public Serializable {
 public:
-	TransportCatalogue(trans_cat::TransportCatalogue* trc) 
-		: trc_(trc) { }
+	TransportCatalogue(trans_cat::TransportCatalogue* trc)  : trc_(trc) { }
 	bool Save() const override;
 	bool Load() override;
 private:
@@ -126,8 +125,7 @@ private:
 
 class RenderSettings : public Serializable {
 public:
-	RenderSettings(trans_cat::RenderSettings* settings)
-		: settings_(settings) { }
+	RenderSettings(trans_cat::RenderSettings* settings) : settings_(settings) { }
 	bool Save() const override;
 	bool Load() override;
 private:
@@ -141,20 +139,16 @@ private:
 
 class Router : public Serializable {
 public:
-	Router(trans_cat::TransportRouter* trans_router, const trans_cat::TransportCatalogue& trc)
-		: trans_router_(trans_router), trc_(trc) { }
+	Router(trans_cat::TransportRouter* trans_router) : trans_router_(trans_router) { }
 	bool Save() const override;
 	bool Load() override;
 private:
 	trans_cat::TransportRouter* trans_router_;
-	const trans_cat::TransportCatalogue& trc_;
 	void SaveSettings(trc_serialize::TransportRouter* proto_trans_router) const;
 	void SaveGraph(trc_serialize::TransportRouter* proto_trans_router) const;
-	void SaveRoute(trc_serialize::TransportRouter* proto_trans_router) const;
 	
 	void LoadSettings(const trc_serialize::TransportRouter& proto_trans_router);
 	void LoadGraph(const trc_serialize::TransportRouter& proto_trans_router);
-	void LoadRoute(const trc_serialize::TransportRouter& proto_trans_router);
 	
 	trc_serialize::Weight WeightToProto(const trans_cat::RouteItem& weight) const;
 	trans_cat::RouteItem ProtoToWeight(const trc_serialize::Weight& proto_weight) const;

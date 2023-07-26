@@ -17,19 +17,17 @@ struct Edge {
     Weight weight;
 };
 
-
-
 template <typename Weight>
 class DirectedWeightedGraph {
-//friend serialize::Serializable;
 private:
-   using IncidenceList = std::vector<EdgeId>;
-using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
+	using IncidenceList = std::vector<EdgeId>;
+	using IncidentEdgesRange = ranges::Range<typename IncidenceList::const_iterator>;
+
 public:
     DirectedWeightedGraph() = default;
     explicit DirectedWeightedGraph(size_t vertex_count);
     EdgeId AddEdge(const Edge<Weight>& edge);
-	// friend Serialize
+
     size_t GetVertexCount() const;
     size_t GetEdgeCount() const;
     const Edge<Weight>& GetEdge(EdgeId edge_id) const;
@@ -46,7 +44,6 @@ public:
 	void LoadData(std::vector<Edge<Weight>>&& edges, std::vector<IncidenceList>&& incidence_lists) {
 		edges_ = std::move(edges);
 		incidence_lists_  = std::move(incidence_lists);
- 
 	}
 private:
     std::vector<Edge<Weight>> edges_;

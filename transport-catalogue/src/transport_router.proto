@@ -9,7 +9,7 @@ message RouterSettings {
 message Weight {
 	uint32 item_type = 1; // enum class RouteItemType
 	double time = 2;
-	uint32  item_id = 3; // std::string_view name;
+	uint32  item_id = 3;
 	int32 span = 4;
 }
 

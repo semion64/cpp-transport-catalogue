@@ -112,16 +112,16 @@ public:
 	void Read(const json::Node* root) override;
 };
 
-class ManagerStatJSON : public request::ManagerStat, public LoaderJSON {
+class ManagerProcessRequestsJSON : public request::ManagerStat, public LoaderJSON {
 public: 
-	ManagerStatJSON(TransportCatalogue& trc) : request::ManagerStat(trc) {	}
+	ManagerProcessRequestsJSON(TransportCatalogue& trc) : request::ManagerStat(trc) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;	
 };
 
-class ManagerBaseJSON : public request::ManagerBase, public LoaderJSON {
+class ManagerMakeBaseJSON : public request::ManagerBase, public LoaderJSON {
 public: 
-	ManagerBaseJSON(TransportCatalogue& trc) : request::ManagerBase(trc) {	}
+	ManagerMakeBaseJSON(TransportCatalogue& trc) : request::ManagerBase(trc) {	}
 	void Read(std::istream& is) override { ReadFromStream(is); }
 	void Read(const json::Node* root) override;	
 };

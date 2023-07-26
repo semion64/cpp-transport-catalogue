@@ -204,7 +204,7 @@ void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, std::string_
 		json_build_.Key("error_message").Value("not found");
 		return;
 	}
-	/*
+	
 	json_build_.Key("total_time").Value(route->weight.time);
 	json_build_.Key("items").StartArray();
 	for(auto edge_id: route->edges) {
@@ -226,7 +226,7 @@ void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, std::string_
 		json_build_.EndDict();
 	}
 	
-	json_build_.EndArray();*/
+	json_build_.EndArray();
 }
 
 void UserInterfaceJSON::ShowBus(std::string_view bus_name) const {
@@ -263,7 +263,7 @@ void UserInterfaceJSON::ShowStopBuses(std::string_view stop_name) const {
 	}
 }
 
-void ManagerBaseJSON::Read(const json::Node* root) {
+void ManagerMakeBaseJSON::Read(const json::Node* root) {
 	ReadFromJSON(root);
 	
 	RenderSettingsJSON render_settings(trc_);
@@ -282,7 +282,7 @@ void ManagerBaseJSON::Read(const json::Node* root) {
 	SetBase(base.release());
 }
 
-void ManagerStatJSON::Read(const json::Node* root) {
+void ManagerProcessRequestsJSON::Read(const json::Node* root) {
 	ReadFromJSON(root);
 	
 	SerializeSettingsJSON serialization_settings(trc_);
@@ -293,30 +293,6 @@ void ManagerStatJSON::Read(const json::Node* root) {
 	stat->Read(root_);
 	SetStat(stat.release());
 }
-
-/*
-void ManagerJSON::Read(const json::Node* root) {
-	ReadFromJSON(root);
-	
-	RenderSettingsJSON render_settings(trc_);
-	RouterSettingsJSON router_settings(trc_);
-	
-	SerializeSettingsJSON serialization_settings(trc_);
-	render_settings.Read(root_);
-	router_settings.Read(root_);
-	serialization_settings.Read(root_);
-	
-	render_settings_ = render_settings.Get();
-	router_settings_ = router_settings.Get();
-	serialization_settings_ = serialization_settings.Get();
-	
-	auto base = std::make_unique<BaseJSON>(trc_); 
-	auto stat = std::make_unique<StatJSON>(trc_); 
-	base->Read(root_);
-	stat->Read(root_);
-	SetBase(base.release());
-	SetStat(stat.release());
-}*/
 
 namespace detail {
 svg::Color ParseColor(const json::Node& node_color) {
@@ -331,6 +307,6 @@ svg::Color ParseColor(const json::Node& node_color) {
 	
 	return node_color.AsString();
 }
+
 }// end ::detail
- 
 } // end ::trans_cat

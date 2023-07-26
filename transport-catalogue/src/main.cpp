@@ -11,6 +11,8 @@
 
 #include <string_view>
 
+#define __TRANS_CAT_DEBUG__
+
 using namespace std::literals;
 void PrintUsage(std::ostream& stream = std::cerr) {
     stream << "Usage: transport_catalogue [make_base|process_requests]\n"sv;
@@ -18,62 +20,69 @@ void PrintUsage(std::ostream& stream = std::cerr) {
 
 void MakeBase(std::istream& is) {
 	trans_cat::TransportCatalogue trc;
-	trans_cat::ManagerBaseJSON json_request(trc);
-	json_request.Read(is); 
-	json_request.DoBase();  
-	std::ofstream output(json_request.GetSettingsSerialization().file, std::ios::binary);
+	trans_cat::ManagerMakeBaseJSON json_make(trc);
+	json_make.Read(is); 
+	json_make.DoBase();  
+	std::ofstream output(json_make.GetSettingsSerialization().file, std::ios::binary);
 	
-	trans_cat::TransportRouter trans_router(trc, json_request.GetSettingsRouter());
-	trans_cat::RenderSettings render_settings = json_request.GetSettingsRender();
+	trans_cat::TransportRouter trans_router(trc, json_make.GetSettingsRouter());
+	trans_cat::RenderSettings render_settings = json_make.GetSettingsRender();
 	
 	trans_router.BuildGraph();
 	
 	serialize::Manager serial_mng;
 	serial_mng.AddTask(new serialize::TransportCatalogue(&trc));
 	serial_mng.AddTask(new serialize::RenderSettings(&render_settings));
-	serial_mng.AddTask(new serialize::Router(&trans_router, trc));
+	serial_mng.AddTask(new serialize::Router(&trans_router));
 	if(!serial_mng.Save(output)) {
 		std::cerr << "Serialization error" << std::endl;
 	}
+	
+#ifdef __TRANS_CAT_DEBUG__ 	
+	std::cout << "SERIALIZE_OK!" << std::endl;
+#endif
 }
 
 void ProcessRequests(std::istream& is, std::ostream& os) {
 	trans_cat::TransportCatalogue trc;
-	trans_cat::ManagerStatJSON json_request(trc); 
+	trans_cat::ManagerProcessRequestsJSON json_process(trc); 
 	trans_cat::RenderSettings render_settings;
 	trans_cat::RouterSettings router_settings;
-	json_request.Read(is); 
+	json_process.Read(is); 
 	trans_cat::TransportRouter router(trc, router_settings);
 	
-	std::ifstream input(json_request.GetSettingsSerialization().file, std::ios::binary);
+	std::ifstream input(json_process.GetSettingsSerialization().file, std::ios::binary);
 	
 	serialize::Manager serial_mng;
 	serial_mng.AddTask(new serialize::TransportCatalogue(&trc));
 	serial_mng.AddTask(new serialize::RenderSettings(&render_settings));
-	serial_mng.AddTask(new serialize::Router(&router, trc));
+	serial_mng.AddTask(new serialize::Router(&router));
 	if(!serial_mng.Load(input)) {
 		std::cerr << "Deserialization error" << std::endl;
 	}
 	
+#ifdef __TRANS_CAT_DEBUG__ 	
+	std::cout << "DESERIALIZE_OK!" << std::endl;
+#endif
 	trans_cat::MapRendererSVG map_renderer(trc, render_settings);
 	
 	
 	trans_cat::UserInterfaceJSON ui(os, trc, &router, &map_renderer);
-	json_request.DoStat(ui);  
+	json_process.DoStat(ui);  
 }
 int main(int argc, char* argv[]) {
-	int DEBUG_VER = true;
-	if(DEBUG_VER) {
-		std::ifstream is("open_test/s14_3_opentest_2_make_base.json");
-		MakeBase(is);
-		
-		std::cout << "SERIALIZE_OK!" << std::endl;
-		std::ifstream is2("open_test/s14_3_opentest_2_process_requests.json");
-		std::ofstream os("res.json");
-		ProcessRequests(is2, os);
-		std::cout << "DEBUGGING_OK!" << std::endl;
-		return 0;
-	}
+	
+#ifdef __TRANS_CAT_DEBUG__ 
+	std::cout << "DEBUGGING_START..." << std::endl;
+	std::ifstream is("open_test/s14_3_opentest_2_make_base.json");
+	MakeBase(is);
+	
+	std::ifstream is2("open_test/s14_3_opentest_2_process_requests.json");
+	std::ofstream os("res.json");
+	ProcessRequests(is2, os);
+	std::cout << "DEBUGGING_OK!" << std::endl;
+	return 0;
+#endif
 	
     if (argc != 2) {
         PrintUsage();
