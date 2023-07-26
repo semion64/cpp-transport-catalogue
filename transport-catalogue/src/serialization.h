@@ -9,6 +9,8 @@
 #include <transport_catalogue.pb.h>
 #include <map_renderer.pb.h>
 #include <transport_router.pb.h>
+#include <graph.pb.h>
+#include <svg.pb.h>
 
 namespace serialize{
 	
@@ -27,7 +29,7 @@ enum class ColorFormat {
 
 struct ColorSetter {
 public:
-	ColorSetter(trc_serialize::Color& proto_color) : proto_color_(proto_color) {}
+	ColorSetter(serial_svg::Color& proto_color) : proto_color_(proto_color) {}
     void operator()([[maybe_unused]]const std::monostate& none) const {
 		using namespace std::literals; 
 		proto_color_.set_format(static_cast<int32_t> (ColorFormat::NONE));
@@ -53,7 +55,7 @@ public:
 		proto_color_.set_opacity(value.opacity);
 	}
 private:
-	trc_serialize::Color& proto_color_;
+	serial_svg::Color& proto_color_;
 };
 
 class Manager;
@@ -64,11 +66,11 @@ public:
 	Serializable() { } 
 	virtual bool Save() const = 0;
 	virtual bool Load() = 0;
-	void SetProtoTransCat(trc_serialize::TransportCatalogue* proto_trans_cat) {
+	void SetProtoTransCat(serial_trc::TransportCatalogue* proto_trans_cat) {
 		proto_trans_cat_ = proto_trans_cat;
 	}
 protected:
-	mutable trc_serialize::TransportCatalogue* proto_trans_cat_ = nullptr;	
+	mutable serial_trc::TransportCatalogue* proto_trans_cat_ = nullptr;	
 };
 
 class Manager {
@@ -94,7 +96,7 @@ public:
 	}
 	
 	bool Load(std::istream& input) {
-		trc_serialize::TransportCatalogue proto_trans_cat;
+		serial_trc::TransportCatalogue proto_trans_cat;
 	
 		if (!proto_trans_cat_.ParseFromIstream(&input)) {
 			return false;
@@ -110,7 +112,7 @@ public:
 	}
 	
 private:
-	trc_serialize::TransportCatalogue proto_trans_cat_;
+	serial_trc::TransportCatalogue proto_trans_cat_;
 	std::vector<Serializable*> tasks_;
 };
 
@@ -131,10 +133,10 @@ public:
 private:
 	trans_cat::RenderSettings* settings_;
 	
-	trc_serialize::Point PointToProto(svg::Point point) const;
-	trc_serialize::Color ColorToProto(svg::Color clr) const;
-	svg::Point ProtoToPoint(trc_serialize::Point proto_point) const;
-	svg::Color ProtoToColor(trc_serialize::Color proto_clr) const;
+	serial_svg::Point PointToProto(svg::Point point) const;
+	serial_svg::Color ColorToProto(svg::Color clr) const;
+	svg::Point ProtoToPoint(serial_svg::Point proto_point) const;
+	svg::Color ProtoToColor(serial_svg::Color proto_clr) const;
 };
 
 class Router : public Serializable {
@@ -144,14 +146,14 @@ public:
 	bool Load() override;
 private:
 	trans_cat::TransportRouter* trans_router_;
-	void SaveSettings(trc_serialize::TransportRouter* proto_trans_router) const;
-	void SaveGraph(trc_serialize::TransportRouter* proto_trans_router) const;
+	void SaveSettings(serial_trc::TransportRouter* proto_trans_router) const;
+	void SaveGraph(serial_trc::TransportRouter* proto_trans_router) const;
 	
-	void LoadSettings(const trc_serialize::TransportRouter& proto_trans_router);
-	void LoadGraph(const trc_serialize::TransportRouter& proto_trans_router);
+	void LoadSettings(const serial_trc::TransportRouter& proto_trans_router);
+	void LoadGraph(const serial_trc::TransportRouter& proto_trans_router);
 	
-	trc_serialize::Weight WeightToProto(const trans_cat::RouteItem& weight) const;
-	trans_cat::RouteItem ProtoToWeight(const trc_serialize::Weight& proto_weight) const;
+	serial_graph::Weight WeightToProto(const trans_cat::RouteItem& weight) const;
+	trans_cat::RouteItem ProtoToWeight(const serial_graph::Weight& proto_weight) const;
 };
 
 }

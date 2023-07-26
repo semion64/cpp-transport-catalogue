@@ -1,18 +1,8 @@
 syntax = "proto3";
-package trc_serialize;
+package serial_trc;
 
-message Point {
-	double x = 1;
-	double y = 2;
-}
-message Color {
-	uint32 r = 1;
-	uint32 g = 2;
-	uint32 b = 3;
-	double opacity = 4;
-	string name = 5;
-	int32 format = 6;
-}
+import "svg.proto";
+
 message RenderSettings {
 	double width = 1;
 	double height = 2;
@@ -21,11 +11,11 @@ message RenderSettings {
 	double line_width = 5;
 	
 	uint32 bus_label_font_size = 6;
-	Point bus_label_offset = 7;
+	serial_svg.Point bus_label_offset = 7;
 	uint32 stop_label_font_size = 8;
 	
-	Point stop_label_offset = 9;
-	Color underlayer_color = 10;
+	serial_svg.Point stop_label_offset = 9;
+	serial_svg.Color underlayer_color = 10;
 	double underlayer_width = 11;
-	repeated Color color_palette = 12;
+	repeated serial_svg.Color color_palette = 12;
 }

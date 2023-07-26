@@ -11,7 +11,7 @@
 
 #include <string_view>
 
-#define __TRANS_CAT_DEBUG__
+// #define __TRANS_CAT_DEBUG__
 
 using namespace std::literals;
 void PrintUsage(std::ostream& stream = std::cerr) {
@@ -39,7 +39,7 @@ void MakeBase(std::istream& is) {
 	}
 	
 #ifdef __TRANS_CAT_DEBUG__ 	
-	std::cout << "SERIALIZE_OK!" << std::endl;
+	std::cout << "Serialize done" << std::endl;
 #endif
 }
 
@@ -62,7 +62,7 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 	}
 	
 #ifdef __TRANS_CAT_DEBUG__ 	
-	std::cout << "DESERIALIZE_OK!" << std::endl;
+	std::cout << "Deserialize done" << std::endl;
 #endif
 	trans_cat::MapRendererSVG map_renderer(trc, render_settings);
 	
@@ -80,7 +80,7 @@ int main(int argc, char* argv[]) {
 	std::ifstream is2("open_test/s14_3_opentest_2_process_requests.json");
 	std::ofstream os("res.json");
 	ProcessRequests(is2, os);
-	std::cout << "DEBUGGING_OK!" << std::endl;
+	std::cout << "DEBUGGING_OK..." << std::endl;
 	return 0;
 #endif
 	

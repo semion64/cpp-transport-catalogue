@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package serial_graph;
+
+message Weight {
+	uint32 item_type = 1; // enum class RouteItemType
+	double time = 2;
+	uint32  item_id = 3;
+	int32 span = 4;
+}
+
+message Edge {
+    uint32 from = 1;
+    uint32 to = 2;
+    Weight weight = 3;
+}
+
+message IncidenceList {
+	repeated uint32 edge_id = 1; // EdgeID
+}
+
+message Graph {
+	repeated Edge edges = 1;
+	repeated IncidenceList incidence_lists = 2;
+}

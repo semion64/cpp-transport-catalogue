@@ -6,7 +6,7 @@ namespace serialize{
 
 bool TransportCatalogue::Save() const {
 	// add sotps & buses names
-	trc_serialize::NameIndex proto_name_index;
+	serial_trc::NameIndex proto_name_index;
 	std::map <std::string_view, int> tmp_stop_index, tmp_bus_index;
 	
 	int i = 0;
@@ -25,10 +25,10 @@ bool TransportCatalogue::Save() const {
 	
 	// add stops
 	for(const auto& stop : trc_->GetStops()) {
-		trc_serialize::Stop proto_stop;
+		serial_trc::Stop proto_stop;
 		proto_stop.set_name_index(tmp_stop_index[stop.name]);
 		proto_stop.set_id(stop.id);
-		trc_serialize::Coord proto_coord;
+		serial_trc::Coord proto_coord;
 		proto_coord.set_lat(stop.coord.lat);
 		proto_coord.set_lng(stop.coord.lng);
 		(*proto_stop.mutable_coord()) = proto_coord;
@@ -37,7 +37,7 @@ bool TransportCatalogue::Save() const {
 	
 	// add buses
 	for(const auto& bus : trc_->GetBuses()) {
-		trc_serialize::Bus proto_bus;
+		serial_trc::Bus proto_bus;
 		proto_bus.set_id(bus.id);
 		proto_bus.set_name_index(tmp_bus_index[bus.name]);
 		proto_bus.set_is_ring(bus.is_ring);
@@ -50,7 +50,7 @@ bool TransportCatalogue::Save() const {
 	
 	// add distance between stop
 	for(const auto& dist : trc_->GetDistanceBetweenStops()) {
-		trc_serialize::StopDistance proto_stop_dist;
+		serial_trc::StopDistance proto_stop_dist;
 		proto_stop_dist.set_stop_from(dist.stop_from->id);
 		proto_stop_dist.set_stop_to(dist.stop_to->id);
 		proto_stop_dist.set_distance(dist.distance);
@@ -106,7 +106,7 @@ bool TransportCatalogue::Load() {
 //-----------------------------------------------------------Render--------------------------------------------------------------
 
 bool RenderSettings::Save() const {
-	trc_serialize::RenderSettings proto_rs;
+	serial_trc::RenderSettings proto_rs;
 	
 	proto_rs.set_width(settings_->width);
 	proto_rs.set_height(settings_->height);
@@ -154,27 +154,27 @@ bool RenderSettings::Load() {
 	return true;
 }
 
-trc_serialize::Point RenderSettings::PointToProto(svg::Point point) const {
-	trc_serialize::Point proto_point;
+serial_svg::Point RenderSettings::PointToProto(svg::Point point) const {
+	serial_svg::Point proto_point;
 	proto_point.set_x(point.x);
 	proto_point.set_y(point.y);
 	return proto_point;
 }
 
-trc_serialize::Color RenderSettings::ColorToProto(svg::Color clr) const {
-	trc_serialize::Color proto_clr;
+serial_svg::Color RenderSettings::ColorToProto(svg::Color clr) const {
+	serial_svg::Color proto_clr;
 	std::visit(ColorSetter(proto_clr), clr);
 	return proto_clr;
 }
 
-svg::Point RenderSettings::ProtoToPoint(trc_serialize::Point proto_point) const {
+svg::Point RenderSettings::ProtoToPoint(serial_svg::Point proto_point) const {
 	return { 
 		proto_point.x(), 
 		proto_point.y() 
 	};
 }
 
-svg::Color RenderSettings::ProtoToColor(trc_serialize::Color proto_clr) const {
+svg::Color RenderSettings::ProtoToColor(serial_svg::Color proto_clr) const {
 	switch(static_cast<ColorFormat>(proto_clr.format())) {
 		case ColorFormat::NAMED:
 			return proto_clr.name();
@@ -199,7 +199,7 @@ svg::Color RenderSettings::ProtoToColor(trc_serialize::Color proto_clr) const {
 //-----------------------------------------------------------Router--------------------------------------------------------------
 
 bool Router::Save() const {
-	trc_serialize::TransportRouter proto_trans_router;
+	serial_trc::TransportRouter proto_trans_router;
 	
 	SaveSettings(&proto_trans_router);
 	SaveGraph(&proto_trans_router);
@@ -210,7 +210,7 @@ bool Router::Save() const {
 } 
 	
 bool Router::Load() {
-	trc_serialize::TransportRouter proto_trans_router = proto_trans_cat_->router();
+	serial_trc::TransportRouter proto_trans_router = proto_trans_cat_->router();
 	
 	LoadSettings(proto_trans_router);
 	
@@ -219,8 +219,8 @@ bool Router::Load() {
 	return true;
 }
 
-void Router::SaveGraph(trc_serialize::TransportRouter* proto_trans_router) const {
-	trc_serialize::Graph proto_graph;
+void Router::SaveGraph(serial_trc::TransportRouter* proto_trans_router) const {
+	serial_graph::Graph proto_graph;
 	
     auto gr = trans_router_->GetGraph();
 	const std::vector<graph::Edge<trans_cat::RouteItem>>& __edges = gr.GetEdges(); 
@@ -228,9 +228,9 @@ void Router::SaveGraph(trc_serialize::TransportRouter* proto_trans_router) const
 	auto incidence_lists = gr.GetIncidentLists();
 	
 	for(const auto& edge : __edges) {
-		trc_serialize::Edge proto_edge;
+		serial_graph::Edge proto_edge;
 		
-		trc_serialize::Weight proto_weight = WeightToProto(edge.weight);
+		serial_graph::Weight proto_weight = WeightToProto(edge.weight);
 		proto_edge.set_from(edge.from);
 		proto_edge.set_to(edge.to);
 		*proto_edge.mutable_weight() = proto_weight;
@@ -238,10 +238,10 @@ void Router::SaveGraph(trc_serialize::TransportRouter* proto_trans_router) const
 		*proto_graph.add_edges() = proto_edge;
 	}
 	
-	trc_serialize::IncidenceList proto_incidence;
+	serial_graph::IncidenceList proto_incidence;
 	
 	for(const auto& list : incidence_lists) {
-		trc_serialize::IncidenceList proto_incidence;
+		serial_graph::IncidenceList proto_incidence;
 		for(const auto& edge_id : list) {
 			proto_incidence.add_edge_id(edge_id);
 		}
@@ -251,23 +251,23 @@ void Router::SaveGraph(trc_serialize::TransportRouter* proto_trans_router) const
 	*proto_trans_router->mutable_graph() = proto_graph;
 }
 
-void Router::SaveSettings(trc_serialize::TransportRouter* proto_trans_router) const {
-    trc_serialize::RouterSettings proto_settings;
+void Router::SaveSettings(serial_trc::TransportRouter* proto_trans_router) const {
+    serial_trc::RouterSettings proto_settings;
 	auto settings = trans_router_->GetSettings();
 	proto_settings.set_bus_wait_time(settings.bus_wait_time);
 	proto_settings.set_bus_velocity(settings.bus_velocity);
 	*proto_trans_router->mutable_settings() = proto_settings;	
 }
 
-void Router::LoadSettings(const trc_serialize::TransportRouter& proto_trans_router) {
-	trc_serialize::RouterSettings proto_settings = proto_trans_router.settings();
+void Router::LoadSettings(const serial_trc::TransportRouter& proto_trans_router) {
+	serial_trc::RouterSettings proto_settings = proto_trans_router.settings();
 	trans_router_->SetSettings(trans_cat::RouterSettings{proto_settings.bus_wait_time(), proto_settings.bus_velocity()});
 }
 
-void Router::LoadGraph(const trc_serialize::TransportRouter& proto_trans_router) {
+void Router::LoadGraph(const serial_trc::TransportRouter& proto_trans_router) {
 	std::vector<graph::Edge<trans_cat::RouteItem>> edges;
     std::vector<std::vector<graph::EdgeId>> incidence_lists;
-    trc_serialize::Graph proto_graph = proto_trans_router.graph();
+    serial_graph::Graph proto_graph = proto_trans_router.graph();
 
     for(const auto& edge : proto_graph.edges()) {
 		edges.push_back(
@@ -279,7 +279,7 @@ void Router::LoadGraph(const trc_serialize::TransportRouter& proto_trans_router)
 		);
 	}
 	
-	for(const trc_serialize::IncidenceList& proto_incedent_list : proto_graph.incidence_lists()) {
+	for(const serial_graph::IncidenceList& proto_incedent_list : proto_graph.incidence_lists()) {
 		std::vector<graph::EdgeId> list;
 		for(uint32_t edge_id : proto_incedent_list.edge_id()) {
 			list.push_back(edge_id);
@@ -294,8 +294,8 @@ void Router::LoadGraph(const trc_serialize::TransportRouter& proto_trans_router)
     trans_router_->LoadGraph(std::move(gr));
 }
 
-trc_serialize::Weight Router::WeightToProto(const trans_cat::RouteItem& weight) const {
-	trc_serialize::Weight proto_weight;
+serial_graph::Weight Router::WeightToProto(const trans_cat::RouteItem& weight) const {
+	serial_graph::Weight proto_weight;
 	proto_weight.set_item_type(static_cast<uint32_t>(weight.type));
 	proto_weight.set_time(weight.time);
 	proto_weight.set_item_id(weight.item_id);
@@ -303,7 +303,7 @@ trc_serialize::Weight Router::WeightToProto(const trans_cat::RouteItem& weight) 
 	return proto_weight;
 }
 
-trans_cat::RouteItem Router::ProtoToWeight(const trc_serialize::Weight& proto_weight) const {
+trans_cat::RouteItem Router::ProtoToWeight(const serial_graph::Weight& proto_weight) const {
 	return trans_cat::RouteItem {
 		static_cast<trans_cat::RouteItemType>(proto_weight.item_type()), //type
 		proto_weight.time(),
