@@ -102,7 +102,8 @@ bool Router::Save() const {
 		throw std::logic_error("serialization: firstly build router");
 	}
 	const auto internal_data_list = trans_router_->GetRouter()->GetInternalData(); 
-		
+	// 	std::vector<std::vector<std::optional<graph::Router<trans_cat::RouteItem>::RouteInternalData>>> routes_internal_data;
+	
 	for(const auto& internal_datas : internal_data_list) {
 		trc_serialize::RouteInternalDataList proto_internal_data_list;
 		for(const auto& data : internal_datas) {

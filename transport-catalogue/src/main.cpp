@@ -65,11 +65,11 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 int main(int argc, char* argv[]) {
 	int DEBUG_VER = true;
 	if(DEBUG_VER) {
-		std::ifstream is("open_test/s14_3_opentest_3_make_base.json");
+		std::ifstream is("open_test/s14_3_opentest_2_make_base.json");
 		MakeBase(is);
 		
 		std::cout << "SERIALIZE_OK!" << std::endl;
-		std::ifstream is2("open_test/s14_3_opentest_3_process_requests.json");
+		std::ifstream is2("open_test/s14_3_opentest_2_process_requests.json");
 		std::ofstream os("res.json");
 		ProcessRequests(is2, os);
 		std::cout << "DEBUGGING_OK!" << std::endl;

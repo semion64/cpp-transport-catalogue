@@ -199,7 +199,8 @@ void UserInterfaceJSON::ShowMap() const {
 void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, std::string_view from, std::string_view to) const {
 	auto route = tr_router.BuildRoute(trc_.GetStop(from).id, trc_.GetStop(to).id);
 	
-	if(!route) {
+	if(!route ||
+		route->weight.time == 0 && trc_.GetStop(from).id != trc_.GetStop(to).id) {
 		json_build_.Key("error_message").Value("not found");
 		return;
 	}
