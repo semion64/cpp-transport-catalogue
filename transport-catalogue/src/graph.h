@@ -61,7 +61,6 @@ template <typename Weight>
 EdgeId DirectedWeightedGraph<Weight>::AddEdge(const Edge<Weight>& edge) {
     edges_.push_back(edge);
     const EdgeId id = edges_.size() - 1;
-    std::cout << edge.from << std::endl;
     incidence_lists_.at(edge.from).push_back(id);
     return id;
 }

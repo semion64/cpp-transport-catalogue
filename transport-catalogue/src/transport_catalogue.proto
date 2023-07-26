@@ -35,10 +35,8 @@ message StopBuses {
 message StopDistance {
 	uint32 stop_from = 1;
 	uint32 stop_to = 2;
-	uint32 distance = 3;
+	int32 distance = 3;
 }
-
-
 
 message TransportCatalogue {
 	repeated Bus bus = 1;

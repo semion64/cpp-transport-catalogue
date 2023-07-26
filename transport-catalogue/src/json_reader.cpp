@@ -212,13 +212,13 @@ void UserInterfaceJSON::ShowRoute(const TransportRouter& tr_router, std::string_
 		if(edge.weight.type == RouteItemType::WAIT) {	
 			json_build_
 				.Key("type").Value("Wait")
-				.Key("stop_name").Value(std::string(edge.weight.GetName()))
+				.Key("stop_name").Value(std::string(edge.weight.GetName(trc_)))
 				.Key("time").Value(edge.weight.time);
 		}
 		else if(edge.weight.type == RouteItemType::BUS) {	
 			json_build_
 				.Key("type").Value("Bus")
-				.Key("Bus").Value(std::string(edge.weight.GetName()))
+				.Key("Bus").Value(std::string(edge.weight.GetName(trc_)))
 				.Key("span_count").Value(edge.weight.span)
 				.Key("time").Value(edge.weight.time);
 		}

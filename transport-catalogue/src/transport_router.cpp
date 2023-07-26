@@ -25,7 +25,7 @@ void TransportRouter::AddEdgesForBus(const Bus& bus, size_t start_stop, size_t e
 				RouteItem {
 					RouteItemType::BUS,
 					CalcTime(di),
-					&bus,
+					bus.id,
 					j - i
 				}
 			});
@@ -41,7 +41,7 @@ void TransportRouter::FillByStops(const std::deque<Stop>& stops) {
 			RouteItem { 
 				RouteItemType::WAIT, 
 				rs_.bus_wait_time, 
-				&stops, 
+				stops[i].id, 
 				0
 			} 
 		});
@@ -84,7 +84,6 @@ void TransportRouter::BuildGraph() {
 	auto stops = trc_.GetStops();
 	auto buses = trc_.GetBuses();
 	
-	std::cout << "STOP_SIZE: " << stops.size() << std::endl;
 	gr = graph::DirectedWeightedGraph<RouteItem>(stops.size() * 2);
 	
 	FillByStops(stops);

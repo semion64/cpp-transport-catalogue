@@ -32,10 +32,12 @@ message Graph {
 
 
 // ROUTER
-
+message PrevEdge {
+	uint32 id = 1;
+}
 message RouteInternalData {
 	Weight weight = 1;
-	optional uint32 prev_edge = 2; // EdgeID
+	PrevEdge prev_edge = 2; // EdgeID
 };
 
 message RouteInternalDataList {

@@ -14,7 +14,7 @@ enum class RouteItemType {
 struct RouteItem {
 	RouteItemType type = RouteItemType::NONE;
 	double time = 0;
-	const void* stop_or_bus_obj;
+	size_t item_id;//const void* stop_or_bus_obj;
 	int span = 0;
 	bool operator<(const RouteItem& other) const {
 		return time < other.time;
@@ -31,24 +31,28 @@ struct RouteItem {
 	inline bool operator>(const RouteItem& other) const {
 		return !(time < other.time) && time != other.time;
 	}
-	std::string_view GetName() const {
+	std::string_view GetName(const TransportCatalogue& trc) const {
 		if(type == RouteItemType::BUS) {
-			return reinterpret_cast<const Bus*>(stop_or_bus_obj)->name; 
+			return trc.GetBus(item_id).name;
+			//return reinterpret_cast<const Bus*>(stop_or_bus_obj)->name; 
 		}
 		
 		if(type == RouteItemType::WAIT) {
-			return reinterpret_cast<const Stop*>(stop_or_bus_obj)->name; 
+			return trc.GetStop(item_id).name;
+			//return reinterpret_cast<const Stop*>(stop_or_bus_obj)->name; 
 		}
 		
 		return "";
 	}
 	
-	size_t GetId() const {
+	size_t GetId(const TransportCatalogue& trc) const {
 		if(type == RouteItemType::BUS) {
-			return reinterpret_cast<const Bus*>(stop_or_bus_obj)->id; 
+			return trc.GetBus(item_id).id;
+			//return reinterpret_cast<const Bus*>(stop_or_bus_obj)->id; 
 		}
 		if(type == RouteItemType::WAIT) {
-			return reinterpret_cast<const Stop*>(stop_or_bus_obj)->id; 
+			return trc.GetStop(item_id).id;
+			//return reinterpret_cast<const Stop*>(stop_or_bus_obj)->id; 
 		}
 		
 		return 0;
@@ -56,7 +60,7 @@ struct RouteItem {
 };
 
 inline RouteItem operator+(const RouteItem& l, const RouteItem& r) {
-	return RouteItem {RouteItemType::NONE, l.time + r.time, nullptr, 0};
+	return RouteItem {RouteItemType::NONE, l.time + r.time, 0, 0};
 }
 
 struct RouterSettings {

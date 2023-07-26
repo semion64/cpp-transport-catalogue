@@ -26,9 +26,6 @@ void MakeBase(std::istream& is) {
 	trans_cat::TransportRouter trans_router(trc, json_request.GetSettingsRouter());
 	trans_cat::RenderSettings render_settings = json_request.GetSettingsRender();
 	
-	for(auto& bus : trc.GetBuses()) {
-		std::cout << bus.name << std::endl;
-	}
 	trans_router.BuildGraph();
 	
 	serialize::Manager serial_mng;
@@ -68,11 +65,12 @@ void ProcessRequests(std::istream& is, std::ostream& os) {
 int main(int argc, char* argv[]) {
 	int DEBUG_VER = true;
 	if(DEBUG_VER) {
-		std::ifstream is("make_1_in.json");
+		std::ifstream is("open_test/s14_3_opentest_3_make_base.json");
 		MakeBase(is);
 		
-		std::ifstream is2("process_1_in.json");
-		std::ofstream os("process_1_out.json");
+		std::cout << "SERIALIZE_OK!" << std::endl;
+		std::ifstream is2("open_test/s14_3_opentest_3_process_requests.json");
+		std::ofstream os("res.json");
 		ProcessRequests(is2, os);
 		std::cout << "DEBUGGING_OK!" << std::endl;
 		return 0;

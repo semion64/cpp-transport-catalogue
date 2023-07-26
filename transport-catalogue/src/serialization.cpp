@@ -48,14 +48,15 @@ trc_serialize::Weight WeightToProto(const trans_cat::RouteItem& weight) {
 	trc_serialize::Weight proto_weight;
 	proto_weight.set_item_type(static_cast<uint32_t>(weight.type));
 	proto_weight.set_time(weight.time);
-	proto_weight.set_item_id(weight.GetId());
+	//std::cout << weight.GetId() << std::endl;
+	proto_weight.set_item_id(weight.item_id);
 	proto_weight.set_span(weight.span);
 	return proto_weight;
 }
 
 using IncidenceList = std::vector<graph::EdgeId>;
 bool Router::Save() const {
-	
+
 	trc_serialize::TransportRouter proto_trans_router;
 	trc_serialize::Graph proto_graph;
 	
@@ -110,7 +111,9 @@ bool Router::Save() const {
 				*proto_internal_data.mutable_weight() = WeightToProto(data->weight);
 				if(data->prev_edge) {
 					uint32_t tmp = *data->prev_edge;
-					proto_internal_data.set_prev_edge(tmp);
+					trc_serialize::PrevEdge proto_prev_edge;
+					proto_prev_edge.set_id(tmp);
+					*proto_internal_data.mutable_prev_edge() = proto_prev_edge;
 				}
 			}
 			
@@ -129,16 +132,16 @@ bool Router::Save() const {
 
 trans_cat::RouteItem ProtoToWeight(trc_serialize::Weight proto_weight, const trans_cat::TransportCatalogue& trc) {
 	trans_cat::RouteItem  weight;
-	const void* stop_or_bus_obj = nullptr;
+	size_t item_id;
 	if(proto_weight.item_type() == 1) {
-		stop_or_bus_obj = &trc.GetStop(proto_weight.item_id());
+		item_id = trc.GetStop(proto_weight.item_id()).id;
 	} else if(proto_weight.item_type() == 2) {
-		stop_or_bus_obj = &trc.GetBus(proto_weight.item_id());
+		item_id = trc.GetBus(proto_weight.item_id()).id;
 	}
 	return trans_cat::RouteItem {
 		static_cast<trans_cat::RouteItemType>(proto_weight.item_type()), //type
 		proto_weight.time(),
-		stop_or_bus_obj,
+		item_id,
 		proto_weight.span()
 		};
 }
@@ -197,7 +200,7 @@ bool Router::Load() {
 			//if(proto_int_data != std::nullopt) {
 				std::optional<uint32_t> prev_edge; 
 				if(proto_int_data.has_prev_edge()){
-					prev_edge = proto_int_data.prev_edge();
+					prev_edge = proto_int_data.prev_edge().id();
 				}
 				
 				list.push_back(
